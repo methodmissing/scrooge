@@ -1,0 +1,12 @@
+production:
+  orm: 'active_record'
+  storage: 'memory'
+  buffer_threshold: 60
+  warmup_threshold: 300
+  scope: 1234567891    
+test:
+  orm: 'active_record'
+  storage: 'memory'
+  buffer_threshold: 10
+  warmup_threshold: 30  
+  scope: 
