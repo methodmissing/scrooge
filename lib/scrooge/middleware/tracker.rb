@@ -5,7 +5,11 @@ module Scrooge
       def initialize(app, options = {})
         @app = app
       end
-
+      
+      # Assign a default Resource Tracker instance to Thread.current[:scrooge_resource] 
+      # and supplement it with request specific details ( format, action && controller )
+      # after yielding to the app.Flush Thread.current[:scrooge_resource] on completion.
+      #
       def call(env)    
         Scrooge::Base.profile.tracker.track( Thread.scrooge_resource ) do
           begin

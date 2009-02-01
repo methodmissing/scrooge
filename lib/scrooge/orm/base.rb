@@ -4,13 +4,18 @@ module Scrooge
     autoload :ActiveRecord, 'scrooge/orm/active_record'
         
     class Base < Scrooge::Base
+      
+      #
+      #
+      #
+      
       class NotImplemented < StandardError
       end
       
       class << self
         
         def instantiate( orm_signature )
-          orm_instance = Object.module_eval("::Scrooge::Orm::#{orm_signature.to_const}", __FILE__, __LINE__).new
+          orm_instance = "::Scrooge::Orm::#{orm_signature.to_const}".to_const!
           orm_instance.class.install! unless orm_instance.class.installed?
           orm_instance
         end
@@ -45,18 +50,25 @@ module Scrooge
         "scope_to_#{resource.signature}".to_sym
       end          
       
-      def resource_scope_method?( resource )
-        respond_to?( resource_scope_method( resource ) )
+      def resource_scope_method?( resource, klass )
+        klass.respond_to?( resource_scope_method( resource ) )
       end
       
+      # Only track if the current profile is configured for tracking and a tracker
+      # resource is active, iow. we're in the scope of a request.
+      #
       def track?
         profile.track? && resource?
       end
       
+      # Do we have access to Resource Tracker instance ?
+      # 
       def resource?
         !resource().nil?
       end
       
+      # Delegate to Thread.current
+      #
       def resource
         Thread.current[:scrooge_resource]
       end

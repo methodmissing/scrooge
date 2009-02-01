@@ -3,6 +3,9 @@ require 'yaml'
 module Scrooge
   class Profile
     
+    # A Profile for Scrooge that holds configuration, determines if we're tracking or
+    # scoping and provides access to a Tracker, ORM, Storage and Framework instance. 
+    
     class Signature      
     end
     
@@ -72,15 +75,19 @@ module Scrooge
     end
     
     def track!
-      require 'pp'
       if track?
         log "Tracking"
         orm() # force setup
         framework.install_tracking_middleware()
         ::Kernel.at_exit do
+          log "shutdown ..."
           framework.scope!
         end
       end   
+    end
+    
+    def track_or_scope!
+      track? ? track! : scope!
     end
     
     def track?
@@ -92,8 +99,13 @@ module Scrooge
     end
     
     def scope_to!
-      @tracker_instance = framework.from_scope!( @scope )
+      if scope?
+        log "Scope to #{@scope}"
+        @tracker_instance = framework.from_scope!( @scope )
+        framework.install_scope_middleware( tracker )
+      end
     end
+    alias :scope! :scope_to!
     
     def scope?
       !track?

@@ -2,6 +2,8 @@ module Scrooge
   module Framework
     class Rails < Base
       
+      # Look for RAILS_ROOT, ActiveSupport && ActionController constants.
+      
       signature do
         !defined?(RAILS_ROOT).nil?
       end
@@ -60,7 +62,7 @@ module Scrooge
       
       def install_scope_middleware( tracker )
         tracker.resources.each do |resource|
-          tracker.middleware.each do |resource_middleware|
+          resource.middleware.each do |resource_middleware|
             middleware.use( resource_middleware )
           end
         end

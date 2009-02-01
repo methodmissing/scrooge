@@ -17,7 +17,7 @@ module Scrooge
       end
       
       def signature
-        @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}_#{format.to_s}"
+        @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}_#{format.to_s}".gsub( '/', '_' )
       end
       
       def trackable?
@@ -100,8 +100,12 @@ module Scrooge
           if model.is_a?( Scrooge::Tracker::Model )
             model
           else
-            @models.detect{|m| m.model == model } || Scrooge::Tracker::Model.new( model )
+            model_for( model ) || Scrooge::Tracker::Model.new( model )
           end     
+        end
+      
+        def model_for( model )
+          @models.detect{|m| m.model == model }
         end
       
     end

@@ -87,6 +87,35 @@ describe Scrooge::Framework::Base do
     end
   end
   
+  it "should be able to determine if a given scope is defined" do
+    with_rails do
+      @base.stub!(:config).and_return( CONFIG )
+      @base.scope?( 9876543211 ).should equal( false )
+    end
+  end
+  
+  it "should be able to dump the current application tracker to a scope" do
+    with_rails do
+      @base.stub!(:config).and_return( CONFIG )
+      ::Rails.stub!(:env).and_return( "test" )
+      lambda{ @base.to_scope! }.should change( @base.scopes, :size )
+    end
+  end
+  
+  it "should be able to restore a previous scope to the current app tracker" do
+    with_rails do
+      @base.stub!(:config).and_return( CONFIG )
+      ::Rails.stub!(:env).and_return( "test" )
+      @scope = @base.to_scope!
+      lambda{ @base.from_scope!( @scope ) }.should change( Scrooge::Base.profile.tracker, :object_id )     
+    end
+  end  
+  
+  it "should be able to validate previously saved scope signatures" do
+    @base.stub!(:scope?).and_return(false)
+    lambda{ @base.from_scope!( 'undefined' ) }.should raise_error( Scrooge::Framework::Base::InvalidScopeSignature )
+  end
+  
   it "should be able to interact with the framework's Rack middleware" do
     lambda{ @base.middleware }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end

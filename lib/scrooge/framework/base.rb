@@ -42,29 +42,44 @@ module Scrooge
       end        
    
       class << self
-        
+
+        # Per framework signature lookup.
+        #        
         @@signatures = {}
         @@signatures[self.name] = Hash.new( [] )
+        
+        # Support none by default.
+        #
         @@frameworks = []        
                 
+        # Registers a framework signature.
+        #        
         def signature( &block )
           @@signatures[self.name] = signatures << block
         end  
         
+        # 
         def signatures
           @@signatures[self.name] || []
         end
         
+        # All supported frameworks.
+        #
         def frameworks
           @@frameworks
         end
         
+        # Infer the framework Scrooge attaches to in a first yield manner.
+        # A match of all defined signatures is required.
+        #
         def which_framework?
           iterate_frameworks() || raise( NoSupportedFrameworks )
         end
         
+        # Yield an instance of the current framework.
+        #
         def instantiate
-          Object.module_eval("::#{which_framework?()}", __FILE__, __LINE__).new
+          which_framework?().new
         end
         
         private
@@ -129,33 +144,50 @@ module Scrooge
         raise NotImplemented
       end
       
+      # Retrieve all previously persisted scopes tracked with Scrooge. 
+      #
       def scopes
         ensure_scopes_path do
           Dir.entries( scopes_path ).grep(/\d{10}/)
         end
       end
       
+      # Return the scopes storage path for the current framework.
+      #
       def scopes_path
         @profiles_path ||= File.join( config, 'scrooge', 'scopes' )
       end
 
+      # Return the scopes storage path for a given scope and optional filename.
+      #
       def scope_path( scope, filename = nil )
         path = File.join( scopes_path, scope.to_s )
         filename ? File.join( path, filename ) : path
       end
       
+      # Log a message to the logger.
+      #
       def log( message )
         logger.info "[Scrooge] #{message}"
       end
       
+      # Persist the current tracker as scope or restore a previously persisted scope
+      # from a given signature. 
+      #
       def scope!( scope = nil )
         scope ? from_scope!( scope ) : to_scope!()
       end
       
+      # Do we have a valid scope signature ?
+      #
       def scope?( scope )
         scopes.include?( scope.to_s )
       end
       
+      # Restore a previously persisted scope to the current tracker from a given 
+      # signature.Raises Scrooge::Framework::InvalidScopeSignature if the signature
+      # could not be found.
+      #
       def from_scope!( scope )
         if scope?( scope )
           tracker = Scrooge::Tracker::App.new
@@ -166,6 +198,8 @@ module Scrooge
         end  
       end
       
+      # Dump the current tracker to the filesystem.
+      #
       def to_scope!
         scope = Time.now.to_i
         ensure_scope_path( scope ) do
@@ -173,19 +207,24 @@ module Scrooge
             YAML.dump( Scrooge::Base.profile.tracker.marshal_dump, out )
           end
         end
+        scope
       end      
       
       private
        
        def ensure_scope_path( scope ) #:nodoc:
-         FileUtils.makedirs( scope_path( scope ) ) unless File.exist?( scope_path( scope ) )
+         makedir_unless_exist( scope_path( scope ) )
          yield if block_given?  
        end 
        
        def ensure_scopes_path #:nodoc:
-         FileUtils.makedirs( scopes_path ) unless File.exist?( scopes_path )
+         makedir_unless_exist( scopes_path )
          yield if block_given?
        end
+           
+      def makedir_unless_exist( path )
+        FileUtils.makedirs( path ) unless File.exist?( path )
+      end     
                
     end
   end

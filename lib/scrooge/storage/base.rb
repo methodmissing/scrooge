@@ -15,7 +15,7 @@ module Scrooge
       class << self
         
         def instantiate( storage_signature )
-          Object.module_eval("::Scrooge::Storage::#{storage_signature.to_const}", __FILE__, __LINE__).new
+          "::Scrooge::Storage::#{storage_signature.to_const}".to_const!
         end
         
       end    

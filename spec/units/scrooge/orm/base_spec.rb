@@ -37,7 +37,7 @@ describe Scrooge::Orm::Base do
   end
   
   it "should be able to determine if a given scope method has already been defined" do
-    @base.resource_scope_method?( @tracker ).should equal( false )
+    @base.resource_scope_method?( @tracker, @tracker.class ).should equal( false )
   end
   
   it "should be able to infer the current trackable resource" do

@@ -2,6 +2,9 @@ module Scrooge
   module Core
     module Thread
       
+      # Scrooge Resource tracker scoped to the current Thread for threadsafety in
+      # multi-threaded environments.
+      
       def scrooge_resource
         current[:scrooge_resource] ||= Scrooge::Tracker::Resource.new
       end
