@@ -5,7 +5,7 @@ module Scrooge
       # Look for RAILS_ROOT, ActiveSupport && ActionController constants.
       
       signature do
-        !defined?(RAILS_ROOT).nil?
+        defined?(RAILS_ROOT)
       end
       
       signature do
@@ -58,12 +58,16 @@ module Scrooge
         ::Rails.configuration.middleware
       end    
       
+      # Push the Tracking middle ware in the first slot. 
+      #      
       def install_tracking_middleware
         GUARD.synchronize do
           middleware.insert( 0, Scrooge::Middleware::Tracker )        
         end
       end
       
+      # Install per Resource scoping middleware.
+      #
       def install_scope_middleware( tracker )
         GUARD.synchronize do
           tracker.resources.each do |resource|
