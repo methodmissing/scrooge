@@ -51,17 +51,11 @@ module Scrooge
       end
       
       def middleware
-        # Before QueryCache, after MethodOverride
-        # insert_at = ::Rails.configuration.middleware.size - 1
         ::Rails.configuration.middleware
       end    
       
       def install_tracking_middleware
-        #insert_at = ::Rails.configuration.middleware.size - 3
-        middleware.insert( 0, Scrooge::Middleware::Tracker )
-        #middleware.use Scrooge::Middleware::Tracker 
-        #middleware.insert(insert_at, Scrooge::Middleware::WhichResource )         
-        #middleware.insert(insert_at + 2, Scrooge::Middleware::Tracker )         
+        middleware.insert( 0, Scrooge::Middleware::Tracker )        
       end
       
       def install_scope_middleware( tracker )

@@ -22,7 +22,8 @@ module Scrooge
       end
       
       def marshal_load( data )
-        @attributes = Set.new( data[name()] )
+        @model = data.keys.first
+        @attributes = Set.new( data[@model] )
         self
       end
       

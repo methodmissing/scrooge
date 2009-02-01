@@ -49,7 +49,7 @@ module Scrooge
         @action = data[:action]
         @method = data[:method]
         @format = data[:format]
-        @models = data[:models]
+        @models = restored_models( data[:models] )#data[:models]
         self
       end
       
@@ -87,6 +87,13 @@ module Scrooge
       
         def dumped_models #:nodoc:
           @models.to_a.map{|m| m.marshal_dump }
+        end
+        
+        def restored_models( models )
+          models.map do |model|
+            m = model.keys.first # TODO: cleanup
+            Model.new( m ).marshal_load( model )
+          end
         end
         
         def setup_model( model )

@@ -6,7 +6,7 @@ module Scrooge
         module SingletonMethods
                   
           def define_read_method(symbol, attr_name, column)
-            if ::Scrooge::Base.profile.track?
+            if ::Scrooge::Base.profile.orm.track?
               logger.info "[Scrooge] read method #{attr_name.inspect}"
               Thread.scrooge_resource << [self.base_class, attr_name]
             end
@@ -18,7 +18,7 @@ module Scrooge
         module InstanceMethods        
     
           def read_attribute(attr_name)
-            if ::Scrooge::Base.profile.track?
+            if ::Scrooge::Base.profile.orm.track?
               logger.info "[Scrooge] read attribute #{attr_name.inspect}"
               Thread.scrooge_resource << [self.class.base_class, attr_name]
             end
@@ -65,10 +65,12 @@ module Scrooge
       end      
       
       def name( model )
+        model = model.constantize if model.is_a?(String)
         model.base_class.to_s
       end
       
       def table_name( model )
+        model = model.constantize if model.is_a?(String)
         model.table_name
       end
           

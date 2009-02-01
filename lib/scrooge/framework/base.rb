@@ -159,7 +159,7 @@ module Scrooge
       def from_scope!( scope )
         if scope?( scope )
           tracker = Scrooge::Tracker::App.new
-          tracker.marshal_load( YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) ) )#[environment] )
+          tracker.marshal_load( YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) ) )
           tracker
         else
           raise InvalidScopeSignature
