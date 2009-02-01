@@ -3,6 +3,8 @@ module Scrooge
     class Resource < Base
       
       GET = /get/i
+      
+      GUARD = Monitor.new
             
       attr_accessor :controller,
                     :action,
@@ -25,43 +27,47 @@ module Scrooge
       end
       
       def <<( model )
-        if model.is_a?( Array )
-          model, attribute = model
-          model = setup_model( model )
-          model << attribute
-        else
-          model = setup_model( model )
+        GUARD.synchronize do
+          if model.is_a?( Array )
+            model, attribute = model
+            model = setup_model( model )
+            model << attribute
+          else
+            model = setup_model( model )
+          end
+          @models << model
         end
-        @models << model
       end
       
       def marshal_dump
-        { signature => { :controller => @controller,
-                         :action => @action,
-                         :method => @method,
-                         :format => @format,
-                         :models => dumped_models() } }
+        GUARD.synchronize do
+          { signature => { :controller => @controller,
+                           :action => @action,
+                           :method => @method,
+                           :format => @format,
+                           :models => dumped_models() } }
+        end
       end      
       
       def marshal_load( data )
-        data = data.to_a.flatten.last
-        @controller = data[:controller]
-        @action = data[:action]
-        @method = data[:method]
-        @format = data[:format]
-        @models = restored_models( data[:models] )#data[:models]
-        self
-      end
-      
-      def middlewares
-        
+        GUARD.synchronize do
+          data = data.to_a.flatten.last
+          @controller = data[:controller]
+          @action = data[:action]
+          @method = data[:method]
+          @format = data[:format]
+          @models = restored_models( data[:models] )#data[:models]
+          self
+        end  
       end
       
       def middleware
         @middleware ||= begin
-          models.map do |model|
-            middleware_for_model( model )
-          end
+          GUARD.synchronize do
+            models.map do |model|
+              middleware_for_model( model )
+            end
+          end  
         end
       end      
       
@@ -86,22 +92,28 @@ module Scrooge
       private
       
         def dumped_models #:nodoc:
-          @models.to_a.map{|m| m.marshal_dump }
-        end
-        
-        def restored_models( models )
-          models.map do |model|
-            m = model.keys.first # TODO: cleanup
-            Model.new( m ).marshal_load( model )
+          GUARD.synchronize do
+            @models.to_a.map{|m| m.marshal_dump }
           end
         end
         
+        def restored_models( models )
+          GUARD.synchronize do
+            models.map do |model|
+              m = model.keys.first # TODO: cleanup
+              Model.new( m ).marshal_load( model )
+            end
+          end  
+        end
+        
         def setup_model( model )
-          if model.is_a?( Scrooge::Tracker::Model )
-            model
-          else
-            model_for( model ) || Scrooge::Tracker::Model.new( model )
-          end     
+          GUARD.synchronize do
+            if model.is_a?( Scrooge::Tracker::Model )
+              model
+            else
+              model_for( model ) || Scrooge::Tracker::Model.new( model )
+            end
+          end       
         end
       
         def model_for( model )

@@ -2,6 +2,8 @@ module Scrooge
   module Tracker
     class App < Scrooge::Tracker::Base
       
+      GUARD = Monitor.new      
+      
       attr_accessor :resources
       
       def initialize
@@ -10,15 +12,21 @@ module Scrooge
       end
             
       def <<( resource )
-        @resources << setup_resource( resource )
+        GUARD.synchronize do
+          @resources << setup_resource( resource )
+        end
       end
       
       def marshal_dump
-        { environment() => dumped_resources() }
+        GUARD.synchronize do
+          { environment() => dumped_resources() }
+        end
       end
       
       def marshal_load( data )
-        @resources = Set.new( restored_resources( data ) )
+        GUARD.synchronize do
+          @resources = Set.new( restored_resources( data ) )
+        end
         self
       end
       
@@ -34,7 +42,9 @@ module Scrooge
       private
       
         def setup_resource( resource )
-          @resources.detect{|r| r.signature == resource.signature } || resource
+          GUARD.synchronize do
+            resource_for( resource ) || resource
+          end
         end
       
         def environment #:nodoc:
@@ -42,15 +52,23 @@ module Scrooge
         end
       
         def restored_resources( data ) #:nodoc:
-          data[environment()].map do |resource|
-            Resource.new.marshal_load( resource )
+          GUARD.synchronize do
+            data[environment()].map do |resource|
+              Resource.new.marshal_load( resource )
+            end
           end
         end
       
         def dumped_resources #:nodoc:
-          @resources.to_a.map do |resource|
-            resource.marshal_dump
+          GUARD.synchronize do
+            @resources.to_a.map do |resource|
+              resource.marshal_dump
+            end
           end
+        end
+      
+        def resource_for( resource )
+          @resources.detect{|r| r.signature == resource.signature }
         end
       
     end

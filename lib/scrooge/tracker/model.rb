@@ -2,6 +2,8 @@ module Scrooge
   module Tracker
     class Model < Base
       
+      GUARD = Monitor.new
+      
       attr_accessor :model,
                     :attributes 
 
@@ -12,19 +14,25 @@ module Scrooge
       end
    
       def <<( attribute )
-        Array( attribute ).each do |attr|
-          attributes << attr
-        end
+        GUARD.synchronize do
+          Array( attribute ).each do |attr|
+            attributes << attr
+          end
+        end  
       end     
       
       def marshal_dump
-        { name() => @attributes.to_a }
+        GUARD.synchronize do
+          { name() => @attributes.to_a }
+        end
       end
       
       def marshal_load( data )
-        @model = data.keys.first
-        @attributes = Set.new( data[@model] )
-        self
+        GUARD.synchronize do
+          @model = data.keys.first
+          @attributes = Set.new( data[@model] )
+          self
+        end
       end
       
       def name
@@ -36,7 +44,9 @@ module Scrooge
       end
       
       def to_sql
-        @attributes.map{|a| "#{table_name}.#{a.to_s}" }.join(', ')
+        GUARD.synchronize do
+          @attributes.map{|a| "#{table_name}.#{a.to_s}" }.join(', ')
+        end
       end
       
     end
