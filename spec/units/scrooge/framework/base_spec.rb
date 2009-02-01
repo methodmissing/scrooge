@@ -39,6 +39,10 @@ describe Scrooge::Framework::Base do
     lambda{ @base.root }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end  
   
+  it "should be able to setup a resource tracker instance from given status, headers and body" do
+    lambda{ @base.resource( {} ) }.should raise_error( Scrooge::Framework::Base::NotImplemented )
+  end  
+  
   it "should be able to yield it's temp path" do
     lambda{ @base.tmp }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end  
@@ -84,7 +88,7 @@ describe Scrooge::Framework::Base do
   end
   
   it "should be able to interact with the framework's Rack middleware" do
-    lambda{ @base.middleware() }.should raise_error( Scrooge::Framework::Base::NotImplemented )
+    lambda{ @base.middleware }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end
   
   it "should be able to install tracking middleware" do
@@ -95,5 +99,8 @@ describe Scrooge::Framework::Base do
     lambda{ @base.install_scope_middleware( 'tracker' ) }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end  
   
+  it "should be able to register code blocks to run after the framework has been initialized" do
+    lambda{ @base.initialized() }.should raise_error( Scrooge::Framework::Base::NotImplemented )
+  end
   
 end  

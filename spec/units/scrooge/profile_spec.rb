@@ -59,7 +59,7 @@ describe "Scrooge::Profile instance" do
   end 
   
   it "should be able to infer the current scope" do
-    @profile.scope_to.should eql( 1234567891 )
+    @profile.scope_to.should eql( "1234567891" )
   end
     
 end

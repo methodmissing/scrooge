@@ -3,7 +3,7 @@ module Scrooge
     class Rails < Base
       
       signature do
-        defined?(RAILS_ROOT)
+        !defined?(RAILS_ROOT).nil?
       end
       
       signature do
@@ -15,7 +15,7 @@ module Scrooge
       end
       
       def environment
-        ::Rails.env
+        ::Rails.env.to_s
       end
       
       def root
@@ -34,13 +34,12 @@ module Scrooge
         ::Rails.logger
       end
       
-      def resource( app )
-        Scrooge::Tracker::Resource.new do |resource|
-          resource.controller = app.request.path_parameters['controller']
-          resource.action = app.request.path_parameters['action']
-          resource.method = app.request.method
-          resource.format = app.request.format
-        end
+      def resource( env )
+        request = env['action_controller.rescue.request']
+        Thread.scrooge_resource.controller = request.path_parameters['controller']
+        Thread.scrooge_resource.action = request.path_parameters['action']
+        Thread.scrooge_resource.method = request.method
+        Thread.scrooge_resource.format = request.format.to_s        
       end      
       
       def read_cache( key )
@@ -51,20 +50,30 @@ module Scrooge
         ::Rails.cache.write( key, value )
       end
       
-      def middleware( &block )
-        ::ActionController::Dispatcher.middleware.instance_eval do
-          block.call
-        end
+      def middleware
+        # Before QueryCache, after MethodOverride
+        # insert_at = ::Rails.configuration.middleware.size - 1
+        ::Rails.configuration.middleware
       end    
+      
+      def install_tracking_middleware
+        #insert_at = ::Rails.configuration.middleware.size - 3
+        middleware.insert( 0, Scrooge::Middleware::Tracker )
+        #middleware.use Scrooge::Middleware::Tracker 
+        #middleware.insert(insert_at, Scrooge::Middleware::WhichResource )         
+        #middleware.insert(insert_at + 2, Scrooge::Middleware::Tracker )         
+      end
       
       def install_scope_middleware( tracker )
         tracker.resources.each do |resource|
           tracker.middleware.each do |resource_middleware|
-            middleware do
-              use resource_middleware
-            end
+            middleware.use( resource_middleware )
           end
         end
+      end
+      
+      def initialized( &block )
+        ::Rails.configuration.after_initialize( &block )
       end
       
     end

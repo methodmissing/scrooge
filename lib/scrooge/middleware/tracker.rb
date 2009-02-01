@@ -5,19 +5,19 @@ module Scrooge
       def initialize(app, options = {})
         @app = app
       end
-    
-      def call(env)
-        Scrooge::Profile.tracker.track( resource ) do
-          @app.call(env)
+
+      def call(env)    
+        Scrooge::Base.profile.tracker.track( Thread.scrooge_resource ) do
+          begin
+            result = @app.call(env)
+            Scrooge::Base.profile.framework.resource( env )
+            result
+          ensure
+            Thread.reset_scrooge_resource!
+          end
         end
       end
       
-      private
-      
-        def resource
-          Scrooge::Profile.framework.resource( @app )
-        end
-    
     end
   end
 end

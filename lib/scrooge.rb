@@ -1,7 +1,9 @@
 $:.unshift(File.dirname(__FILE__))
 
+require 'yaml'
 require 'scrooge/core/string'
 require 'scrooge/core/symbol'
+require 'scrooge/core/thread'
 
 module Scrooge
   class Base

@@ -10,7 +10,7 @@ module Scrooge
       end
             
       def <<( resource )
-        @resources << resource
+        @resources << setup_resource( resource )
       end
       
       def marshal_dump
@@ -23,19 +23,29 @@ module Scrooge
       end
       
       def track( resource )
-        if profile.track? && resource.trackable?
-          with_tracking( resource ) do
-            yield
-          end
-        else
+        profile.log "Track with resource #{resource.inspect}"
+        begin
           yield
-        end       
+        ensure
+          self << resource
+        end
+        #if profile.track? #&& resource.trackable?
+        #  with_tracking( resource ) do
+        #    yield
+        #  end
+        #else
+        #  yield
+        #end       
       end
       
       private
       
+        def setup_resource( resource )
+          @resources.detect{|r| r.signature == resource.signature } || resource
+        end
+      
         def with_tracking( resource )
-          Thread.current[:scrooge_resource] = resource
+          Thread.current[:scrooge_resource] ||= resource
           yield 
         ensure
           Thread.current[:scrooge_resource] = nil  

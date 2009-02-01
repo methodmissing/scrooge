@@ -10,7 +10,9 @@ module Scrooge
       class << self
         
         def instantiate( orm_signature )
-          Object.module_eval("::Scrooge::Orm::#{orm_signature.to_const}", __FILE__, __LINE__).new
+          orm_instance = Object.module_eval("::Scrooge::Orm::#{orm_signature.to_const}", __FILE__, __LINE__).new
+          orm_instance.class.install! unless orm_instance.class.installed?
+          orm_instance
         end
         
         def install!

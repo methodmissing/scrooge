@@ -93,7 +93,7 @@ module Scrooge
           if model.is_a?( Scrooge::Tracker::Model )
             model
           else
-            Scrooge::Tracker::Model.new( model )
+            @models.detect{|m| m.model == model } || Scrooge::Tracker::Model.new( model )
           end     
         end
       

@@ -37,6 +37,9 @@ module Scrooge
       
       class NoSupportedFrameworks < StandardError
       end
+      
+      class InvalidScopeSignature < StandardError
+      end        
    
       class << self
         
@@ -98,7 +101,7 @@ module Scrooge
         raise NotImplemented
       end
       
-      def resource( app )
+      def resource( env )
         raise NotImplemented
       end
       
@@ -110,7 +113,7 @@ module Scrooge
         raise NotImplemented
       end 
       
-      def middleware( &block )
+      def middleware
         raise NotImplemented
       end
       
@@ -119,6 +122,10 @@ module Scrooge
       end
       
       def install_tracking_middleware
+        raise NotImplemented
+      end
+      
+      def initialized( &block )
         raise NotImplemented
       end
       
@@ -132,11 +139,48 @@ module Scrooge
         @profiles_path ||= File.join( config, 'scrooge', 'scopes' )
       end
 
-      def scope_path( scope )
-        File.join( scopes_path, scope.to_s )
+      def scope_path( scope, filename = nil )
+        path = File.join( scopes_path, scope.to_s )
+        filename ? File.join( path, filename ) : path
       end
       
+      def log( message )
+        logger.info "[Scrooge] #{message}"
+      end
+      
+      def scope!( scope = nil )
+        scope ? from_scope!( scope ) : to_scope!()
+      end
+      
+      def scope?( scope )
+        scopes.include?( scope.to_s )
+      end
+      
+      def from_scope!( scope )
+        if scope?( scope )
+          tracker = Scrooge::Tracker::App.new
+          tracker.marshal_load( YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) ) )#[environment] )
+          tracker
+        else
+          raise InvalidScopeSignature
+        end  
+      end
+      
+      def to_scope!
+        scope = Time.now.to_i
+        ensure_scope_path( scope ) do
+          File.open( scope_path( scope, 'scope.yml' ), 'w' ) do |out|
+            YAML.dump( Scrooge::Base.profile.tracker.marshal_dump, out )
+          end
+        end
+      end      
+      
       private
+       
+       def ensure_scope_path( scope ) #:nodoc:
+         FileUtils.makedirs( scope_path( scope ) ) unless File.exist?( scope_path( scope ) )
+         yield if block_given?  
+       end 
        
        def ensure_scopes_path #:nodoc:
          FileUtils.makedirs( scopes_path ) unless File.exist?( scopes_path )

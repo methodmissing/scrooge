@@ -12,6 +12,10 @@ module Scrooge
         new( YAML.load( IO.read( path ) )[environment.to_s] )
       end
       
+      def setup!
+        setup( File.join( framework.config, 'scrooge.yml' ), framework.environment )
+      end
+      
       def framework
         @@framework ||= Scrooge::Framework::Base.instantiate
       end
@@ -59,16 +63,36 @@ module Scrooge
       self.class.framework
     end
     
+    def log( message )
+      framework.log( message ) rescue ''
+    end
+    
     def tracker
       @tracker_instance ||= Scrooge::Tracker::App.new
     end
     
+    def track!
+      require 'pp'
+      if track?
+        log "Tracking"
+        orm() # force setup
+        framework.install_tracking_middleware()
+        ::Kernel.at_exit do
+          framework.scope!
+        end
+      end   
+    end
+    
     def track?
-      @scope.nil?
+      @track ||= (@scope || '').match( /\d{10}/ ).nil?
     end
     
     def scope_to
       @scope
+    end
+    
+    def scope_to!
+      @tracker_instance = framework.from_scope!( @scope )
     end
     
     def scope?
@@ -82,7 +106,7 @@ module Scrooge
         @storage = @options['storage'] || :memory
         @buffer_threshold = @options['buffer_threshold'] || 0
         @warmup_threshold = @options['warmup_threshold'] || 0  
-        @scope = @options['scope'] || nil
+        @scope = @options['scope'].to_s || nil
       end        
                   
   end
