@@ -9,11 +9,15 @@ module Scrooge
       end
       
       def read( tracker )
-        @storage[tracker.signature]
+        GUARD.synchronize do
+          @storage[tracker.signature]
+        end
       end
                   
       def write( tracker, buffered = true )
-        @storage[tracker.signature] = tracker
+        GUARD.synchronize do
+          @storage[tracker.signature] = tracker
+        end
       end
       
     end

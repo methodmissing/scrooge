@@ -32,6 +32,9 @@ module Scrooge
     autoload :Rails, 'scrooge/framework/rails'
     
     class Base < Scrooge::Base
+      
+      GUARD = Mutex.new
+      
       class NotImplemented < StandardError
       end
       
@@ -149,7 +152,7 @@ module Scrooge
       def scopes
         ensure_scopes_path do
           Dir.entries( scopes_path ).grep(/\d{10}/)
-        end
+        end  
       end
       
       # Return the scopes storage path for the current framework.
@@ -189,25 +192,29 @@ module Scrooge
       # could not be found.
       #
       def from_scope!( scope )
-        if scope?( scope )
-          tracker = Scrooge::Tracker::App.new
-          tracker.marshal_load( YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) ) )
-          tracker
-        else
-          raise InvalidScopeSignature
-        end  
+        GUARD.synchronize do
+          if scope?( scope )
+            tracker = Scrooge::Tracker::App.new
+            tracker.marshal_load( YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) ) )
+            tracker
+          else
+            raise InvalidScopeSignature
+          end
+        end    
       end
       
       # Dump the current tracker to the filesystem.
       #
       def to_scope!
-        scope = Time.now.to_i
-        ensure_scope_path( scope ) do
-          File.open( scope_path( scope, 'scope.yml' ), 'w' ) do |out|
-            YAML.dump( Scrooge::Base.profile.tracker.marshal_dump, out )
+        GUARD.synchronize do
+          scope = Time.now.to_i
+          ensure_scope_path( scope ) do
+            File.open( scope_path( scope, 'scope.yml' ), 'w' ) do |out|
+              YAML.dump( Scrooge::Base.profile.tracker.marshal_dump, out )
+            end
           end
-        end
-        scope
+          scope
+        end  
       end      
       
       private

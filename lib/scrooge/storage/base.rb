@@ -10,6 +10,10 @@ module Scrooge
       class NotImplemented < StandardError
       end 
       
+      # A Single Mutex for all Storage subclasses as their's only one storage instance.
+      #
+      GUARD = Mutex.new
+      
       NAMESPACE = 'scrooge_storage'.freeze 
           
       class << self

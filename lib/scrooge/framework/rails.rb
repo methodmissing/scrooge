@@ -37,11 +37,13 @@ module Scrooge
       end
       
       def resource( env )
-        request = env['action_controller.rescue.request']
-        Thread.scrooge_resource.controller = request.path_parameters['controller']
-        Thread.scrooge_resource.action = request.path_parameters['action']
-        Thread.scrooge_resource.method = request.method
-        Thread.scrooge_resource.format = request.format.to_s        
+        GUARD.synchronize do
+          request = env['action_controller.rescue.request']
+          Thread.scrooge_resource.controller = request.path_parameters['controller']
+          Thread.scrooge_resource.action = request.path_parameters['action']
+          Thread.scrooge_resource.method = request.method
+          Thread.scrooge_resource.format = request.format.to_s        
+        end
       end      
       
       def read_cache( key )
@@ -57,15 +59,19 @@ module Scrooge
       end    
       
       def install_tracking_middleware
-        middleware.insert( 0, Scrooge::Middleware::Tracker )        
+        GUARD.synchronize do
+          middleware.insert( 0, Scrooge::Middleware::Tracker )        
+        end
       end
       
       def install_scope_middleware( tracker )
-        tracker.resources.each do |resource|
-          resource.middleware.each do |resource_middleware|
-            middleware.use( resource_middleware )
+        GUARD.synchronize do
+          tracker.resources.each do |resource|
+            resource.middleware.each do |resource_middleware|
+              middleware.use( resource_middleware )
+            end
           end
-        end
+        end  
       end
       
       def initialized( &block )

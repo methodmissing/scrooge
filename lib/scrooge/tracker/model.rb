@@ -21,13 +21,13 @@ module Scrooge
         end  
       end     
       
-      def marshal_dump
+      def marshal_dump #:nodoc:
         GUARD.synchronize do
           { name() => @attributes.to_a }
         end
       end
       
-      def marshal_load( data )
+      def marshal_load( data ) #:nodoc:
         GUARD.synchronize do
           @model = data.keys.first
           @attributes = Set.new( data[@model] )

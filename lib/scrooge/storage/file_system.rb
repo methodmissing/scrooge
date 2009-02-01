@@ -7,21 +7,25 @@ module Scrooge
       end  
   
       def read( tracker )
-        begin
-          File.open( tracker_file( tracker ), 'rb') {|t| Marshal.load(t) }
-        rescue => exception
-          profile.framework.logger.error "Scrooge: Could not read storage entry #{tracker.key} (#{exception.to_s})"
-        end
+        GUARD.synchronize do
+          begin
+            File.open( tracker_file( tracker ), 'rb') {|t| Marshal.load(t) }
+          rescue => exception
+            profile.framework.logger.error "Scrooge: Could not read storage entry #{tracker.key} (#{exception.to_s})"
+          end
+        end  
       end      
       
       def write( tracker, buffered = true )
-        begin
-          ensure_tracker_path( tracker ) do
-            File.open( tracker_file( tracker ), 'w') {|t| Marshal.dump( tracker, t ) }
+        GUARD.synchronize do
+          begin
+            ensure_tracker_path( tracker ) do
+              File.open( tracker_file( tracker ), 'w') {|t| Marshal.dump( tracker, t ) }
+            end
+          rescue => exception
+            profile.framework.logger.error "Scrooge: Could not write storage entry #{tracker.key} (#{exception.to_s})"
           end
-        rescue => exception
-          profile.framework.logger.error "Scrooge: Could not write storage entry #{tracker.key} (#{exception.to_s})"
-        end
+        end  
       end  
       
       def tracker_file( tracker )

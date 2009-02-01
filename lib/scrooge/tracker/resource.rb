@@ -39,7 +39,7 @@ module Scrooge
         end
       end
       
-      def marshal_dump
+      def marshal_dump #:nodoc:
         GUARD.synchronize do
           { signature => { :controller => @controller,
                            :action => @action,
@@ -49,14 +49,14 @@ module Scrooge
         end
       end      
       
-      def marshal_load( data )
+      def marshal_load( data ) #:nodoc:
         GUARD.synchronize do
           data = data.to_a.flatten.last
           @controller = data[:controller]
           @action = data[:action]
           @method = data[:method]
           @format = data[:format]
-          @models = restored_models( data[:models] )#data[:models]
+          @models = restored_models( data[:models] )
           self
         end  
       end
@@ -106,7 +106,7 @@ module Scrooge
           end  
         end
         
-        def setup_model( model )
+        def setup_model( model ) #:nodoc:
           GUARD.synchronize do
             if model.is_a?( Scrooge::Tracker::Model )
               model
@@ -116,7 +116,7 @@ module Scrooge
           end       
         end
       
-        def model_for( model )
+        def model_for( model ) #:nodoc:
           @models.detect{|m| m.model == model }
         end
       

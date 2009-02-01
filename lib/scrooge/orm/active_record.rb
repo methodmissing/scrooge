@@ -64,11 +64,10 @@ module Scrooge
       end
       
       # Generate scope helpers for a given model and resource.
-      # We continuously 
       #
       def scope_resource_to_model( resource, model )
         method_name = resource_scope_method( resource )
-        klass = model.model.to_const if model.model.is_a?(String)
+        klass = model.model.to_const!(false) if model.model.is_a?(String)
         unless resource_scope_method?( resource, klass ) 
           klass.instance_eval(<<-EOS, __FILE__, __LINE__)
             def #{method_name}(&block)
@@ -83,14 +82,14 @@ module Scrooge
       # Returns a lookup key from a given String or AR klass 
       #
       def name( model )
-        model = model.to_const! if model.is_a?(String)
+        model = model.to_const!(false) if model.is_a?(String)
         model.base_class.to_s
       end
       
       # Returns a table name from a given String or AR klass 
       #
       def table_name( model )
-        model = model.to_const! if model.is_a?(String)
+        model = model.to_const!(false) if model.is_a?(String)
         model.table_name
       end
       

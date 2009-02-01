@@ -2,6 +2,8 @@ module Scrooge
   module Storage
     module Buffer
       
+      GUARD = Mutex.new
+      
       attr_accessor :storage_buffer,
                     :buffered_at
       
@@ -10,23 +12,29 @@ module Scrooge
       end
       
       def buffered_at
-        @buffered_at ||= Time.now.to_i
+        GUARD.synchronize do
+          @buffered_at ||= Time.now.to_i
+        end
       end
       
       def read( tracker )
-        with_read_buffer( tracker ) do
-          super( tracker )
-        end
+        GUARD.synchronize do
+          with_read_buffer( tracker ) do
+            super( tracker )
+          end
+        end  
       end      
             
       def write( tracker, buffered = true )
-        if buffered
-          with_write_buffer( tracker ) do
+        GUARD.synchronize do
+          if buffered
+            with_write_buffer( tracker ) do
+              super( tracker, buffered )
+            end
+          else
             super( tracker, buffered )
           end
-        else
-          super( tracker, buffered )
-        end       
+        end         
       end      
       
       def buffer?
@@ -38,7 +46,7 @@ module Scrooge
           ( buffered_at + profile.buffer_threshold ) < Time.now.to_i
         else
           false
-        end  
+        end
       end      
 
       def buffer( tracker )
@@ -46,10 +54,12 @@ module Scrooge
       end
       
       def flush!
-        while( !storage_buffer.empty? ) do
-          write( storage_buffer.shift.last, false )
+        GUARD.synchronize do
+          while( !storage_buffer.empty? ) do
+            write( storage_buffer.shift.last, false )
+          end
+          buffered_at = Time.now.to_i
         end
-        buffered_at = Time.now.to_i
       end
       
       private

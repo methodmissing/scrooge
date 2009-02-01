@@ -10,6 +10,8 @@ module Scrooge
     class Base < Scrooge::Base
       include Comparable      
       
+      # Scrooge Tracker base class.
+      
       class NotImplemented < StandardError
       end
       
@@ -23,14 +25,20 @@ module Scrooge
         @counter  
       end
       
+      # Requires subclasses to implement a custom marshal_dump
+      #
       def marshal_dump
         raise NotImplemented
       end
-      
+
+      # Requires subclasses to implement a custom marshal_load
+      #      
       def marshal_load( data )
         raise NotImplemented
       end
       
+      # Compare trackers through their Marshal representations.
+      #
       def ==( tracker )
         compare_to( tracker )
       end

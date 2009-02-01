@@ -5,7 +5,7 @@ module Scrooge
         
     class Base < Scrooge::Base
       
-      #
+      # 
       #
       #
       
