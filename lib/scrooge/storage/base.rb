@@ -1,6 +1,7 @@
 module Scrooge
   module Storage
-    
+
+    autoload :Lookup, 'scrooge/storage/lookup'    
     autoload :Buffer, 'scrooge/storage/buffer'
     autoload :FileSystem, 'scrooge/storage/file_system'
     autoload :Memory, 'scrooge/storage/memory'
@@ -49,6 +50,22 @@ module Scrooge
       def expand_key( key )
         "#{NAMESPACE}/#{key}"
       end      
+      
+      # Commit a given tracker to the storage backend and register it's signature at
+      # central lookup.
+      #
+      def <<( tracker )
+        register_with_lookup!( tracker )
+        write( tracker )
+      end
+      
+      private
+      
+        def register_with_lookup!( tracker ) #:nodoc:
+          lookup = unbuffered_read( Scrooge::Storage::Lookup::KEY ) || Scrooge::Storage::Lookup.new
+          lookup << tracker
+          unbuffered_write( lookup )
+        end
       
     end
   end

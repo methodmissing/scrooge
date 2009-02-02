@@ -32,12 +32,14 @@ module Scrooge
         end  
       end  
       
-      # Returns the path to a given 
+      # Returns the file path to a given tracker instance
       #
       def tracker_file( tracker )
         File.join( tracker_path( tracker ), 'scrooge' )
       end
     
+      # Returns the directory path to a given tracker instance
+      #       
       def tracker_path( tracker )
         File.join( profile.framework.tmp, tracker.signature )
       end      

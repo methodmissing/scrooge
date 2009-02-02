@@ -64,4 +64,11 @@ describe Scrooge::Storage::Base do
     @base.storage_buffer.should be_empty
   end
   
+  it "should be able to commit a tracker to commit a tracker to storage and register it with centralized lookup" do
+    @base.stub!(:unbuffered_read).and_return(nil)  
+    @base.stub!(:unbuffered_write).and_return(@tracker)      
+    @base.stub!(:write).and_return(@tracker)
+    ( @base << @tracker ).should eql( @tracker )
+  end
+  
 end  

@@ -17,6 +17,7 @@ module Scrooge
             Scrooge::Base.profile.framework.resource( env )
             result
           ensure
+            Scrooge::Base.profile.storage << Thread.scrooge_resource
             Thread.reset_scrooge_resource!
           end
         end

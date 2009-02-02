@@ -7,6 +7,13 @@ module Scrooge
       attr_accessor :storage_buffer,
                     :buffer_flushed_at
       
+      def self.extended( klass )
+        klass.instance_eval do
+          alias :unbuffered_write :write
+          alias :unbuffered_read :read
+        end        
+      end
+      
       # Initialize with an empty storage buffer.
       #
       def storage_buffer 
