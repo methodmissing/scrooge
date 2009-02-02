@@ -13,12 +13,16 @@ module Scrooge
         @attributes = Set.new 
       end
 
+      # Has any Attributes been tracked ? 
+      #
       def any?
         GUARD.synchronize do
           !@attributes.empty?
         end  
       end
    
+      # Add a Model attribute to this tracker.
+      #
       def <<( attribute )
         GUARD.synchronize do
           Array( attribute ).each do |attr|
@@ -41,14 +45,20 @@ module Scrooge
         end
       end
       
+      # Memoize the name lookup.
+      #
       def name
         @name ||= profile.orm.name( @model )
       end
       
+      # Memoize the table name lookup.
+      #
       def table_name
         @table_name ||= profile.orm.table_name( @model )
       end
       
+      # Dump to a SQL SELECT snippet.
+      #
       def to_sql
         GUARD.synchronize do
           @attributes.map{|a| "#{table_name}.#{a.to_s}" }.join(', ')

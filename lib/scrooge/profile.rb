@@ -151,6 +151,8 @@ module Scrooge
         memoize_backends!
       end        
       
+      # Force constant lookups as autoload is not threadsafe.
+      #
       def memoize_backends! #:nodoc:
         framework()
         orm()

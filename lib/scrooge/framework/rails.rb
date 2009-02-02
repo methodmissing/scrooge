@@ -38,6 +38,7 @@ module Scrooge
       
       def resource( env )
         GUARD.synchronize do
+          # TODO: Wonky practice to piggy back on this current Edge / 2.3 hack
           request = env['action_controller.rescue.request']
           Thread.scrooge_resource.controller = request.path_parameters['controller']
           Thread.scrooge_resource.action = request.path_parameters['action']

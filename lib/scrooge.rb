@@ -8,14 +8,24 @@ require 'scrooge/core/thread'
 module Scrooge
   class Base
     
+    GUARD = Mutex.new
+    
     class << self
       
+      # Active Profile reader
+      #
       def profile
-        @@profile ||= Scrooge::Profile.new
+        GUARD.synchronize do
+          @@profile ||= Scrooge::Profile.new
+        end
       end
       
+      # Active Profile writer.
+      #
       def profile=( profile )
-        @@profile = profile
+        GUARD.synchronize do
+          @@profile = profile
+        end
       end
       
     end

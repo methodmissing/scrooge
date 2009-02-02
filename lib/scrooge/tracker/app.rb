@@ -13,6 +13,8 @@ module Scrooge
         @resources = Set.new
       end
       
+      # Has any Resources been tracked ? 
+      #
       def any?
         GUARD.synchronize do
           !@resources.empty?
@@ -40,6 +42,8 @@ module Scrooge
         self
       end
       
+      # Track a given Resource.
+      #
       def track( resource )
         profile.log "Track with resource #{resource.inspect}"
         begin

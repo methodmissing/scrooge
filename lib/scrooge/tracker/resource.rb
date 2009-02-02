@@ -2,6 +2,16 @@ module Scrooge
   module Tracker
     class Resource < Base
       
+      # A Resource tracker is scoped to a
+      #
+      # * controller
+      # * action
+      # * request method
+      # * content type
+      #
+      # and is a container for any Models referenced during the active
+      # request / response cycle.
+      
       GET = /get/i
       
       GUARD = Monitor.new
@@ -18,20 +28,28 @@ module Scrooge
         yield self if block_given?
       end
 
+      # Has any Models been tracked ? 
+      #
       def any?
         GUARD.synchronize do
           !@models.empty?
         end  
       end
       
+      # Generates a signature / lookup key.
+      #
       def signature
         @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}_#{format.to_s}".gsub( '/', '_' )
       end
       
+      # Only track GET requests
+      #
       def trackable?
         !( method || '' ).to_s.match( GET ).nil?
       end
       
+      # Add a Model to this resource.
+      #
       def <<( model )
         GUARD.synchronize do
           if model.is_a?( Array )
@@ -67,6 +85,9 @@ module Scrooge
         end  
       end
       
+      # Yields a collection of Rack middleware to scope Model attributes to the
+      # tracked dataset.
+      #
       def middleware
         @middleware ||= begin
           GUARD.synchronize do
@@ -77,6 +98,8 @@ module Scrooge
         end
       end      
       
+      # Return a valid Rack middleware instance for a given model.
+      #
       def middleware_for_model( model )
         resource = self  
         profile.orm.scope_resource_to_model( resource, model )
@@ -103,7 +126,7 @@ module Scrooge
           end
         end
         
-        def restored_models( models )
+        def restored_models( models ) #:nodoc:
           GUARD.synchronize do
             models.map do |model|
               m = model.keys.first # TODO: cleanup
