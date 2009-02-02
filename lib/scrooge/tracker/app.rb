@@ -53,6 +53,14 @@ module Scrooge
         end     
       end
       
+      def inspect #:nodoc:
+        if any?
+          @resources.map{|r| r.inspect }.join( "\n\n" )
+        else
+          super
+        end  
+      end
+      
       private
       
         def setup_resource( resource ) #:nodoc:

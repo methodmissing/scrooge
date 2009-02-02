@@ -70,4 +70,11 @@ describe Scrooge::Tracker::Resource do
     @resource.middleware().first.new( @model ).should respond_to( :call )
   end
   
+  it "should implemented a custom Object#inspect" do
+    @resource << @model
+    @resource.inspect().should match( /GET/ )
+    @resource.inspect().should match( /products/ )
+    @resource.inspect().should match( /Product/ )
+  end  
+  
 end

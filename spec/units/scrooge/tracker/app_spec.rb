@@ -44,11 +44,17 @@ describe Scrooge::Tracker::App do
     end  
   end
 
-  specify "should be able to compare itself to other app trackers" do
+  it "should be able to compare itself to other app trackers" do
     with_rails do
       ::Rails.stub!(:env).and_return( 'test' )
       @app.should eql( @app )
     end  
+  end
+  
+  it "should implemented a custom Object#inspect" do  
+    @app << @resource
+    @app.inspect().should match( /GET/ )  
+    @app.inspect().should match( /products/ )
   end
   
 end

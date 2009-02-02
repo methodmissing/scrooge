@@ -118,7 +118,15 @@ module Scrooge
         klass
       end
       
+      def inspect #:nodoc:
+        "#<#{@method.to_s.upcase} :#{@controller}/#{@action} #{@content_type}\n#{models_for_inspect()}"
+      end
+      
       private
+      
+        def models_for_inspect #:nodoc:
+          models.map{|m| " - #{m.inspect}" }.join( "\n" )
+        end
       
         def dumped_models #:nodoc:
           GUARD.synchronize do

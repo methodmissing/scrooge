@@ -35,9 +35,15 @@ describe Scrooge::Tracker::Model do
     @model.to_sql().should eql( "products.price, products.description, products.name" )
   end
   
-  specify "should be able to compare itself to other model trackers" do
+  it "should be able to compare itself to other model trackers" do
     @model << [:name, :description, :price]
     @model.should eql( @model )
+  end
+  
+  it "should implemented a custom Object#inspect" do
+    @model << [:name, :description]
+    @model.inspect().should match( /Product/ )
+    @model.inspect().should match( /:name/ )
   end
   
 end

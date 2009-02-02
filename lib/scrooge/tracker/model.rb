@@ -65,6 +65,16 @@ module Scrooge
         end
       end
       
+      def inspect #:nodoc:
+        "#<#{name()} #{attributes_for_inspect}>"
+      end
+      
+      private
+       
+        def attributes_for_inspect #:nodoc:
+          @attributes.map{|a| ":#{a}" }.join(', ')
+        end
+      
     end
   end
 end
