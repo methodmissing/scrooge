@@ -132,4 +132,11 @@ describe Scrooge::Framework::Base do
     lambda{ @base.initialized() }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end
   
+  it "should be able to return a full path to the scrooge configuration file" do
+    with_rails do
+      @base.stub!(:config).and_return( CONFIG )
+      @base.configuration_file.should match( /scrooge.yml/ )
+    end
+  end
+  
 end  

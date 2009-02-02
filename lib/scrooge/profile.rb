@@ -21,7 +21,7 @@ module Scrooge
       # Pairs profile setup with the host framework.
       #
       def setup!
-        setup( File.join( framework.config, 'scrooge.yml' ), framework.environment )
+        setup( framework.configuration_file, framework.environment )
       end
       
       # Yields an instance to a wrapper of the host framework.

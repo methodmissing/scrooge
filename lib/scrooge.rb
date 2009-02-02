@@ -1,6 +1,7 @@
 $:.unshift(File.dirname(__FILE__))
 
 require 'yaml'
+require 'fileutils'
 require 'scrooge/core/string'
 require 'scrooge/core/symbol'
 require 'scrooge/core/thread'
@@ -27,6 +28,21 @@ module Scrooge
           @@profile = profile
         end
       end
+      
+      # Installs a YAML configuration template in the host framework's config
+      # directory.
+      #
+      def setup!
+        unless File.exist?( profile.framework.configuration_file )
+          FileUtils.cp( configuration_template(), profile.framework.configuration_file )
+        end  
+      end
+      
+      private
+      
+        def configuration_template #:nodoc:
+          File.join( File.dirname(__FILE__), '..', 'assets', 'config', 'scrooge.yml.template' )
+        end
       
     end
     

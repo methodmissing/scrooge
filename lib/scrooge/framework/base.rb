@@ -243,6 +243,12 @@ module Scrooge
         end  
       end      
       
+      # Full path the scrooge configuration file.
+      #
+      def configuration_file
+        @configuration_file ||= File.join( config, 'scrooge.yml' )
+      end
+      
       private
        
        def scope_from_yaml( scope ) #:nodoc:

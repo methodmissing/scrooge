@@ -17,3 +17,10 @@ Spec::Rake::SpecTask.new do |t|
   t.spec_files = FileList['spec/**/*_spec.rb']
   t.spec_opts << "-c"
 end
+
+namespace :scrooge do
+  desc "Copies over the example scrooge.yml file to the host framework's configuration directory"
+  task :setup do
+    Scrooge::Base.setup!
+  end  
+end  
