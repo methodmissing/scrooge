@@ -2,18 +2,14 @@ module Scrooge
   module Framework
     class Rails < Base
       
-      # Look for RAILS_ROOT, ActiveSupport && ActionController constants.
+      # Look for RAILS_ROOT and Rails.
       
       signature do
         defined?(RAILS_ROOT)
       end
       
       signature do
-        Object.const_defined?( "ActiveSupport" )
-      end
-
-      signature do
-        Object.const_defined?( "ActionController" )
+        Object.const_defined?( "Rails" )
       end
       
       def environment

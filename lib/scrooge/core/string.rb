@@ -12,8 +12,12 @@ module Scrooge
       end
       
       def to_const!( instantiate = true )
-        const = Object.module_eval(to_const, __FILE__, __LINE__)
-        instantiate ? const.new : const
+        begin
+          const = Object.module_eval(to_const, __FILE__, __LINE__)
+          instantiate ? const.new : const
+        rescue => exception 
+           exception.to_s.match(/uninitialized constant/) ? self : raise
+        end
       end
          
     end

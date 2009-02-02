@@ -125,11 +125,15 @@ module Scrooge
       end   
     end  
     
+    def scope_to_signature!( scope_signature )
+      log "Scope to #{scope_signature}"
+      @tracker_instance = framework.from_scope!( scope_signature )
+    end
+    
     def scope_to!
       if scope?
-        log "Scope to #{@scope}"
-        @tracker_instance = framework.from_scope!( @scope )
-        framework.install_scope_middleware( tracker )
+        scope_to_signature!( @scope )
+        framework.install_scope_middleware( tracker )        
       end
     end
     alias :scope! :scope_to!

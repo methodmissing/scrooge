@@ -83,7 +83,7 @@ module Scrooge
       #
       def name( model )
         model = model.to_const!(false) if model.is_a?(String)
-        model.base_class.to_s
+        model.respond_to?(:base_class) ? model.base_class.to_s : model.to_s
       end
       
       # Returns a table name from a given String or AR klass 

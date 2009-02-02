@@ -119,7 +119,7 @@ module Scrooge
       end
       
       def inspect #:nodoc:
-        "#<#{@method.to_s.upcase} :#{@controller}/#{@action} #{@content_type}\n#{models_for_inspect()}"
+        "#<#{@method.to_s.upcase} :#{@controller}/#{@action} (#{@format})\n#{models_for_inspect()}"
       end
       
       private
