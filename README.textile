@@ -5,6 +5,6 @@ Ruby applications only fetch the database content needed to minimize wire traffi
 and reduce conversion overheads to native Ruby types.
 
 This is mostly an experiment into unobtrusive tracking, respecting development workflows
-and  
+and understanding Rack internals better. 
 
 h2. !! Work in progress - ship early, ship often !!  
