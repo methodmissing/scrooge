@@ -1,18 +1,12 @@
 production:
   orm: 'active_record'
-  storage: 'cache'
-  buffer_threshold: 60
-  warmup_threshold: 3600
+  storage: 'memory'
   scope:    
 development:
   orm: 'active_record'
   storage: 'memory'
-  buffer_threshold: 20
-  warmup_threshold: 1800
   scope: 
 test:
   orm: 'active_record'
-  storage: 'memory'
-  buffer_threshold: 0
-  warmup_threshold: 0  
+  storage: 'memory'  
   scope:

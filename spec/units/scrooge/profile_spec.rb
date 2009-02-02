@@ -19,22 +19,6 @@ describe "Scrooge::Profile instance" do
     @profile = Scrooge::Profile.setup( File.join( FIXTURES, 'config', 'scrooge.yml' ), :production )
   end  
   
-  it "should be able to determine if a warmup is desireable" do
-    @profile.should be_warmed_up
-  end
-  
-  it "should be able to determine if storage should be buffered" do
-    @profile.should be_buffered
-  end  
-  
-  it "should return a valid warmup threshold" do
-    @profile.warmup_threshold.should eql(300)
-  end
-  
-  it "should return a valid buffer threshold" do
-    @profile.buffer_threshold.should eql(60)
-  end  
-  
   it "should return a valid ORM instance" do
     @profile.orm.class.should equal( Scrooge::Orm::ActiveRecord )
   end

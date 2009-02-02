@@ -43,33 +43,7 @@ module Scrooge
     def options=( options )
       @options = options
       configure!
-    end
-    
-    # Should we do a warmup ?
-    #
-    def warmup?
-      warmup_threshold != 0  
-    end
-    alias :warmed_up? :warmup?              
-    
-    # Should the tracking phase be buffered ?
-    #     
-    def buffer?
-      buffer_threshold != 0   
-    end     
-    alias :buffered? :buffer?
-    
-    # Buffer threshold in seconds, if any.
-    #    
-    def buffer_threshold
-      @buffer_threshold.to_i
-    end
-    
-    # Warmup threshold, in seconds, if any.
-    #
-    def warmup_threshold
-      @warmup_threshold.to_i
-    end    
+    end  
     
     # Delegates to the underlying ORM framework.
     #
@@ -149,8 +123,6 @@ module Scrooge
       def configure! #:nodoc:
         @orm = @options['orm'] || :active_record
         @storage = @options['storage'] || :memory
-        @buffer_threshold = @options['buffer_threshold'] || 0
-        @warmup_threshold = @options['warmup_threshold'] || 0  
         @scope = @options['scope'].to_s || nil
         memoize_backends!
       end        

@@ -31,7 +31,7 @@ module Scrooge
       
       def marshal_dump #:nodoc:
         GUARD.synchronize do
-          { environment() => dumped_resources() }
+          dumped_resources()
         end
       end
       
@@ -75,7 +75,7 @@ module Scrooge
       
         def restored_resources( data ) #:nodoc:
           GUARD.synchronize do
-            data[environment()].map do |resource|
+            data.map do |resource|
               Resource.new.marshal_load( resource )
             end
           end
