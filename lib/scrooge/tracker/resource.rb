@@ -17,6 +17,12 @@ module Scrooge
         @models = Set.new
         yield self if block_given?
       end
+
+      def any?
+        GUARD.synchronize do
+          !@models.empty?
+        end  
+      end
       
       def signature
         @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}_#{format.to_s}".gsub( '/', '_' )

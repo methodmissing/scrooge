@@ -5,18 +5,24 @@ module Scrooge
       GUARD = Mutex.new
       
       attr_accessor :storage_buffer,
-                    :buffered_at
+                    :buffer_flushed_at
       
+      # Initialize with an empty storage buffer.
+      #
       def storage_buffer 
         @storage_buffer ||= {}
       end
       
-      def buffered_at
+      # Calculate when the buffer was last flushed.
+      #
+      def buffer_flushed_at
         GUARD.synchronize do
-          @buffered_at ||= Time.now.to_i
+          @buffer_flushed_at ||= Time.now.to_i
         end
       end
       
+      # Buffered read.
+      #
       def read( tracker )
         GUARD.synchronize do
           with_read_buffer( tracker ) do
@@ -24,7 +30,9 @@ module Scrooge
           end
         end  
       end      
-            
+      
+      # Buffered write.
+      #      
       def write( tracker, buffered = true )
         GUARD.synchronize do
           if buffered
@@ -37,28 +45,35 @@ module Scrooge
         end         
       end      
       
+      # Determine if we should buffer at all. 
+      #
       def buffer?
         profile.buffer?  
       end 
       
+      # Determine if the buffer should be flushed.
+      #
       def flush_buffer?
         if buffer?
-          ( buffered_at + profile.buffer_threshold ) < Time.now.to_i
+          ( buffer_flushed_at + profile.buffer_threshold ) < Time.now.to_i
         else
           false
         end
       end      
 
+      # Buffers a given tracker instance.
+      #
       def buffer( tracker )
         storage_buffer[tracker.signature] = tracker
       end
       
+      # Flush the current buffer.
       def flush!
         GUARD.synchronize do
           while( !storage_buffer.empty? ) do
             write( storage_buffer.shift.last, false )
           end
-          buffered_at = Time.now.to_i
+          buffer_flushed_at = Time.now.to_i
         end
       end
       

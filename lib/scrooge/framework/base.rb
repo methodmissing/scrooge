@@ -61,7 +61,8 @@ module Scrooge
           @@signatures[self.name] = signatures << block
         end  
         
-        # 
+        # All signatures for the current klass. 
+        #
         def signatures
           @@signatures[self.name] || []
         end
@@ -99,50 +100,75 @@ module Scrooge
                         
       end
       
+      # The framework environment eg. test, development etc.
+      #
       def environment
         raise NotImplemented
       end
       
+      # Application root directory
+      #
       def root
         raise NotImplemented  
       end
       
+      # Application temp. directory
+      #
       def tmp
         raise NotImplemented
       end      
       
+      # Application configuration directory
+      #
       def config
         raise NotImplemented
       end
       
+      # Application logger instance.
+      # API compat with stdlib Logger assumed.
+      #
       def logger
         raise NotImplemented
       end
       
+      # Supplement the current Resource tracker with additional environment context. 
+      #
       def resource( env )
         raise NotImplemented
       end
       
+      # Write to the framework cache.
+      #
       def write_cache( key, value )
         raise NotImplemented
       end
       
+      # Read from the framework cache.
+      #
       def read_cache( key )
         raise NotImplemented
       end 
       
+      # Access to the framework's Rack middleware stack.
+      #
       def middleware
         raise NotImplemented
       end
       
+      # Inject scoping middleware. 
+      #
       def install_scope_middleware( tracker )
         raise NotImplemented
       end
       
+      # Inject tracking middleware.
+      #
       def install_tracking_middleware
         raise NotImplemented
       end
       
+      # Register a code block to run when the host framework is fully initialized.
+      #
       def initialized( &block )
         raise NotImplemented
       end
@@ -195,7 +221,7 @@ module Scrooge
         GUARD.synchronize do
           if scope?( scope )
             tracker = Scrooge::Tracker::App.new
-            tracker.marshal_load( YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) ) )
+            tracker.marshal_load( scope_from_yaml( scope ) )
             tracker
           else
             raise InvalidScopeSignature
@@ -209,8 +235,8 @@ module Scrooge
         GUARD.synchronize do
           scope = Time.now.to_i
           ensure_scope_path( scope ) do
-            File.open( scope_path( scope, 'scope.yml' ), 'w' ) do |out|
-              YAML.dump( Scrooge::Base.profile.tracker.marshal_dump, out )
+            File.open( scope_path( scope, 'scope.yml' ), 'w' ) do |io|
+              scope_to_yaml( io )
             end
           end
           scope
@@ -218,6 +244,14 @@ module Scrooge
       end      
       
       private
+       
+       def scope_from_yaml( scope ) #:nodoc:
+         YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) )
+       end
+       
+       def scope_to_yaml( io ) #:nodoc:
+         YAML.dump( Scrooge::Base.profile.tracker.marshal_dump, io )
+       end 
        
        def ensure_scope_path( scope ) #:nodoc:
          makedir_unless_exist( scope_path( scope ) )

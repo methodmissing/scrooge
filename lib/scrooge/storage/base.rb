@@ -18,24 +18,34 @@ module Scrooge
           
       class << self
         
+        # Yields a storage instance from a given signature.
+        #
         def instantiate( storage_signature )
           "::Scrooge::Storage::#{storage_signature.to_const}".to_const!
         end
         
       end    
       
+      # Enable a storage buffer by default.
+      #
       def initialize
         extend Buffer
       end
-                       
+      
+      # Retrieve a given tracker from storage.
+      #                 
       def read( tracker )
         raise NotImplemented
       end      
             
+      # Persist a given tracker to storage.
+      #      
       def write( tracker, buffered = true )
         raise NotImplemented
       end
       
+      # Namespace lookup keys. 
+      #
       def expand_key( key )
         "#{NAMESPACE}/#{key}"
       end      

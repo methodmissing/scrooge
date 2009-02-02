@@ -12,6 +12,12 @@ module Scrooge
         @model = model
         @attributes = Set.new 
       end
+
+      def any?
+        GUARD.synchronize do
+          !@attributes.empty?
+        end  
+      end
    
       def <<( attribute )
         GUARD.synchronize do

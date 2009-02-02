@@ -12,6 +12,10 @@ describe Scrooge::Tracker::App do
                 end
   end
   
+  it "should be able to determine if any resources has been tracked" do
+    @app.any?().should equal( false )
+  end
+  
   it "should initialize with an empty set of resources" do
     @app.resources.should eql( Set.new )
   end

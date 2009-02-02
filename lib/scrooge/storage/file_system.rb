@@ -6,6 +6,8 @@ module Scrooge
         extend Buffer
       end  
   
+      # Read a given tracker instance from the filesystem.
+      #
       def read( tracker )
         GUARD.synchronize do
           begin
@@ -16,6 +18,8 @@ module Scrooge
         end  
       end      
       
+      # Writes a given tracker instance to the filesystem.
+      #
       def write( tracker, buffered = true )
         GUARD.synchronize do
           begin
@@ -28,6 +32,8 @@ module Scrooge
         end  
       end  
       
+      # Returns the path to a given 
+      #
       def tracker_file( tracker )
         File.join( tracker_path( tracker ), 'scrooge' )
       end

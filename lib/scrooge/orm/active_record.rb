@@ -49,7 +49,7 @@ module Scrooge
           begin
             ::ActiveRecord::Base.included_modules.include?( Scrooge::Orm::ActiveRecord::ScroogeAttributes )
           rescue => exception
-            profile.log exception.to_s
+            #profile.log exception.to_s
           end
         end
         

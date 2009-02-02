@@ -13,6 +13,12 @@ module Scrooge
         @resources = Set.new
       end
       
+      def any?
+        GUARD.synchronize do
+          !@resources.empty?
+        end  
+      end
+      
       # Add a Resource instance to this tracker.
       #      
       def <<( resource )

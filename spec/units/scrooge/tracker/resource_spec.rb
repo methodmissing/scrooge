@@ -9,11 +9,15 @@ describe Scrooge::Tracker::Resource do
                   resource.method = :get
                   resource.format = :html
                 end
-    @model = Scrooge::Tracker::Model.new( 'Post' )
+    @model = Scrooge::Tracker::Model.new( 'Class' )
     @model.stub!(:name).and_return( 'Product' )
     @model.stub!(:table_name).and_return( 'products' )        
   end
   
+  it "should be able to determine if any models has been tracked" do
+    @resource.any?().should equal( false )
+  end
+    
   it "should initialize with an empty set of models" do
     @resource.models.should eql( Set.new )
   end

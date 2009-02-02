@@ -7,6 +7,10 @@ describe Scrooge::Tracker::Model do
     @model.stub!(:name).and_return( 'Product' )
     @model.stub!(:table_name).and_return( 'products' )    
   end
+
+  it "should be able to determine if any attributes has been tracked" do
+    @model.any?().should equal( false )
+  end
   
   it "should initialize with an empty set of attributes" do
     @model.attributes.should eql( Set.new )

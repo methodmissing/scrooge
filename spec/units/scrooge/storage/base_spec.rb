@@ -20,8 +20,8 @@ describe Scrooge::Storage::Base do
     @tracker.stub!(:signature).and_return('signature')
   end
 
-  it "should initialize with a buffered at timestamp" do
-    @base.buffered_at.class.should equal( Bignum )
+  it "should initialize with a buffer flushed at timestamp" do
+    @base.buffer_flushed_at.class.should equal( Bignum )
   end
 
   it "should initialize with an empty storage buffer" do
