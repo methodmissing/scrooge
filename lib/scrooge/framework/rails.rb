@@ -55,7 +55,7 @@ module Scrooge
         ::Rails.configuration.middleware
       end    
       
-      # Push the Tracking middle ware into the first slot. 
+      # Push the Tracking middleware into the first slot. 
       #      
       def install_tracking_middleware
         GUARD.synchronize do

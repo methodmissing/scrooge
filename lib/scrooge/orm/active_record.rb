@@ -70,7 +70,6 @@ module Scrooge
         unless resource_scope_method?( resource, klass ) 
           klass.instance_eval(<<-EOS, __FILE__, __LINE__)
             def #{method_name}(&block)
-              logger.info "[Scrooge] scope to #{method_name}"
               with_scope( { :find => { :select => '#{model.to_sql}' } }) do
                 block.call
               end 

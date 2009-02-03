@@ -12,6 +12,7 @@ module Scrooge
           Scrooge::Base.profile.tracker.track( Thread.scrooge_resource ) do
             begin
               Scrooge::Base.profile.framework.resource( {}, controller.request )
+              Scrooge::Base.profile.log "Track for Resource #{Thread.scrooge_resource.inspect}"
               block.call
             ensure
               Thread.reset_scrooge_resource!

@@ -67,6 +67,8 @@ describe Scrooge::Tracker::Resource do
     @resource << @model
     @resource.middleware().class.should equal( Array )
     @resource.middleware().first.class.should equal( Class )
+    @resource.middleware().first.inspect.should match( /Middleware/ )
+    @resource.middleware().first.inspect.should match( /Product/ )
     @resource.middleware().first.new( @model ).should respond_to( :call )
   end
   

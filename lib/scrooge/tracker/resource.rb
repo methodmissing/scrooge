@@ -108,12 +108,17 @@ module Scrooge
           
           class << self
             
+            def inspect
+              "#<Scrooge::Middleware #{model.inspect}>"
+            end
+            
             # Around Filter compatible implementation for Rails as Dispatcher is 
             # the root Rack application and as such don't provide access to the Rails
             # Routing internals from other middleware.
             #
             def filter( controller, &block )
               #{model.model.to_s}.#{profile.orm.resource_scope_method( resource ).to_s} do
+                Scrooge::Base.profile.log "Scope for Model #{model.inspect}"
                 block.call
               end
             end
