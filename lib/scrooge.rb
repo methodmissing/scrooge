@@ -16,17 +16,13 @@ module Scrooge
       # Active Profile reader
       #
       def profile
-        GUARD.synchronize do
-          @@profile ||= Scrooge::Profile.new
-        end
+        @@profile ||= Scrooge::Profile.new
       end
       
       # Active Profile writer.
       #
       def profile=( profile )
-        GUARD.synchronize do
-          @@profile = profile
-        end
+        @@profile = profile
       end
       
       # Installs a YAML configuration template in the host framework's config
