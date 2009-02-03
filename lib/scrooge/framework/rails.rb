@@ -59,7 +59,9 @@ module Scrooge
       #      
       def install_tracking_middleware
         GUARD.synchronize do
-          ApplicationController.around_filter Scrooge::Middleware::Tracker
+          ActionController::Dispatcher.to_prepare( :scrooge_install_tracking_middleware ) do
+            ApplicationController.around_filter Scrooge::Middleware::Tracker
+          end
         end
       end
       
@@ -67,12 +69,13 @@ module Scrooge
       #
       def install_scope_middleware( tracker )
         GUARD.synchronize do
-          middleware.use Rack::ShowExceptions
-          tracker.resources.each do |resource|
-            resource.middleware.each do |resource_middleware|
-              controller( resource ).around_filter resource_middleware, :only => resource.action
+          ActionController::Dispatcher.to_prepare( :scrooge_install_scope_middleware ) do
+            tracker.resources.each do |resource|
+              resource.middleware.each do |resource_middleware|
+                controller( resource ).around_filter resource_middleware, :only => resource.action
+              end
             end
-          end
+          end  
         end  
       end
       

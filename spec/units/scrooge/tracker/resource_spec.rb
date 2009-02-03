@@ -43,15 +43,15 @@ describe Scrooge::Tracker::Resource do
   end
   
   it "should be able to generate a lookup signature" do
-    @resource.signature().should eql( "products_show_get_html" )
+    @resource.signature().should eql( "products_show_get" )
   end
   
   it "should be able to dump itself to a serializeable representation" do
-    @resource.marshal_dump().should eql( { "products_show_get_html" => { :models => [],
-                                                                 :method => :get,   
-                                                                 :format => :html,
-                                                                 :action => "show",   
-                                                                :controller => "products"} } )
+    @resource.marshal_dump().should eql( { "products_show_get" => { :models => [],
+                                                                    :method => :get,   
+                                                                    :format => :html,
+                                                                    :action => "show",   
+                                                                    :controller => "products"} } )
   end
   
   it "should be able to restore itself from a serialized representation" do

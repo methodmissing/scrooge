@@ -27,11 +27,11 @@ describe Scrooge::Tracker::App do
   it "should be able to dump itself to a serializeable representation" do
     @app << @resource
     with_rails do
-      @app.marshal_dump().should eql( [ { "products_show_get_html" => { :method => :get,
-                                                                        :models => [],
-                                                                        :format => :html,
-                                                                        :action => "show",
-                                                                        :controller => "products" } } ] )
+      @app.marshal_dump().should eql( [ { "products_show_get" => { :method => :get,
+                                                                   :models => [],
+                                                                   :format => :html,
+                                                                   :action => "show",
+                                                                   :controller => "products" } } ] )
     end
   end
 
