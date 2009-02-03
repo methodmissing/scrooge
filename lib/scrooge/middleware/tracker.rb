@@ -2,6 +2,25 @@ module Scrooge
   module Middleware 
     class Tracker < Scrooge::Base
     
+      class << self
+        
+        # Around Filter compatible implementation for Rails as Dispatcher is 
+        # the root Rack application and as such don't provide access to the Rails
+        # Routing internals from other middleware.
+        #
+        def filter( controller, &block )
+          Scrooge::Base.profile.tracker.track( Thread.scrooge_resource ) do
+            begin
+              Scrooge::Base.profile.framework.resource( {}, controller.request )
+              block.call
+            ensure
+              Thread.reset_scrooge_resource!
+            end
+          end
+        end
+        
+      end
+    
       def initialize(app, options = {})
         @app = app
       end

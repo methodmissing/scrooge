@@ -15,7 +15,7 @@ module Scrooge
         # Instantiate and optionally install from a given ORM signature.
         #
         def instantiate( orm_signature )
-          orm_instance = "::Scrooge::Orm::#{orm_signature.to_const}".to_const!
+          orm_instance = "scrooge/orm/#{orm_signature}".to_const!
           orm_instance.class.install! unless orm_instance.class.installed?
           orm_instance
         end

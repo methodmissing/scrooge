@@ -139,7 +139,7 @@ module Scrooge
       
       # Supplement the current Resource tracker with additional environment context. 
       #
-      def resource( env )
+      def resource( env, request = nil )
         raise NotImplemented
       end
       
@@ -176,6 +176,12 @@ module Scrooge
       # Register a code block to run when the host framework is fully initialized.
       #
       def initialized( &block )
+        raise NotImplemented
+      end
+      
+      # Yields a controller constant from a given Resource Tracker
+      #
+      def controller( resource )
         raise NotImplemented
       end
       

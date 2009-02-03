@@ -19,7 +19,7 @@ module Scrooge
         # Yields a storage instance from a given signature.
         #
         def instantiate( storage_signature )
-          "::Scrooge::Storage::#{storage_signature.to_const}".to_const!
+          "scrooge/storage/#{storage_signature}".to_const!
         end
         
       end    

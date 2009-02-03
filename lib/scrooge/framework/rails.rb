@@ -32,10 +32,10 @@ module Scrooge
         ::Rails.logger
       end
       
-      def resource( env )
+      def resource( env, request = nil )
         GUARD.synchronize do
           # TODO: Wonky practice to piggy back on this current Edge / 2.3 hack
-          request = env['action_controller.rescue.request']
+          request = request || env['action_controller.rescue.request']
           Thread.scrooge_resource.controller = request.path_parameters['controller']
           Thread.scrooge_resource.action = request.path_parameters['action']
           Thread.scrooge_resource.method = request.method
@@ -59,7 +59,7 @@ module Scrooge
       #      
       def install_tracking_middleware
         GUARD.synchronize do
-          middleware.insert( 0, Scrooge::Middleware::Tracker )        
+          ApplicationController.around_filter Scrooge::Middleware::Tracker
         end
       end
       
@@ -67,9 +67,10 @@ module Scrooge
       #
       def install_scope_middleware( tracker )
         GUARD.synchronize do
+          middleware.use Rack::ShowExceptions
           tracker.resources.each do |resource|
             resource.middleware.each do |resource_middleware|
-              middleware.use( resource_middleware )
+              controller( resource ).around_filter resource_middleware, :only => resource.action
             end
           end
         end  
@@ -77,6 +78,10 @@ module Scrooge
       
       def initialized( &block )
         ::Rails.configuration.after_initialize( &block )
+      end
+      
+      def controller( resource )
+        "#{resource.controller}_controller".classify.constantize
       end
       
     end

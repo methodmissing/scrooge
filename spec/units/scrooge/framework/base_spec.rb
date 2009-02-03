@@ -140,6 +140,10 @@ describe Scrooge::Framework::Base do
     lambda{ @base.initialized() }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end
   
+  it "should be able to map a resource instance to a controller constant" do
+    lambda{ @base.controller( 'resource' ) }.should raise_error( Scrooge::Framework::Base::NotImplemented )
+  end
+  
   it "should be able to return a full path to the scrooge configuration file" do
     with_rails do
       @base.stub!(:config).and_return( CONFIG )
