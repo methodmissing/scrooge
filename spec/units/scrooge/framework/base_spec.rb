@@ -80,6 +80,14 @@ describe Scrooge::Framework::Base do
     end
   end
   
+  it "should be able to determine if there's any previously persisted scopes" do
+    with_rails do
+      @base.stub!(:config).and_return( CONFIG )
+      @base.send( :ensure_scopes_path )
+      @base.scopes?().should eql( true )
+    end
+  end
+  
   it "should be able to infer the path to a given scope" do
     with_rails do
       @base.stub!(:config).and_return( CONFIG )

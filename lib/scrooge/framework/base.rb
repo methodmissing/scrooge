@@ -187,6 +187,12 @@ module Scrooge
         end  
       end
       
+      # Determine if there's any previously persisted scopes.
+      #
+      def scopes?
+        !scopes().empty?
+      end
+      
       # Return the scopes storage path for the current framework.
       #
       def scopes_path
