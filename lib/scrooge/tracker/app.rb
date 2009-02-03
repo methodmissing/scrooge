@@ -49,7 +49,7 @@ module Scrooge
         begin
           yield
         ensure
-          self << resource
+          self << resource if resource.any?
         end     
       end
       
