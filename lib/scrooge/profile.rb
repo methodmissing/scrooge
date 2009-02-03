@@ -84,13 +84,19 @@ module Scrooge
     # Determine if this is a tracking or scope profile.
     #  
     def track_or_scope!
-      track? ? track! : scope!
+      if enabled?
+        track? ? track! : scope!
+      end
     end
     
     # Are we tracking ?
     #
     def track?
-      @track ||= (@scope || '').match( /\d{10}/ ).nil?
+      if enabled?
+        @track ||= (@scope || '').match( /\d{10}/ ).nil?
+      else
+        false
+      end  
     end
     
     def track!
@@ -110,7 +116,11 @@ module Scrooge
     # Are we scoping ?
     #
     def scope?
-      !track?
+      if enabled?
+        !track?
+      else
+        false
+      end    
     end        
         
     # Scope the tracker environment to a given scope signature.

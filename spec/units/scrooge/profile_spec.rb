@@ -50,4 +50,11 @@ describe "Scrooge::Profile instance" do
     @profile.enabled?().should eql( true )  
   end  
     
+  it "should neither track or scope if not enabled" do
+    @profile.should_receive(:track!).never
+    @profile.should_receive(:scope!).never
+    @profile.stub!(:enabled?).and_return(false)
+    @profile.track_or_scope!  
+  end  
+    
 end
