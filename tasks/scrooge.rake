@@ -13,23 +13,31 @@ namespace :scrooge do
 
   desc "List all available Scrooge scopes"
   task :list do
-    if Scrooge::Profile.framework.scopes?
+    any_scopes do
       Scrooge::Profile.framework.scopes.each do |scope|
         puts "- #{scope}"
       end
-    else
-      puts "There's no existing Scrooge scopes!"
     end    
   end
 
   desc "Dumps Resources and Models for a given scope to a human friendly format.Assumes ENV['scope'] is set."
   task :inspect do
-    begin
-      Scrooge::Base.profile.scope_to_signature!( ENV['scope'] )
-      puts Scrooge::Base.profile.tracker.inspect
-    rescue Scrooge::Framework::Base::InvalidScopeSignature
-      puts "Please set ENV['scope'] to the scope you'd like to inspect."
-    end    
+    any_scopes do
+      begin
+        Scrooge::Base.profile.scope_to_signature!( ENV['scope'] )
+        puts Scrooge::Base.profile.tracker.inspect
+      rescue Scrooge::Framework::Base::InvalidScopeSignature
+        puts "Please set ENV['scope'] to the scope you'd like to inspect."
+      end
+    end      
+  end
+
+  def any_scopes
+    if Scrooge::Profile.framework.scopes?
+      yield
+    else
+      puts "There's no existing Scrooge scopes!"
+    end      
   end
 
 end
