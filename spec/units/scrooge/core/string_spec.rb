@@ -14,4 +14,8 @@ describe Scrooge::Core::String do
     @string.to_const!( false ).should == Scrooge::Base
   end
   
+  it "should return self if it's not able to constantize" do
+    'not/defined'.to_const!( false ).should == 'not/defined'
+  end
+  
 end
