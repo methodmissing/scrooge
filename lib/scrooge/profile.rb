@@ -130,6 +130,12 @@ module Scrooge
       end
     end
     alias :scope! :scope_to!
+    
+    # Should Scrooge inject itself ?
+    #         
+    def enabled?
+      !@enabled.nil?
+    end         
                 
     private
     
@@ -137,6 +143,7 @@ module Scrooge
         @orm = @options['orm'] || :active_record
         @storage = @options['storage'] || :memory
         @scope = @options['scope'].to_s || nil
+        @enabled = @options['enabled'] || false
         memoize_backends!
       end        
       

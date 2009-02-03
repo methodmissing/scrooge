@@ -1,12 +1,15 @@
 production:
   orm: 'active_record'
   storage: 'memory'
-  scope:    
+  scope:
+  enabled: true    
 development:
   orm: 'active_record'
   storage: 'memory'
   scope: 
+  enabled: true    
 test:
   orm: 'active_record'
   storage: 'memory'  
   scope:
+  enabled: true    

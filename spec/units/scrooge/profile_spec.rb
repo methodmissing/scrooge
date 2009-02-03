@@ -46,4 +46,8 @@ describe "Scrooge::Profile instance" do
     @profile.scope_to.should eql( "1234567891" )
   end
     
+  it "should be able to determine if it's enabled" do
+    @profile.enabled?().should eql( true )  
+  end  
+    
 end
