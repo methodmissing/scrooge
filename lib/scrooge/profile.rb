@@ -15,7 +15,7 @@ module Scrooge
       # given environment.
       #
       def setup( path, environment )
-        new( YAML.load( IO.read( path ) )[environment.to_s] )
+        new( read_config( path, environment ) )
       end
       
       # Pairs profile setup with the host framework.
@@ -29,6 +29,12 @@ module Scrooge
       def framework
         @@framework ||= Scrooge::Framework::Base.instantiate
       end
+      
+      private
+      
+        def read_config( path, environment ) #:nodoc:
+          YAML.load( IO.read( path ) )[environment.to_s]
+        end
       
     end
                
@@ -87,23 +93,36 @@ module Scrooge
       @track ||= (@scope || '').match( /\d{10}/ ).nil?
     end
     
-    def scope_to
-      @scope
-    end
-  
     def track!
       if track?
         log "Tracking"
         framework.install_tracking_middleware()
         shutdown_hook!
       end   
-    end  
+    end      
     
+    # The active scope signature
+    #
+    def scope_to
+      @scope
+    end
+        
+    # Are we scoping ?
+    #
+    def scope?
+      !track?
+    end        
+        
+    # Scope the tracker environment to a given scope signature.
+    #
     def scope_to_signature!( scope_signature )
       log "Scope to #{scope_signature}"
       @tracker_instance = framework.from_scope!( scope_signature )
     end
     
+    # Scope the tracker environment to a given scope signature and install
+    # scoping middleware.
+    #
     def scope_to!
       if scope?
         scope_to_signature!( @scope )
@@ -111,13 +130,7 @@ module Scrooge
       end
     end
     alias :scope! :scope_to!
-    
-    # Are we scoping ?
-    #
-    def scope?
-      !track?
-    end
-            
+                
     private
     
       def configure! #:nodoc:

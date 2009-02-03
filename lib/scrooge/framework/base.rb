@@ -35,6 +35,12 @@ module Scrooge
       
       GUARD = Mutex.new
       
+      SCOPE_REGEX = /\d{10}/.freeze
+      
+      CONFIGURATION_FILE = 'scrooge.yml'.freeze
+      
+      SCOPE_FILE = 'scope.yml'.freeze
+      
       class NotImplemented < StandardError
       end
       
@@ -177,7 +183,7 @@ module Scrooge
       #
       def scopes
         ensure_scopes_path do
-          Dir.entries( scopes_path ).grep(/\d{10}/)
+          Dir.entries( scopes_path ).grep( SCOPE_REGEX )
         end  
       end
       
@@ -235,7 +241,7 @@ module Scrooge
         GUARD.synchronize do
           scope = Time.now.to_i
           ensure_scope_path( scope ) do
-            File.open( scope_path( scope, 'scope.yml' ), 'w' ) do |io|
+            File.open( scope_path( scope, SCOPE_FILE ), 'w' ) do |io|
               scope_to_yaml( io )
             end
           end
@@ -246,13 +252,13 @@ module Scrooge
       # Full path the scrooge configuration file.
       #
       def configuration_file
-        @configuration_file ||= File.join( config, 'scrooge.yml' )
+        @configuration_file ||= File.join( config, CONFIGURATION_FILE )
       end
       
       private
        
        def scope_from_yaml( scope ) #:nodoc:
-         YAML.load( IO.read( scope_path( scope.to_s, 'scope.yml' ) ) )
+         YAML.load( IO.read( scope_path( scope.to_s, SCOPE_FILE ) ) )
        end
        
        def scope_to_yaml( io ) #:nodoc:
