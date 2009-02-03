@@ -13,9 +13,13 @@ namespace :scrooge do
 
   desc "List all available Scrooge scopes"
   task :list do
-    Scrooge::Profile.framework.scopes.each do |scope|
-      puts "- #{scope}"
-    end
+    if Scrooge::Profile.framework.scopes?
+      Scrooge::Profile.framework.scopes.each do |scope|
+        puts "- #{scope}"
+      end
+    else
+      puts "There's no existing Scrooge scopes!"
+    end    
   end
 
   desc "Dumps Resources and Models for a given scope to a human friendly format.Assumes ENV['scope'] is set."
