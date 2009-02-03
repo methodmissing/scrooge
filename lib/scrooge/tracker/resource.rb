@@ -39,7 +39,7 @@ module Scrooge
       # Generates a signature / lookup key.
       #
       def signature
-        @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}_#{format.to_s}".gsub( '/', '_' )
+        @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}_#{format.to_s}".gsub( /\/|\*|\./, '_s' )
       end
       
       # Only track GET requests
