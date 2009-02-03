@@ -12,7 +12,9 @@ module Scrooge
               logger.info "[Scrooge] read method #{attr_name.inspect}"
               Thread.scrooge_resource << [self.base_class, attr_name]
             end
-            super(symbol, attr_name, column)
+            ::Scrooge::Base.profile.orm.on_missing_attribute( self, attr_name ) do 
+              super(symbol, attr_name, column)
+            end
           end
           
         end
@@ -26,7 +28,9 @@ module Scrooge
               logger.info "[Scrooge] read attribute #{attr_name.inspect}"
               Thread.scrooge_resource << [self.class.base_class, attr_name]
             end
-            super( attr_name )
+            ::Scrooge::Base.profile.orm.on_missing_attribute( self, attr_name ) do 
+              super( attr_name )
+            end  
           end
           
         end
@@ -48,7 +52,6 @@ module Scrooge
           begin
             ::ActiveRecord::Base.included_modules.include?( Scrooge::Orm::ActiveRecord::ScroogeAttributes )
           rescue => exception
-            #profile.log exception.to_s
           end
         end
         
@@ -75,8 +78,22 @@ module Scrooge
               end 
             end  
           EOS
-        end     
+        end
       end      
+      
+      def on_missing_attribute( record, attribute )
+        begin
+          yield
+        rescue ActiveRecord::MissingAttributeError
+          if Scrooge::Base.profile.raise_on_missing_attribute?
+            raise
+          else
+            # Override outer scope to load all columns
+            record.reload( :select => '*' )
+            retry
+          end  
+        end            
+      end
       
       # Returns a lookup key from a given String or AR klass 
       #

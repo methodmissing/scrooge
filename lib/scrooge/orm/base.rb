@@ -15,7 +15,7 @@ module Scrooge
         # Instantiate and optionally install from a given ORM signature.
         #
         def instantiate( orm_signature )
-          orm_instance = "scrooge/orm/#{orm_signature}".to_const!
+          orm_instance = "scrooge/orm/#{orm_signature.to_s}".to_const!
           orm_instance.class.install! unless orm_instance.class.installed?
           orm_instance
         end
@@ -56,6 +56,13 @@ module Scrooge
       # Returns a table name from a given String or AR klass 
       #      
       def table_name( model )
+        raise NotImplemented
+      end
+
+      # Attempts to recover from missing attribute errors which may occur if
+      # the tracking environment don't trigger conditional renders etc. 
+      #
+      def on_missing_attribute( record, attribute )
         raise NotImplemented
       end
 

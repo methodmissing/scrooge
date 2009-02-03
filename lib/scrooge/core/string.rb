@@ -16,7 +16,7 @@ module Scrooge
           const = Object.module_eval(to_const, __FILE__, __LINE__)
           instantiate ? const.new : const
         rescue => exception 
-           exception.to_s.match( /uninitialized constant/ ) ? self : raise
+          exception.to_s.match( /uninitialized constant/ ) ? self : raise
         end
       end
          

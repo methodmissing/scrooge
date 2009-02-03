@@ -54,4 +54,8 @@ describe Scrooge::Orm::Base do
     @base.track?().should equal( false )
   end
   
+  it "should be able to handle missing attribute errors" do
+    lambda{ @base.on_missing_attribute( 'record', 'attribute' ) }.should raise_error( Scrooge::Orm::Base::NotImplemented )
+  end
+  
 end  

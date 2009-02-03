@@ -1,15 +1,18 @@
 production:
-  orm: 'active_record'
-  storage: 'memory'
+  orm: :active_record
+  storage: :memory
   scope:
+  on_missing_attribute: :reload # or :raise
   enabled: true    
 development:
-  orm: 'active_record'
-  storage: 'memory'
+  orm: :active_record
+  storage: :memory
   scope: 
+  on_missing_attribute: :reload # or :raise
   enabled: true    
 test:
-  orm: 'active_record'
-  storage: 'memory'  
+  orm: :active_record
+  storage: :memory  
   scope:
+  on_missing_attribute: :reload # or :raise
   enabled: true    

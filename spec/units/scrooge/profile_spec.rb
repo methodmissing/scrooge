@@ -8,7 +8,7 @@ describe "Scrooge::Profile singleton" do
   
   it "should be able to instantiate it self from a given config path and environment" do
     @profile.setup( File.join( FIXTURES, 'config', 'scrooge.yml' ), :production ).class.should equal( Scrooge::Profile )
-    @profile.setup( File.join( FIXTURES, 'config', 'scrooge.yml' ), :test ).options['orm'].should == 'active_record'
+    @profile.setup( File.join( FIXTURES, 'config', 'scrooge.yml' ), :test ).options['orm'].should equal( :active_record )
   end
   
 end
@@ -17,6 +17,8 @@ describe "Scrooge::Profile instance" do
  
   before(:each) do
     @profile = Scrooge::Profile.setup( File.join( FIXTURES, 'config', 'scrooge.yml' ), :production )
+    @profile.framework.stub!(:scopes).and_return( %w(1234567891) )
+    @profile.options = { 'scope' => '1234567891'}
   end  
   
   it "should return a valid ORM instance" do
@@ -55,6 +57,10 @@ describe "Scrooge::Profile instance" do
     @profile.should_receive(:scope!).never
     @profile.stub!(:enabled?).and_return(false)
     @profile.track_or_scope!  
+  end  
+    
+  it "should be able to determine if it should raise on missing attributes" do    
+    @profile.raise_on_missing_attribute?().should equal( false )  
   end  
     
 end

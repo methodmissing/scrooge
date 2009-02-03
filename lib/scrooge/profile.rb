@@ -146,16 +146,31 @@ module Scrooge
     def enabled?
       !@enabled.nil?
     end         
+    
+    # Should we raise on missing attributes ?
+    #
+    def raise_on_missing_attribute?
+      @on_missing_attribute == :raise
+    end
                 
     private
     
       def configure! #:nodoc:
-        @orm = @options['orm'] || :active_record
-        @storage = @options['storage'] || :memory
-        @scope = @options['scope'].to_s || nil
-        @enabled = @options['enabled'] || false
+        @orm = configure_with( @options['orm'], [:active_record], :active_record )
+        @storage = configure_with( @options['storage'], [:memory], :memory )
+        @scope = configure_with( @options['scope'].to_s, framework.scopes, nil )
+        @enabled = configure_with( @options['enabled'], [true, false], true )
+        @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
         memoize_backends!
       end        
+      
+      def configure_with( given, valid, default ) #:nodoc:
+        if given
+          valid.include?( given ) ? given : default
+        else
+          default
+        end    
+      end
       
       # Force constant lookups as autoload is not threadsafe.
       #
