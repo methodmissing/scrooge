@@ -5,18 +5,34 @@ module Scrooge
         
         module SingletonMethods
           
-          # Attach to generated attribute reader methods.
-          #         
-          def define_read_method(symbol, attr_name, column)
-            if ::Scrooge::Base.profile.orm.track?
-              logger.info "[Scrooge] read method #{attr_name.inspect}"
-              Thread.scrooge_resource << [self.base_class, attr_name]
-            end
-            ::Scrooge::Base.profile.orm.on_missing_attribute( self, attr_name ) do 
+          private
+     
+            # Attach to generated attribute reader methods.
+        
+            def define_read_method(symbol, attr_name, column)
+              register_with_scrooge!( attr_name, 'define read method' )
               super(symbol, attr_name, column)
             end
-          end
           
+            def define_read_method_for_time_zone_conversion(attr_name)
+              register_with_scrooge!( attr_name, 'define read method for time zone conversion' )
+              super(attr_name)
+            end
+
+            def define_read_method_for_serialized_attribute(attr_name)
+              register_with_scrooge!( attr_name, 'define read method for serialized attribute' )
+              super(attr_name)
+            end  
+
+            private 
+            
+              def register_with_scrooge!( attr_name, caller ) #:nodoc:
+                if ::Scrooge::Base.profile.orm.track?
+                  logger.info "[Scrooge] #{caller} #{attr_name.to_s}"
+                  Thread.scrooge_resource << [self.base_class, attr_name]
+                end
+              end
+
         end
         
         module InstanceMethods        
@@ -24,14 +40,34 @@ module Scrooge
           # Attach to AR::Base#read_attribute.
           #
           def read_attribute(attr_name)
-            if ::Scrooge::Base.profile.orm.track?
-              logger.info "[Scrooge] read attribute #{attr_name.inspect}"
-              Thread.scrooge_resource << [self.class.base_class, attr_name]
-            end
-            ::Scrooge::Base.profile.orm.on_missing_attribute( self, attr_name ) do 
-              super( attr_name )
-            end  
+            register_with_scrooge!( attr_name, 'read attribute' )
+            super( attr_name )
           end
+
+          # Attach to AR::Base#read_attribute_before_typecast.
+          #
+          def read_attribute_before_type_cast(attr_name)
+            register_with_scrooge!( attr_name, 'read attribute before type cast' )
+            super(attr_name)
+          end
+          
+          private
+          
+            def register_with_scrooge!( attr_name, caller ) #:nodoc:
+              if ::Scrooge::Base.profile.orm.track?
+                logger.info "[Scrooge] #{caller} #{attr_name.to_s}"
+                Thread.scrooge_resource << [self.class.base_class, attr_name]
+              end
+            end
+            
+            def missing_attribute(attr_name, stack) #:nodoc:
+              if Scrooge::Base.profile.raise_on_missing_attribute?
+                super(attr_name, stack)
+              else
+                logger.info "[Scrooge] missing attribute #{attr_name.to_s}"
+                reload( :select => '*' )
+              end    
+            end
           
         end
       
@@ -81,20 +117,6 @@ module Scrooge
         end
       end      
       
-      def on_missing_attribute( record, attribute )
-        begin
-          yield
-        rescue ActiveRecord::MissingAttributeError
-          if Scrooge::Base.profile.raise_on_missing_attribute?
-            raise
-          else
-            # Override outer scope to load all columns
-            record.reload( :select => '*' )
-            retry
-          end  
-        end            
-      end
-      
       # Returns a lookup key from a given String or AR klass 
       #
       def name( model )
@@ -108,6 +130,13 @@ module Scrooge
         model = model.to_const!(false) if model.is_a?(String)
         model.table_name
       end
+      
+      # Returns a primary key from a given String or AR klass 
+      #
+      def primary_key( model )
+        model = model.to_const!(false) if model.is_a?(String)
+        model.primary_key
+      end      
       
     end  
   end  

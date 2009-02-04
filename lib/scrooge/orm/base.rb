@@ -47,26 +47,25 @@ module Scrooge
         raise NotImplemented
       end
    
-      # Returns a lookup key from a given String or AR klass 
+      # Returns a lookup key from a given String or class 
       #      
       def name( model )
         raise NotImplemented
       end
 
-      # Returns a table name from a given String or AR klass 
+      # Returns a table name from a given String or class 
       #      
       def table_name( model )
         raise NotImplemented
       end
 
-      # Attempts to recover from missing attribute errors which may occur if
-      # the tracking environment don't trigger conditional renders etc. 
+      # Returns a primary key from a given String or class
       #
-      def on_missing_attribute( record, attribute )
+      def primary_key( model )
         raise NotImplemented
       end
 
-      # Generates a safe method name for a given resource.
+      # Generates a sanitized method name for a given resource.
       #
       def resource_scope_method( resource )
         "scope_to_#{resource.signature}".to_sym

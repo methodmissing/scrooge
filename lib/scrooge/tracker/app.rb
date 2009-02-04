@@ -61,11 +61,18 @@ module Scrooge
         end  
       end
       
+      # If we've seen this resource before, return the original, else, returns
+      # the given resource.
+      #
+      def resource_for( resource )
+        @resources.detect{|r| r.signature == resource.signature } || resource
+      end
+      
       private
       
         def setup_resource( resource ) #:nodoc:
           GUARD.synchronize do
-            resource_for( resource ) || resource
+            resource_for( resource )
           end
         end
       
@@ -88,11 +95,7 @@ module Scrooge
             end
           end
         end
-      
-        def resource_for( resource ) #:nodoc:
-          @resources.detect{|r| r.signature == resource.signature }
-        end
-      
+            
     end
   end
 end

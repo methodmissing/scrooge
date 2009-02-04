@@ -11,7 +11,8 @@ describe Scrooge::Tracker::Resource do
                 end
     @model = Scrooge::Tracker::Model.new( 'Class' )
     @model.stub!(:name).and_return( 'Product' )
-    @model.stub!(:table_name).and_return( 'products' )        
+    @model.stub!(:table_name).and_return( 'products' )  
+    @model.stub!(:primary_key).and_return( 'id' )      
   end
   
   it "should be able to determine if any models has been tracked" do

@@ -57,11 +57,17 @@ module Scrooge
         @table_name ||= profile.orm.table_name( @model )
       end
       
+      # Memoize the primary key lookup.
+      #
+      def primary_key
+        @primary_key ||= profile.orm.primary_key( @model )
+      end
+      
       # Dump to a SQL SELECT snippet.
       #
       def to_sql
         GUARD.synchronize do
-          @attributes.map{|a| "#{table_name}.#{a.to_s}" }.join(', ')
+          attributes_with_primary_key().map{|a| "#{table_name}.#{a.to_s}" }.join(', ')
         end
       end
       
@@ -75,6 +81,10 @@ module Scrooge
           @attributes.map{|a| ":#{a}" }.join(', ')
         end
       
-    end
+        def attributes_with_primary_key
+          @attributes << primary_key
+        end
+      
+    end    
   end
 end

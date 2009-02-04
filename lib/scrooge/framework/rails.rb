@@ -36,10 +36,8 @@ module Scrooge
         GUARD.synchronize do
           # TODO: Wonky practice to piggy back on this current Edge / 2.3 hack
           request = request || env['action_controller.rescue.request']
-          Thread.scrooge_resource.controller = request.path_parameters['controller']
-          Thread.scrooge_resource.action = request.path_parameters['action']
-          Thread.scrooge_resource.method = request.method
-          Thread.scrooge_resource.format = request.format.to_s        
+          supplement_current_resource!( request )
+          Thread.scrooge_resource = Scrooge::Base.profile.tracker.resource_for( Thread.scrooge_resource )      
         end
       end      
       
@@ -86,6 +84,15 @@ module Scrooge
       def controller( resource )
         "#{resource.controller}_controller".classify.constantize
       end
+      
+      private 
+      
+        def supplement_current_resource!( request ) #:nodoc:
+          Thread.scrooge_resource.controller = request.path_parameters['controller']
+          Thread.scrooge_resource.action = request.path_parameters['action']
+          Thread.scrooge_resource.method = request.method
+          Thread.scrooge_resource.format = request.format.to_s  
+        end
       
     end
   end

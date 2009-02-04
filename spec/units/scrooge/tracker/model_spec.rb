@@ -5,7 +5,8 @@ describe Scrooge::Tracker::Model do
   before(:each) do
     @model = Scrooge::Tracker::Model.new( 'Post' )
     @model.stub!(:name).and_return( 'Product' )
-    @model.stub!(:table_name).and_return( 'products' )    
+    @model.stub!(:table_name).and_return( 'products' )
+    @model.stub!(:primary_key).and_return( 'id' )    
   end
 
   it "should be able to determine if any attributes has been tracked" do
@@ -32,7 +33,7 @@ describe Scrooge::Tracker::Model do
   
   it "should be able to render a attribute selection SQL snippet from it's referenced attributes" do
     @model << [:name, :description, :price]
-    @model.to_sql().should eql( "products.price, products.description, products.name" )
+    @model.to_sql().should eql( "products.id, products.price, products.description, products.name" )
   end
   
   it "should be able to compare itself to other model trackers" do

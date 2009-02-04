@@ -32,6 +32,10 @@ describe Scrooge::Orm::Base do
     lambda{ @base.table_name( 'model' ) }.should raise_error( Scrooge::Orm::Base::NotImplemented )
   end  
   
+  it "should be able to generate a primary key for a given model" do
+    lambda{ @base.primary_key( 'model' ) }.should raise_error( Scrooge::Orm::Base::NotImplemented )
+  end  
+  
   it "should be able to generate a per resource scope method" do
     @base.resource_scope_method( @tracker ).should eql( :scope_to_tracker )
   end
@@ -52,10 +56,6 @@ describe Scrooge::Orm::Base do
   
   it "should be able to determine if it should track attribute access" do
     @base.track?().should equal( false )
-  end
-  
-  it "should be able to handle missing attribute errors" do
-    lambda{ @base.on_missing_attribute( 'record', 'attribute' ) }.should raise_error( Scrooge::Orm::Base::NotImplemented )
   end
   
 end  

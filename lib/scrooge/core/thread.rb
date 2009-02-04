@@ -9,6 +9,10 @@ module Scrooge
         current[:scrooge_resource] ||= Scrooge::Tracker::Resource.new
       end
       
+      def scrooge_resource=( resource )
+        current[:scrooge_resource] = resource
+      end
+      
       def reset_scrooge_resource!
         current[:scrooge_resource] = nil
       end  

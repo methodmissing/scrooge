@@ -54,4 +54,9 @@ describe Scrooge::Tracker::App do
     @app.inspect().should match( /products/ )
   end
   
+  it "should be able to determine if a resource's been seen before" do
+    @app << @resource
+    @app.resource_for( @resource ).should eql( @resource )
+  end
+  
 end

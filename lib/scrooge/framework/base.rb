@@ -287,7 +287,7 @@ module Scrooge
          yield if block_given?
        end
            
-      def makedir_unless_exist( path )
+      def makedir_unless_exist( path ) #:nodoc:
         FileUtils.makedirs( path ) unless File.exist?( path )
       end     
                
