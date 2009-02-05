@@ -193,7 +193,7 @@ module Scrooge
         end
       
         def model_for( model ) #:nodoc:
-          @models.detect{|m| m.model == model }
+          @models.detect{|m| m.model.name == model.name }
         end
       
     end
