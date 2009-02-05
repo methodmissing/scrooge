@@ -21,11 +21,11 @@ module Scrooge
       end
       
       def tmp
-        File.join( ::Rails.root, 'tmp' )
+        @tmp ||= File.join( ::Rails.root, 'tmp' )
       end
       
       def config
-        File.join( ::Rails.root, 'config' )
+        @config ||= File.join( ::Rails.root, 'config' )
       end
       
       def logger
@@ -69,9 +69,7 @@ module Scrooge
         GUARD.synchronize do
           ActionController::Dispatcher.to_prepare( :scrooge_install_scope_middleware ) do
             tracker.resources.each do |resource|
-              resource.middleware.each do |resource_middleware|
-                controller( resource ).prepend_around_filter resource_middleware, :only => resource.action
-              end
+              install_scope_middleware_for_resource!( resource )
             end
           end  
         end  
@@ -86,6 +84,12 @@ module Scrooge
       end
       
       private 
+      
+        def install_scope_middleware_for_resource!( resource ) #:nodoc:
+          resource.middleware.each do |resource_middleware|
+            controller( resource ).prepend_around_filter resource_middleware, :only => resource.action
+          end
+        end
       
         def supplement_current_resource!( request ) #:nodoc:
           Thread.scrooge_resource.controller = request.path_parameters['controller']

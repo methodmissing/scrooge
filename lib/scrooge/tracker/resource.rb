@@ -52,14 +52,7 @@ module Scrooge
       #
       def <<( model )
         GUARD.synchronize do
-          if model.is_a?( Array )
-            model, attribute = model
-            model = setup_model( model )
-            model << attribute
-          else
-            model = setup_model( model )
-          end
-          @models << model
+          @models << track_model_from( model )
         end
       end
       
@@ -158,6 +151,17 @@ module Scrooge
       end
       
       private
+      
+        def track_model_from( model ) #:nodoc:
+          model.is_a?( Array ) ? model_from_enumerable( model ) : setup_model( model )
+        end
+      
+        def model_from_enumerable( model ) #:nodoc:
+          model, attribute = model
+          model = setup_model( model )
+          model << attribute
+          model
+        end
       
         def models_for_inspect #:nodoc:
           models.map{|m| " - #{m.inspect}" }.join( "\n" )

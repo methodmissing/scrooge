@@ -238,9 +238,7 @@ module Scrooge
       def from_scope!( scope )
         GUARD.synchronize do
           if scope?( scope )
-            tracker = Scrooge::Tracker::App.new
-            tracker.marshal_load( scope_from_yaml( scope ) )
-            tracker
+            restore_scope!( scope )
           else
             raise InvalidScopeSignature
           end
@@ -252,11 +250,7 @@ module Scrooge
       def to_scope!
         GUARD.synchronize do
           scope = Time.now.to_i
-          ensure_scope_path( scope ) do
-            File.open( scope_path( scope, SCOPE_FILE ), 'w' ) do |io|
-              scope_to_yaml( io )
-            end
-          end
+          dump_scope!( scope )
           scope
         end  
       end      
@@ -268,6 +262,20 @@ module Scrooge
       end
       
       private
+       
+       def restore_scope!( scope ) #:nodoc:
+         tracker = Scrooge::Tracker::App.new
+         tracker.marshal_load( scope_from_yaml( scope ) )
+         tracker
+       end
+       
+       def dump_scope!( scope ) #:nodoc:
+         ensure_scope_path( scope ) do
+           File.open( scope_path( scope, SCOPE_FILE ), 'w' ) do |io|
+             scope_to_yaml( io )
+           end
+         end
+       end
        
        def scope_from_yaml( scope ) #:nodoc:
          YAML.load( IO.read( scope_path( scope.to_s, SCOPE_FILE ) ) )

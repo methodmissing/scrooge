@@ -161,6 +161,7 @@ module Scrooge
         @scope = configure_with( @options['scope'].to_s, framework.scopes, nil )
         @enabled = configure_with( @options['enabled'], [true, false], true )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
+        reset_backends!
         memoize_backends!
       end        
       
@@ -170,6 +171,12 @@ module Scrooge
         else
           default
         end    
+      end
+      
+      def reset_backends! #:nodoc:
+        @orm_instance = nil
+        @tracker_instance = nil
+        @storage_instance = nil
       end
       
       # Force constant lookups as autoload is not threadsafe.

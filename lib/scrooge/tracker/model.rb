@@ -81,7 +81,7 @@ module Scrooge
           @attributes.map{|a| ":#{a}" }.join(', ')
         end
       
-        def attributes_with_primary_key
+        def attributes_with_primary_key #:nodoc:
           @attributes << primary_key
         end
       
