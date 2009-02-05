@@ -144,7 +144,7 @@ module Scrooge
     # Should Scrooge inject itself ?
     #         
     def enabled?
-      !@enabled.nil?
+      @enabled
     end         
     
     # Should we raise on missing attributes ?
@@ -159,7 +159,7 @@ module Scrooge
         @orm = configure_with( @options['orm'], [:active_record], :active_record )
         @storage = configure_with( @options['storage'], [:memory], :memory )
         @scope = configure_with( @options['scope'].to_s, framework.scopes, nil )
-        @enabled = configure_with( @options['enabled'], [true, false], true )
+        @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
         reset_backends!
         memoize_backends!

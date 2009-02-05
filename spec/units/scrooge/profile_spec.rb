@@ -41,7 +41,7 @@ describe "Scrooge::Profile instance" do
    
   it "should be able to determine if the active profile should track or scope" do
     @profile.track?().should equal( false )
-    @profile.scope?().should equal( true )
+    @profile.scope?().should equal( false )
   end 
   
   it "should be able to infer the current scope" do
@@ -49,7 +49,7 @@ describe "Scrooge::Profile instance" do
   end
     
   it "should be able to determine if it's enabled" do
-    @profile.enabled?().should eql( true )  
+    @profile.enabled?().should eql( false )  
   end  
     
   it "should neither track or scope if not enabled" do
