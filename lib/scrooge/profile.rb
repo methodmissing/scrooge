@@ -158,7 +158,7 @@ module Scrooge
       def configure! #:nodoc:
         @orm = configure_with( @options['orm'], [:active_record], :active_record )
         @storage = configure_with( @options['storage'], [:memory], :memory )
-        @scope = configure_with( @options['scope'].to_s, framework.scopes, nil )
+        @scope = configure_with( @options['scope'].to_s, framework.scopes, ENV['scope'] )
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
         reset_backends!

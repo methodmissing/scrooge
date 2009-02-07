@@ -63,4 +63,11 @@ describe "Scrooge::Profile instance" do
     @profile.raise_on_missing_attribute?().should equal( false )  
   end  
     
+  it "should be able to fallback to scope from the environment if none given" do
+    @profile.framework.stub!(:scopes).and_return( [] )
+    ENV['scope'] = 'scope_from_env'
+    @profile.send(:configure!)
+    @profile.scope_to.should eql( 'scope_from_env' )   
+  end  
+    
 end
