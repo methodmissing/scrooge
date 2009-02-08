@@ -7,4 +7,17 @@ and reduce conversion overheads to native Ruby types.
 This is mostly an experiment into unobtrusive tracking, respecting development workflows
 and understanding Rack internals better. 
 
-h2. !! Work in progress - ship early, ship often !!  
+h2. Installation
+
+h4. From Git
+
+  git pull git://github.com/methodmissing/scrooge.git
+
+h4. As a Rails plugin
+
+  ./script/plugin install git://github.com/methodmissing/scrooge.git
+
+h4. As a Gem
+
+  sudo gem install methodmissing-scrooge -s http://gems.github.com
+

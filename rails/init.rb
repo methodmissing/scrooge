@@ -1,4 +1,4 @@
-require 'scrooge'
+require File.join(File.dirname(__FILE__), '..', 'lib', 'scrooge' )
 
 # Hook to register through Scrooge::Framework::Base.inherited
 Scrooge::Framework::Rails

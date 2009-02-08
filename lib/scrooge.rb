@@ -5,11 +5,12 @@ require 'fileutils'
 require 'scrooge/core/string'
 require 'scrooge/core/symbol'
 require 'scrooge/core/thread'
+require 'thread'
 
 module Scrooge
   class Base
     
-    GUARD = Mutex.new
+    GUARD = ::Mutex.new
     
     class << self
       
