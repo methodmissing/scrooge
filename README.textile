@@ -7,17 +7,244 @@ and reduce conversion overheads to native Ruby types.
 This is mostly an experiment into unobtrusive tracking, respecting development workflows
 and understanding Rack internals better. 
 
+h2. Why bother ?
+
+* Object conversion and moving unnecessary data is both expensive and tax existing infrastructure in high load setups
+* Manually extracting and scoping SELECT clauses is not sustainable in a clean and painless manner with iterative development, even less so in large projects.
+
+h2. Suggested Use
+
+Scrooge *requires* a comprehensive existing functional or integration test suite for best results.If test coverage is flaky or non-existent, then a) you shouldn't worry about performance tuning and b) shouldn't be reading this - go spec.
+
+There's 2 basic modes of operation, a tracking or a scope phase.
+
+h4. Resources
+
+A resource is :
+
+* A controller and action endpoint ( inferred through framework specific routing )
+* A content type / format - a PDF representation may have different Model attribute requirements than a vanilla ERB view.
+* Request method - typically popular public facing GET requests  
+
+All Model to attribute mappings is tracked on a per Resource basis.Multiple Models per Resource is supported.
+
+h4. Tracking
+
+In tracking mode, which is the default when no scope is given and Scrooge is enabled, Scrooge installs filters ( either through Rack middleware or framework specific hooks ) that track attribute access on a per Resource basis.
+
+A Kernel#at_exit callback dumps and timestamps this profile ( or scope ) to eg. *framework_configuration_directory/config/scopes/1234147851/scope.yml* 
+
+This typically happens during functional or integration testing.
+
+The test log may look like :
+
+  Processing HotelsController#index (for 0.0.0.0 at 2009-02-09 02:55:55) [GET]
+    Parameters: {"action"=>"index", "controller"=>"hotels"}
+  [Scrooge] Track with resource #< :/ ()
+  [Scrooge] Track for Resource #<GET :hotels/index (*/*)
+   - #<Hotel :from_price, :narrative, :star_rating, :latitude, :created_at, :hotel_name, :updated_at, :important_notes, :id, :apt, :location_id, :nearest_tube, :longitude, :telephone, :nearest_rail, :location_name, :distance>
+   - #<Image :thumbnail_width, :created_at, :title, :updated_at, :url, :thumbnail_height, :height, :thumbnail_url, :has_thumbnail, :hotel_id, :width>
+    Hotel Load (0.3ms)   SELECT * FROM `hotels` LIMIT 0, 15
+  Rendering template within layouts/application
+  Rendering hotels/index
+    Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 491) LIMIT 1
+  [Scrooge] read attribute updated_at
+  Rendered hotels/_hotel (2.7ms)
+  Rendered shared/_header (0.1ms)
+  Rendered shared/_navigation (0.3ms)
+  Missing template hotels/_index_sidebar.erb in view path app/views
+  Rendered shared/_sidebar (0.1ms)
+  Rendered shared/_footer (0.1ms)
+  Completed in 91ms (View: 90, DB: 1) | 200 OK [http://test.host/hotels]
+    SQL (0.3ms)   ROLLBACK
+    SQL (0.1ms)   BEGIN
+
+An example scope / profile, saved to disk :
+
+  --- 
+  - hotels_show_get: 
+      :action: show
+      :controller: hotels
+      :method: :get
+      :format: "*/*"
+      :models: 
+      - Address: 
+        - line1
+        - line2
+        - created_at
+        - postcode
+        - updated_at
+        - country_id
+        - county
+        - location_id
+        - town
+        - hotel_id
+      - Hotel: 
+        - important_notes
+        - location_id
+  - locations_index_get: 
+      :action: index
+      :controller: locations
+      :method: :get
+      :format: "*/*"
+      :models: 
+      - Location: 
+        - name
+        - created_at
+        - code
+        - updated_at
+        - level
+        - id
+  - countries_index_get: 
+      :action: index
+      :controller: countries
+      :method: :get
+      :format: "*/*"
+      :models: 
+      - Country: 
+        - name
+        - created_at
+        - code
+        - updated_at
+        - id
+        - location_id
+        - continent_id
+  - hotels_index_get: 
+      :action: index
+      :controller: hotels
+      :method: :get
+      :format: "*/*"
+      :models: 
+      - Hotel: 
+        - from_price
+        - narrative
+        - star_rating
+        - latitude
+        - created_at
+        - hotel_name
+        - updated_at
+        - important_notes
+        - id
+        - apt
+        - location_id
+        - nearest_tube
+        - longitude
+        - telephone
+        - nearest_rail
+        - location_name
+        - distance
+      - Image: 
+        - thumbnail_width
+        - created_at
+        - title
+        - updated_at
+        - url
+        - thumbnail_height
+        - height
+        - thumbnail_url
+        - has_thumbnail
+        - hotel_id
+        - width
+
+h4. Scoping
+
+A previously persisted scope / profile can be restored from disk and injected to the applicable Resources.Database content retrieved will match that of the given scope timestamp.
+
+This is typically pushed to production and adjusted for each major release or deployment.
+
+Log output may look like :
+
+  Processing HotelsController#index (for 0.0.0.0 at 2009-02-09 02:59:41) [GET]
+    Parameters: {"action"=>"index", "controller"=>"hotels"}
+  [Scrooge] Scope for Model #<Image :created_at, :thumbnail_width, :title, :updated_at, :url, :id, :thumbnail_height, :height, :thumbnail_url, :has_thumbnail, :width, :hotel_id>
+  [Scrooge] Scope for Model #<Hotel :narrative, :from_price, :created_at, :latitude, :star_rating, :hotel_name, :updated_at, :important_notes, :apt, :id, :nearest_tube, :location_id, :nearest_rail, :telephone, :longitude, :distance, :location_name>
+    Hotel Load (0.4ms)   SELECT hotels.narrative, hotels.from_price, hotels.created_at, hotels.latitude, hotels.star_rating, hotels.hotel_name, hotels.updated_at, hotels.important_notes, hotels.apt, hotels.id, hotels.nearest_tube, hotels.location_id, hotels.nearest_rail, hotels.telephone, hotels.longitude, hotels.distance, hotels.location_name FROM `hotels` LIMIT 0, 15
+  Rendering template within layouts/application
+  Rendering hotels/index
+    Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 491) LIMIT 1
+  Rendered hotels/_hotel (2.8ms)
+  Rendered shared/_header (0.1ms)
+  Rendered shared/_navigation (0.3ms)
+  Missing template hotels/_index_sidebar.erb in view path app/views
+  Rendered shared/_sidebar (0.1ms)
+  Rendered shared/_footer (0.1ms)
+  Completed in 90ms (View: 5, DB: 1) | 200 OK [http://test.host/hotels]
+    SQL (0.1ms)   ROLLBACK
+    SQL (0.1ms)   BEGIN
+
 h2. Installation
+
+h4. As a Rails plugin ( Recommended )
+
+  ./script/plugin install git://github.com/methodmissing/scrooge.git
 
 h4. From Git
 
   git pull git://github.com/methodmissing/scrooge.git
 
-h4. As a Rails plugin
-
-  ./script/plugin install git://github.com/methodmissing/scrooge.git
 
 h4. As a Gem
 
   sudo gem install methodmissing-scrooge -s http://gems.github.com
 
+h2. Configuration
+
+Scrooge installs ( see recommended installation above ) a configuration file with the following format within *framework_configuration_directory/scrooge.yml ( RAILS_ROOT/config/scrooge.yml for a Rails setup ) :
+
+  production:
+    orm: :active_record
+    storage: :memory
+    scope:
+    on_missing_attribute: :reload # or :raise
+    enabled: true    
+  development:
+    orm: :active_record
+    storage: :memory
+    scope: 
+    on_missing_attribute: :reload # or :raise
+    enabled: true    
+  test:
+    orm: :active_record
+    storage: :memory  
+    scope:
+    on_missing_attribute: :reload # or :raise
+    enabled: true 
+
+h4. ORM 
+
+Scrooge is ORM agnostic and ships with an ActiveRecord layer.
+
+  orm: :active_record
+
+h4. Storage backend
+
+Tracking results can be persisted to a given backend or storage option.Ships with a memory store, but can be extended to file system, memcached etc. as all Tracker components is designed to be Marshal friendly.
+
+  storage: :memory
+
+h4. Scope
+
+A scope is a reference to a timestamped Scrooge run where access to Model attributes is tracked on a per Resource basis.
+
+  scope: 1234567891
+
+If not scope is given in the configuration, ENV['scope'] would also be considered to facilitate configuration through Capistrano etc.
+
+h4. Handling Missing Attributes
+
+When the contents for a given Model attribute has not been retrieved from the database, most ORM frameworks raise an error by default.This is configurable to reloading the model with all it's columns or raise instead.
+
+  on_missing_attribute: :reload # or :raise
+
+h4. Status
+
+Scrooge can be disabled with :
+
+  enabled: false 
+
+h2. Notes
+
+This is an initial release, has not yet been battle tested in production and is pending Ruby 1.9.1 compatibility.
+
+Initially evaluated a centralized tracker concept for multi-server environments with minimal configuration overhead
+and on the fly scope injection after a given warmup threshold but found that to be overkill for a first release. 
