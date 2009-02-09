@@ -13,7 +13,7 @@ module Scrooge
       end
       
       def environment
-        ::Rails.env.to_s
+        ::RAILS_ENV
       end
       
       def root

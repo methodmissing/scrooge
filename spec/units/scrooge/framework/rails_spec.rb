@@ -8,8 +8,7 @@ describe Scrooge::Framework::Rails do
 
   it "should be able to yield it's current environment" do
     with_rails do
-      ::Rails.stub!(:env).and_return('production')
-      @framework.environment.should eql( 'production' )
+      @framework.environment.should eql( 'test' )
     end
   end
 

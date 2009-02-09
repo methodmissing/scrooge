@@ -37,11 +37,12 @@ Spec::Runner.configure do |config|
     begin
       Kernel.const_set :RAILS_ROOT, "#{Dir.pwd}/spec" unless defined?(RAILS_ROOT)
       Kernel.const_set :Rails, Class.new unless defined?(Rails)
+      Kernel.const_set :RAILS_ENV, "test" unless defined?(RAILS_ENV)
       ::Rails.stub!(:cache).and_return( Spec::Helpers::Framework::Rails::Cache.new )
       ::Rails.stub!(:root).and_return( RAILS_ROOT )
       yield
     ensure
-      [:RAILS_ROOT, :Rails].each do |const|  
+      [:RAILS_ROOT, :RAILS_ENV, :Rails].each do |const|  
         Kernel.send( :remove_const, const )
       end
     end
