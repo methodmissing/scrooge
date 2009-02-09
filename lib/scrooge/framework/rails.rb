@@ -76,7 +76,11 @@ module Scrooge
       end
       
       def initialized( &block )
-        ::Rails.configuration.after_initialize( &block )
+        begin
+          ::Rails.configuration.after_initialize( &block )
+        rescue NameError
+          # No cofig initialized - plugin installation etc.
+        end  
       end
       
       def controller( resource )
