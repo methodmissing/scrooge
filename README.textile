@@ -38,6 +38,8 @@ This typically happens during functional or integration testing.
 
 The test log may look like :
 
+<pre>
+<code>
   Processing HotelsController#index (for 0.0.0.0 at 2009-02-09 02:55:55) [GET]
     Parameters: {"action"=>"index", "controller"=>"hotels"}
   [Scrooge] Track with resource #< :/ ()
@@ -58,9 +60,13 @@ The test log may look like :
   Completed in 91ms (View: 90, DB: 1) | 200 OK [http://test.host/hotels]
     SQL (0.3ms)   ROLLBACK
     SQL (0.1ms)   BEGIN
+</code>
+</pre>
 
 An example scope / profile, saved to disk :
 
+<pre>
+<code>
 --- 
 - hotels_show_get: 
     :action: show
@@ -145,6 +151,8 @@ An example scope / profile, saved to disk :
       - has_thumbnail
       - hotel_id
       - width
+</code>
+</pre>
 
 h4. Scoping
 
@@ -154,6 +162,8 @@ This is typically pushed to production and adjusted for each major release or de
 
 Log output may look like :
 
+<pre>
+<code>
   Processing HotelsController#index (for 0.0.0.0 at 2009-02-09 02:59:41) [GET]
     Parameters: {"action"=>"index", "controller"=>"hotels"}
   [Scrooge] Scope for Model #<Image :created_at, :thumbnail_width, :title, :updated_at, :url, :id, :thumbnail_height, :height, :thumbnail_url, :has_thumbnail, :width, :hotel_id>
@@ -171,6 +181,8 @@ Log output may look like :
   Completed in 90ms (View: 5, DB: 1) | 200 OK [http://test.host/hotels]
     SQL (0.1ms)   ROLLBACK
     SQL (0.1ms)   BEGIN
+</code>
+</pre>
 
 h2. Installation
 
