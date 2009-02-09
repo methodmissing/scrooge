@@ -15,7 +15,11 @@ module Scrooge
       # given environment.
       #
       def setup( path, environment )
-        new( read_config( path, environment ) )
+        begin
+          new( read_config( path, environment ) )
+        rescue Errno::ENOENT
+          puts "Scrooge Configuration file not available."
+        end
       end
       
       # Pairs profile setup with the host framework.
