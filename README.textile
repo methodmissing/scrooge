@@ -61,90 +61,90 @@ The test log may look like :
 
 An example scope / profile, saved to disk :
 
-  --- 
-  - hotels_show_get: 
-      :action: show
-      :controller: hotels
-      :method: :get
-      :format: "*/*"
-      :models: 
-      - Address: 
-        - line1
-        - line2
-        - created_at
-        - postcode
-        - updated_at
-        - country_id
-        - county
-        - location_id
-        - town
-        - hotel_id
-      - Hotel: 
-        - important_notes
-        - location_id
-  - locations_index_get: 
-      :action: index
-      :controller: locations
-      :method: :get
-      :format: "*/*"
-      :models: 
-      - Location: 
-        - name
-        - created_at
-        - code
-        - updated_at
-        - level
-        - id
-  - countries_index_get: 
-      :action: index
-      :controller: countries
-      :method: :get
-      :format: "*/*"
-      :models: 
-      - Country: 
-        - name
-        - created_at
-        - code
-        - updated_at
-        - id
-        - location_id
-        - continent_id
-  - hotels_index_get: 
-      :action: index
-      :controller: hotels
-      :method: :get
-      :format: "*/*"
-      :models: 
-      - Hotel: 
-        - from_price
-        - narrative
-        - star_rating
-        - latitude
-        - created_at
-        - hotel_name
-        - updated_at
-        - important_notes
-        - id
-        - apt
-        - location_id
-        - nearest_tube
-        - longitude
-        - telephone
-        - nearest_rail
-        - location_name
-        - distance
-      - Image: 
-        - thumbnail_width
-        - created_at
-        - title
-        - updated_at
-        - url
-        - thumbnail_height
-        - height
-        - thumbnail_url
-        - has_thumbnail
-        - hotel_id
-        - width
+--- 
+- hotels_show_get: 
+    :action: show
+    :controller: hotels
+    :method: :get
+    :format: "*/*"
+    :models: 
+    - Address: 
+      - line1
+      - line2
+      - created_at
+      - postcode
+      - updated_at
+      - country_id
+      - county
+      - location_id
+      - town
+      - hotel_id
+    - Hotel: 
+      - important_notes
+      - location_id
+- locations_index_get: 
+    :action: index
+    :controller: locations
+    :method: :get
+    :format: "*/*"
+    :models: 
+    - Location: 
+      - name
+      - created_at
+      - code
+      - updated_at
+      - level
+      - id
+- countries_index_get: 
+    :action: index
+    :controller: countries
+    :method: :get
+    :format: "*/*"
+    :models: 
+    - Country: 
+      - name
+      - created_at
+      - code
+      - updated_at
+      - id
+      - location_id
+      - continent_id
+- hotels_index_get: 
+    :action: index
+    :controller: hotels
+    :method: :get
+    :format: "*/*"
+    :models: 
+    - Hotel: 
+      - from_price
+      - narrative
+      - star_rating
+      - latitude
+      - created_at
+      - hotel_name
+      - updated_at
+      - important_notes
+      - id
+      - apt
+      - location_id
+      - nearest_tube
+      - longitude
+      - telephone
+      - nearest_rail
+      - location_name
+      - distance
+    - Image: 
+      - thumbnail_width
+      - created_at
+      - title
+      - updated_at
+      - url
+      - thumbnail_height
+      - height
+      - thumbnail_url
+      - has_thumbnail
+      - hotel_id
+      - width
 
 h4. Scoping
 
