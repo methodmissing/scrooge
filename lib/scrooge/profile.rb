@@ -17,7 +17,7 @@ module Scrooge
       def setup( path, environment )
         begin
           new( read_config( path, environment ) )
-        rescue Errno::ENOENT
+        rescue ::Errno::ENOENT
           puts "Scrooge Configuration file not available."
         end
       end

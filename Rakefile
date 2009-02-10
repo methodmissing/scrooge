@@ -29,6 +29,7 @@ begin
     Ruby applications only fetch the database content needed to minimize wire traffic
     and reduce conversion overheads to native Ruby types."
     s.authors = ["Lourens Naudé"]
+    s.files = FileList["[A-Z]*", "{lib,spec,rails,assets,tasks}/**/*"]
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
