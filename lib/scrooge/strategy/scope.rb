@@ -3,7 +3,7 @@ module Scrooge
     class Scope < Base
     
       stage :scope do
-        #
+        Scrooge::Profile.scope!
       end    
       
     end

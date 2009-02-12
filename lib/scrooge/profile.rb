@@ -155,22 +155,20 @@ module Scrooge
     #
     def raise_on_missing_attribute?
       @on_missing_attribute == :raise
-    end
+    end    
     
-    def track_and_scope?
-      @warmup != 0
-    end
-           
-    def track_and_scope!
-      
-    end       
+    # Yields a strategt instance.
+    #           
+    def strategy
+      @strategy_instance ||= "scrooge/strategy/#{@strategy.to_s}".to_const!  
+    end           
                 
     private
     
       def configure! #:nodoc:
         @orm = configure_with( @options['orm'], [:active_record], :active_record )
         @storage = configure_with( @options['storage'], [:memory], :memory )
-        @warmup = configure_with( @options['warmup'], 0..28800, 0 )
+        @strategy = configure_with( @options['strategy'], [:track, :scope, :track_then_scope], :track )
         @scope = configure_with( @options['scope'].to_s, framework.scopes, ENV['scope'] )
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )

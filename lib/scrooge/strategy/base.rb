@@ -3,17 +3,16 @@ module Scrooge
     
     autoload :Controller, 'scrooge/strategy/controller'
     autoload :Stage, 'scrooge/strategy/stage'
+    autoload :Scope, 'scrooge/strategy/scope'
+    autoload :Track, 'scrooge/strategy/track'
+    autoload :TrackThenScope, 'scrooge/strategy/track_then_scope'
 
     class Base
-      
-      autoload :Scope, 'scrooge/strategy/scope'
-      autoload :Track, 'scrooge/strategy/track'
-      autoload :TrackThenScope, 'scrooge/strategy/track_then_scope'
       
       class NoStages < StandardError
       end
       
-      @@stages = {}
+      @@stages = Hash.new( [] )
       @@stages[self.name] = []
       
       class << self

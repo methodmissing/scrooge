@@ -70,4 +70,8 @@ describe "Scrooge::Profile instance" do
     @profile.scope_to.should eql( 'scope_from_env' )   
   end  
     
+  it "should be able to yield a stategy instance" do
+    @profile.strategy.class.should == Scrooge::Strategy::Track 
+  end  
+    
 end
