@@ -50,27 +50,27 @@ module Scrooge
       class InvalidScopeSignature < StandardError
       end        
    
-      class << self
-
-        # Per framework signature lookup.
-        #        
-        @@signatures = {}
-        @@signatures[self.name] = Hash.new( [] )
-        
-        # Support none by default.
-        #
-        @@frameworks = []        
+      # Per framework signature lookup.
+      #        
+      @@signatures = Hash.new( [] )
+      @@signatures[self.name] = []
+      
+      # Support none by default.
+      #
+      @@frameworks = [] 
+   
+      class << self  
                 
         # Registers a framework signature.
         #        
         def signature( &block )
-          @@signatures[self.name] = signatures << block
+          @@signatures[self.name] << block
         end  
         
         # All signatures for the current klass. 
         #
         def signatures
-          @@signatures[self.name] || []
+          @@signatures[self.name]
         end
         
         # All supported frameworks.

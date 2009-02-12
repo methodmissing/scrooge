@@ -1,18 +1,21 @@
 production:
   orm: :active_record
   storage: :memory
+  warmup: 1800
   scope:
   on_missing_attribute: :reload # or :raise
   enabled: true    
 development:
   orm: :active_record
   storage: :memory
+  warmup: 1800
   scope: 
   on_missing_attribute: :reload # or :raise
   enabled: true    
 test:
   orm: :active_record
   storage: :memory  
+  warmup: 1800
   scope:
   on_missing_attribute: :reload # or :raise
   enabled: true    

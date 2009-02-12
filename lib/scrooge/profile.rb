@@ -156,12 +156,21 @@ module Scrooge
     def raise_on_missing_attribute?
       @on_missing_attribute == :raise
     end
+    
+    def track_and_scope?
+      @warmup != 0
+    end
+           
+    def track_and_scope!
+      
+    end       
                 
     private
     
       def configure! #:nodoc:
         @orm = configure_with( @options['orm'], [:active_record], :active_record )
         @storage = configure_with( @options['storage'], [:memory], :memory )
+        @warmup = configure_with( @options['warmup'], 0..28800, 0 )
         @scope = configure_with( @options['scope'].to_s, framework.scopes, ENV['scope'] )
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
@@ -191,12 +200,16 @@ module Scrooge
         storage()
         tracker()
       end
+      
+      def scope_to_disk? #:nodoc:
+        tracker.any? && !track_and_scope? 
+      end
                   
       def shutdown_hook! #:nodoc:
         # Registers an at_exit hook to persist the current application scope.
         ::Kernel.at_exit do
           log "shutdown ..."
-          framework.scope! if tracker.any? 
+          framework.scope! if scope_to_disk?
         end        
       end            
                   
