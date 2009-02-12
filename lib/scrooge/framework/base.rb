@@ -173,6 +173,12 @@ module Scrooge
         raise NotImplemented
       end
       
+      # Remove tracking middleware
+      #
+      def uninstall_tracking_middleware
+        raise NotImplemented
+      end
+      
       # Register a code block to run when the host framework is fully initialized.
       #
       def initialized( &block )

@@ -63,6 +63,12 @@ module Scrooge
         end
       end
       
+      # Remove all tracking filters
+      #
+      def uninstall_tracking_middleware
+        ApplicationController.skip_filter Scrooge::Middleware::Tracker
+      end
+      
       # Install per Resource scoping middleware.
       #
       def install_scope_middleware( tracker )
@@ -79,7 +85,7 @@ module Scrooge
         begin
           ::Rails.configuration.after_initialize( &block )
         rescue NameError
-          # No cofig initialized - plugin installation etc.
+          # No config initialized - plugin installation etc.
         end  
       end
       

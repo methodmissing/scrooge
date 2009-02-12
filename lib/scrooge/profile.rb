@@ -130,20 +130,37 @@ module Scrooge
     # Scope the tracker environment to a given scope signature.
     #
     def scope_to_signature!( scope_signature )
-      log "Scope to #{scope_signature}"
+      log "Scope to signature #{scope_signature} ..."
       @tracker_instance = framework.from_scope!( scope_signature )
     end
     
-    # Scope the tracker environment to a given scope signature and install
-    # scoping middleware.
+    # Scope to a given tracker instance.
     #
-    def scope_to!
-      if scope?
-        scope_to_signature!( @scope )
-        framework.install_scope_middleware( tracker )        
-      end
+    def scope_to_tracker!( tracker )
+      log "Scope to tracker #{tracker.inspect} ..."
+      @tracker_instance = tracker
+    end
+    
+    # Yields a tracker instance from a given signature or tracker.
+    #
+    def scope_to!( signature_or_tracker )
+      if signature_or_tracker.kind_of?( Scrooge::Tracker::Base )
+        scope_to_tracker!( signature_or_tracker )
+      else
+        scope_to_signature!( signature_or_tracker  )
+      end  
     end
     alias :scope! :scope_to!
+
+    # Scope the tracker environment to a given scope signature or tracker instance and install
+    # scoping middleware.
+    #    
+    def scope!( signature_or_tracker )
+      if scope?
+        scope_to!( signature_or_tracker )
+        framework.install_scope_middleware( tracker )       
+      end
+    end
     
     # Should Scrooge inject itself ?
     #         
@@ -188,6 +205,7 @@ module Scrooge
         @orm_instance = nil
         @tracker_instance = nil
         @storage_instance = nil
+        @strategy_instance = nil
       end
       
       # Force constant lookups as autoload is not threadsafe.
@@ -197,9 +215,10 @@ module Scrooge
         orm()
         storage()
         tracker()
+        strategy()
       end
       
-      def scope_to_disk? #:nodoc:
+      def save_to_disk? #:nodoc:
         tracker.any? && !track_and_scope? 
       end
                   
@@ -207,7 +226,7 @@ module Scrooge
         # Registers an at_exit hook to persist the current application scope.
         ::Kernel.at_exit do
           log "shutdown ..."
-          framework.scope! if scope_to_disk?
+          framework.scope! if save_to_disk?
         end        
       end            
                   

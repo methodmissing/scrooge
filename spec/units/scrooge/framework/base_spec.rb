@@ -132,6 +132,10 @@ describe Scrooge::Framework::Base do
     lambda{ @base.install_tracking_middleware() }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end
   
+  it "should be able to uninstall tracking middleware" do
+    lambda{ @base.uninstall_tracking_middleware() }.should raise_error( Scrooge::Framework::Base::NotImplemented )
+  end  
+  
   it "should be able to install scoping middleware" do
     lambda{ @base.install_scope_middleware( 'tracker' ) }.should raise_error( Scrooge::Framework::Base::NotImplemented )
   end  
