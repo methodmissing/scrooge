@@ -214,8 +214,9 @@ module Scrooge
       
       # Log a message to the logger.
       #
-      def log( message )
+      def log( message, flush = false )
         logger.info "[Scrooge] #{message}"
+        flush_logger! if flush
       end
       
       # Persist the current tracker as scope or restore a previously persisted scope
@@ -262,6 +263,10 @@ module Scrooge
       end
       
       private
+       
+       def flush_logger! #:nodoc:
+         logger.flush if logger.respond_to?(:flush)
+       end
        
        def restore_scope!( scope ) #:nodoc:
          tracker = Scrooge::Tracker::App.new
