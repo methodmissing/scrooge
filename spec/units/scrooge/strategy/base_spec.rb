@@ -49,8 +49,4 @@ describe Scrooge::Strategy::Base do
     @base.stages.first.class.should eql( Scrooge::Strategy::Stage )
   end
   
-  it "should be able to determine if any stages is defined" do
-    @base.stages?().should eql( true )
-  end
-  
 end

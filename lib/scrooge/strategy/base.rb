@@ -18,6 +18,8 @@ module Scrooge
       
       class << self
         
+        # Stage definition macro.
+        #
         # stage :track, :for => 10.minutes do
         #   ....
         # end
@@ -26,28 +28,34 @@ module Scrooge
           @@stages[self.name] << Scrooge::Strategy::Stage.new( signature, options, &block )
         end
         
+        # List all defined stages for this klass.
+        #
         def stages
           @@stages[self.name]
         end
         
+        # Are there any stages defined ?
+        #
         def stages?
           !stages.empty?
         end
         
+        # Test teardown helper.
+        #
         def flush!
           @@stages[self.name] = []
         end
         
       end
       
+      # Requires at least one stage definition.
+      #
       def initialize
-        raise NoStages unless stages?
+        raise NoStages unless self.class.stages?
       end 
       
-      def stages?
-        self.class.stages?
-      end
-      
+      # Piggy back on stages defined for this klass.
+      #
       def stages
         self.class.stages
       end
