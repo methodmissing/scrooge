@@ -3,7 +3,11 @@ module Scrooge
     class Scope < Base
     
       stage :scope do
-        Scrooge::Profile.scope!
+        
+        log "Scope ..." 
+        scope = nil
+        framework.install_scope_middleware( tracker )
+       
       end    
       
     end

@@ -24,7 +24,7 @@ namespace :scrooge do
   task :inspect do
     any_scopes do
       begin
-        Scrooge::Base.profile.scope_to_signature!( ENV['scope'] )
+        Scrooge::Base.profile.scope = ENV['scope']
         puts Scrooge::Base.profile.tracker.inspect
       rescue Scrooge::Framework::Base::InvalidScopeSignature
         puts "Please set ENV['scope'] to the scope you'd like to inspect."

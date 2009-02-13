@@ -67,6 +67,18 @@ module Scrooge
       @storage_instance ||= Scrooge::Storage::Base.instantiate( @storage )
     end
     
+    # Delegates to the Application Tracker.
+    #
+    def tracker
+      @tracker_instance ||= Scrooge::Tracker::App.new
+    end
+
+    # Yields a strategt instance.
+    #           
+    def strategy
+      @strategy_instance ||= "scrooge/strategy/#{@strategy.to_s}".to_const!  
+    end
+    
     # Delegates to the current framework.
     #
     def framework
@@ -78,21 +90,7 @@ module Scrooge
     def log( message )
       framework.log( message ) rescue ''
     end
-    
-    # Delegates to the Application Tracker.
-    #
-    def tracker
-      @tracker_instance ||= Scrooge::Tracker::App.new
-    end
-      
-    # Determine if this is a tracking or scope profile.
-    #  
-    def track_or_scope!
-      if enabled?
-        track? ? track! : scope!
-      end
-    end
-    
+        
     # Are we tracking ?
     #
     def track?
@@ -101,67 +99,24 @@ module Scrooge
       else
         false
       end  
-    end
-    
-    def track!
-      if track?
-        log "Tracking"
-        framework.install_tracking_middleware()
-        shutdown_hook!
-      end   
-    end      
+    end   
     
     # The active scope signature
     #
-    def scope_to
+    def scope
       @scope
-    end
-        
-    # Are we scoping ?
-    #
-    def scope?
-      if enabled?
-        !track?
-      else
-        false
-      end    
-    end        
-        
-    # Scope the tracker environment to a given scope signature.
-    #
-    def scope_to_signature!( scope_signature )
-      log "Scope to signature #{scope_signature} ..."
-      @tracker_instance = framework.from_scope!( scope_signature )
-    end
+    end     
     
-    # Scope to a given tracker instance.
-    #
-    def scope_to_tracker!( tracker )
-      log "Scope to tracker #{tracker.inspect} ..."
-      @tracker_instance = tracker
-    end
-    
-    # Yields a tracker instance from a given signature or tracker.
-    #
-    def scope_to!( signature_or_tracker )
+    # Assign the current scope from a given signature or tracker
+    #    
+    def scope=( signature_or_tracker )
       if signature_or_tracker.kind_of?( Scrooge::Tracker::Base )
         scope_to_tracker!( signature_or_tracker )
       else
         scope_to_signature!( signature_or_tracker  )
-      end  
-    end
-    alias :scope! :scope_to!
-
-    # Scope the tracker environment to a given scope signature or tracker instance and install
-    # scoping middleware.
-    #    
-    def scope!( signature_or_tracker )
-      if scope?
-        scope_to!( signature_or_tracker )
-        framework.install_scope_middleware( tracker )       
       end
-    end
-    
+    end    
+            
     # Should Scrooge inject itself ?
     #         
     def enabled?
@@ -172,13 +127,7 @@ module Scrooge
     #
     def raise_on_missing_attribute?
       @on_missing_attribute == :raise
-    end    
-    
-    # Yields a strategt instance.
-    #           
-    def strategy
-      @strategy_instance ||= "scrooge/strategy/#{@strategy.to_s}".to_const!  
-    end           
+    end          
                 
     private
     
@@ -192,7 +141,7 @@ module Scrooge
         reset_backends!
         memoize_backends!
       end        
-      
+    
       def configure_with( given, valid, default ) #:nodoc:
         if given
           valid.include?( given ) ? given : default
@@ -216,19 +165,17 @@ module Scrooge
         storage()
         tracker()
         strategy()
+      end         
+        
+      def scope_to_signature!( scope_signature ) #:nodoc:
+        log "Scope to signature #{scope_signature} ..."
+        @tracker_instance = framework.from_scope!( scope_signature )
       end
-      
-      def save_to_disk? #:nodoc:
-        tracker.any? && !track_and_scope? 
+
+      def scope_to_tracker!( tracker ) #:nodoc:
+        log "Scope to tracker #{tracker.inspect} ..."
+        @tracker_instance = tracker
       end
-                  
-      def shutdown_hook! #:nodoc:
-        # Registers an at_exit hook to persist the current application scope.
-        ::Kernel.at_exit do
-          log "shutdown ..."
-          framework.scope! if save_to_disk?
-        end        
-      end            
-                  
+                        
   end
 end

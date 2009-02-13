@@ -36,7 +36,7 @@ module Scrooge
       def execute!
         begin
           @state = :execute
-          result = @payload.call
+          result = call!
           sleep( @duration )      
           result
         ensure
@@ -63,6 +63,12 @@ module Scrooge
       def terminated?
         @state == :terminated
       end
+      
+      private
+      
+        def call! #:nodoc:
+          Scrooge::Base.profile.instance_eval( &@payload )
+        end
       
     end
   end

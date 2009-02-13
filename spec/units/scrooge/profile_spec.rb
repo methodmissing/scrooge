@@ -38,25 +38,13 @@ describe "Scrooge::Profile instance" do
   it "should return a valid tracker instance" do
     @profile.tracker.class.should equal( Scrooge::Tracker::App )
   end    
-   
-  it "should be able to determine if the active profile should track or scope" do
-    @profile.track?().should equal( false )
-    @profile.scope?().should equal( false )
-  end 
   
   it "should be able to infer the current scope" do
-    @profile.scope_to.should eql( "1234567891" )
+    @profile.scope.should eql( "1234567891" )
   end
     
   it "should be able to determine if it's enabled" do
     @profile.enabled?().should eql( false )  
-  end  
-    
-  it "should neither track or scope if not enabled" do
-    @profile.should_receive(:track!).never
-    @profile.should_receive(:scope!).never
-    @profile.stub!(:enabled?).and_return(false)
-    @profile.track_or_scope!  
   end  
     
   it "should be able to determine if it should raise on missing attributes" do    
@@ -67,7 +55,7 @@ describe "Scrooge::Profile instance" do
     @profile.framework.stub!(:scopes).and_return( [] )
     ENV['scope'] = 'scope_from_env'
     @profile.send(:configure!)
-    @profile.scope_to.should eql( 'scope_from_env' )   
+    @profile.scope.should eql( 'scope_from_env' )   
   end  
     
   it "should be able to yield a stategy instance" do
