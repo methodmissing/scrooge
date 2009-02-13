@@ -13,14 +13,14 @@ module Scrooge
       stage :synchronize, :for => 10 do
         
         log "Synchronize results with other processes ..."
-        synchronize!
+        tracker.synchronize!
       
       end
       
       stage :aggregate, :for => 10 do
         
         log "Aggregate results from other processes ..."   
-        aggregrate!
+        tracker.aggregrate!
       
       end      
       

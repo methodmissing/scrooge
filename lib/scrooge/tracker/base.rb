@@ -15,6 +15,16 @@ module Scrooge
       class NotImplemented < StandardError
       end
       
+      class << self
+        
+        # Marshal helper.
+        #
+        def load( data )
+          new.marshal_load( data )
+        end
+        
+      end
+      
       attr_accessor :counter
       
       def initialize

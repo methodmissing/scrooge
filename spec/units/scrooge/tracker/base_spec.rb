@@ -1,5 +1,13 @@
 require 'spec/spec_helper'
 
+describe "Scrooge::Tracker::Base singleton" do
+  
+  it "should be able to yield an instance from given Marshalled data" do
+    lambda{ Scrooge::Tracker::Base.load( [] ) }.should raise_error( Scrooge::Tracker::Base::NotImplemented )
+  end
+  
+end
+
 describe Scrooge::Tracker::Base do
   
   before(:each) do

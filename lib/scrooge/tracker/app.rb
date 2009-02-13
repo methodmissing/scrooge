@@ -6,11 +6,26 @@ module Scrooge
       
       GUARD = Monitor.new      
       
+      AGGREGATION_BUCKET = 'scrooge_tracker_aggregation'.freeze
+      
       attr_accessor :resources
       
       def initialize
         super()
         @resources = Set.new
+      end
+      
+      def synchronize!
+        GUARD.synchronize do
+          Scrooge::Base.profile.framework.write_cache( syncronization_signature, Marshal.dump( self ) )
+          register_synchronization_signature!
+        end
+      end
+      
+      def aggregate!
+        GUARD.synchronize do
+          
+        end  
       end
       
       # Has any Resources been tracked ? 
@@ -69,6 +84,18 @@ module Scrooge
       end
       
       private
+      
+        def register_synchronization_signature! #:nodoc:
+          if bucket = Scrooge::Base.profile.framework.read_cache( AGGREGATION_BUCKET )
+            Scrooge::Base.profile.framework.write_cache( AGGREGATION_BUCKET, [synchronization_signature] )
+          else
+            Scrooge::Base.profile.framework.write_cache( AGGREGATION_BUCKET, (bucket << synchronization_signature) )
+          end   
+        end
+      
+        def synchronization_signature #:nodoc:
+          @synchronization_signature ||= "#{Thread.current.object_id}_#{Process.pid}_#{rand(1000000)}"
+        end
       
         def setup_resource( resource ) #:nodoc:
           GUARD.synchronize do

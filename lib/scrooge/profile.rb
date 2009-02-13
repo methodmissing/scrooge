@@ -6,9 +6,6 @@ module Scrooge
     # A Profile for Scrooge that holds configuration, determines if we're tracking or
     # scoping and provides access to a Tracker, ORM, Storage and Framework instance. 
     
-    class Signature      
-    end
-    
     class << self
       
       # Setup a new instance from the path to a YAML configuration file and a
