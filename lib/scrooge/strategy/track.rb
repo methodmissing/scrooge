@@ -6,6 +6,7 @@ module Scrooge
         
         log( "Tracking", true )
         framework.install_tracking_middleware()
+        start_tracking!
         ::Kernel.at_exit do
           log( "Shutdown ...", true )
           framework.scope! if tracker.any?

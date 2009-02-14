@@ -10,6 +10,7 @@ module Scrooge
       
       def run!
         Thread.new do
+          Thread.current.abort_on_exception = true
           stages.map do |stage|
             stage.execute!
           end

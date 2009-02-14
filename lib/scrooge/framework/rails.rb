@@ -57,28 +57,30 @@ module Scrooge
       #      
       def install_tracking_middleware
         GUARD.synchronize do
-          ActionController::Dispatcher.to_prepare( :scrooge_install_tracking_middleware ) do
+          #ActionController::Dispatcher.to_prepare( :scrooge_install_tracking_middleware ) do
             ApplicationController.prepend_around_filter Scrooge::Middleware::Tracker
-          end
+          #end
         end
       end
       
       # Remove all tracking filters
       #
       def uninstall_tracking_middleware
-        ApplicationController.skip_filter Scrooge::Middleware::Tracker
+        GUARD.synchronize do
+          ApplicationController.skip_filter Scrooge::Middleware::Tracker
+        end
       end
       
       # Install per Resource scoping middleware.
       #
       def install_scope_middleware( tracker )
         GUARD.synchronize do
-          ActionController::Dispatcher.to_prepare( :scrooge_install_scope_middleware ) do
+          #ActionController::Dispatcher.to_prepare( :scrooge_install_scope_middleware ) do
             tracker.resources.each do |resource|
               install_scope_middleware_for_resource!( resource )
             end
           end  
-        end  
+        #end  
       end
       
       def initialized( &block )

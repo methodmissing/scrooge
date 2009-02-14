@@ -17,7 +17,8 @@ module Scrooge
       # Valid options is
       # * :for : the phase / stage duration, in seconds 
       #               
-      def initialize( signature, options = {}, &block )                  
+      def initialize( signature, options = {}, &block )
+        @signature = signature                  
         @duration = options[:for] || 0 
         @payload = block
         @state = :initialized
@@ -35,6 +36,7 @@ module Scrooge
       #
       def execute!
         begin
+          Scrooge::Base.profile.log( "Execute stage #{signature.inspect} ...", true)
           @state = :execute
           result = call!
           sleep( @duration )      

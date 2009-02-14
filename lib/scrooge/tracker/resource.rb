@@ -194,7 +194,7 @@ module Scrooge
             models.map do |model|
               m = model.keys.first # TODO: cleanup
               Model.new( m ).marshal_load( model )
-            end
+            end.to_set
           end  
         end
         

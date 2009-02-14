@@ -9,7 +9,9 @@ describe Scrooge::Strategy::Scope do
   end
   
   it "should be able to execute a given strategy" do
-    lambda{ @controller.run!().value }.should raise_error( NameError )
+    with_rails do
+      lambda{ @controller.run!().value }.should raise_error( SystemExit )
+    end
   end
   
 end

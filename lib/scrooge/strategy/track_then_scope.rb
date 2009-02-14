@@ -3,16 +3,21 @@ module Scrooge
     class TrackThenScope < Base
       
       stage :track, :for => Scrooge::Base.profile.warmup do
-        
-        log( "Tracking", true )
+
+        log( "Installing tracking middleware ... ", true )
         framework.install_tracking_middleware()
+        log( "Start tracking ... ", true )        
+        start_tracking!
       
       end
       
       stage :synchronize, :for => 10 do
         
-        log( "Synchronize results with other processes ...", true )
+        log( "Uninstalling tracking middleware ... ", true )
         framework.uninstall_tracking_middleware
+        log( "Stop tracking ... ", true )
+        stop_tracking!
+        log( "Synchronize results with other processes ...", true )
         tracker.synchronize!
       
       end
@@ -20,7 +25,7 @@ module Scrooge
       stage :aggregate, :for => 10 do
         
         log( "Aggregate results from other processes ...", true )  
-        tracker.aggregrate!
+        tracker.aggregate!
       
       end      
       

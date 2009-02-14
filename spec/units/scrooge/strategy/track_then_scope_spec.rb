@@ -13,7 +13,9 @@ describe Scrooge::Strategy::TrackThenScope do
   
   it "should be able to execute a given strategy" do
     Scrooge::Base.profile.stub!(:synchronize!).once
-    lambda{ @controller.run!().value }.should raise_error( NameError )
+    with_rails do
+      @controller.run!().value.should include( 'installed' )
+    end
   end
   
 end

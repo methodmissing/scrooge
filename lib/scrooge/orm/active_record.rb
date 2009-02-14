@@ -28,7 +28,6 @@ module Scrooge
             
               def register_with_scrooge!( attr_name, caller ) #:nodoc:
                 if ::Scrooge::Base.profile.orm.track?
-                  logger.info "[Scrooge] #{caller} #{attr_name.to_s}"
                   Thread.scrooge_resource << [self.base_class, attr_name]
                 end
               end
@@ -55,7 +54,6 @@ module Scrooge
           
             def register_with_scrooge!( attr_name, caller ) #:nodoc:
               if ::Scrooge::Base.profile.orm.track?
-                logger.info "[Scrooge] #{caller} #{attr_name.to_s}"
                 Thread.scrooge_resource << [self.class.base_class, attr_name]
               end
             end
@@ -105,7 +103,7 @@ module Scrooge
       #
       def scope_resource_to_model( resource, model )
         method_name = resource_scope_method( resource )
-        klass = model.model.to_const!(false) if model.model.is_a?(String)
+        klass = klass_for_model( model )
         unless resource_scope_method?( resource, klass ) 
           klass.instance_eval(<<-EOS, __FILE__, __LINE__)
             def #{method_name}(&block)
@@ -137,6 +135,12 @@ module Scrooge
         model = model.to_const!(false) if model.is_a?(String)
         model.primary_key
       end      
+      
+      private
+      
+        def klass_for_model( model ) #:nodoc:
+          model.model.is_a?(String) ? model.model.to_const!(false) : model.model
+        end
       
     end  
   end  

@@ -6,6 +6,8 @@ module Scrooge
     # A Profile for Scrooge that holds configuration, determines if we're tracking or
     # scoping and provides access to a Tracker, ORM, Storage and Framework instance. 
     
+    GUARD = Mutex.new
+    
     class << self
       
       # Setup a new instance from the path to a YAML configuration file and a
@@ -41,8 +43,8 @@ module Scrooge
                
     attr_reader :options           
                
-    def initialize( options = {} )           
-      self.options = options            
+    def initialize( options = {} )       
+      self.options = options         
     end
     
     # options writer that attempts to reconfigure for any configuration changes.
@@ -91,12 +93,26 @@ module Scrooge
     # Are we tracking ?
     #
     def track?
-      if enabled?
-        @track ||= (@scope || '').match( /\d{10}/ ).nil?
-      else
-        false
-      end  
-    end   
+      GUARD.synchronize do
+        @track == true
+      end
+    end
+
+    # Enable the tracking phase
+    #
+    def start_tracking!
+      GUARD.synchronize do
+        @track = true
+      end
+    end
+    
+    # Disable the tracking phase
+    #
+    def stop_tracking!
+      GUARD.synchronize do
+        @track = false
+      end
+    end
     
     # The active scope signature
     #
@@ -134,12 +150,12 @@ module Scrooge
                 
     private
     
-      def configure! #:nodoc:
+      def configure! #:nodoc:        
         @orm = configure_with( @options['orm'], [:active_record], :active_record )
         @storage = configure_with( @options['storage'], [:memory], :memory )
         @strategy = configure_with( @options['strategy'], [:track, :scope, :track_then_scope], :track )
         @scope = configure_with( @options['scope'].to_s, framework_scopes, ENV['scope'] )
-        @warmup = configure_with( @options['warmup'].to_s, 0..14400, 0 )        
+        @warmup = configure_with( @options['warmup'], 0..14400, 0 )    
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
         reset_backends!
@@ -162,7 +178,6 @@ module Scrooge
         @orm_instance = nil
         @tracker_instance = nil
         @storage_instance = nil
-        @strategy_instance = nil
       end
       
       # Force constant lookups as autoload is not threadsafe.
@@ -172,7 +187,6 @@ module Scrooge
         orm()
         storage()
         tracker()
-        strategy()
       end         
         
       def scope_to_signature!( scope_signature ) #:nodoc:

@@ -6,5 +6,5 @@ Scrooge::Framework::Rails
 Scrooge::Base.profile = Scrooge::Profile.setup!
 Scrooge::Base.profile.framework.initialized do
   Scrooge::Base.profile.log "Initialized"
-  Scrooge::Base.profile.track_or_scope!
+  Scrooge::Base.profile.strategy.execute!
 end

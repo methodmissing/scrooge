@@ -59,6 +59,12 @@ module Scrooge
         self.class.stages
       end
       
+      # Enforce this strategy
+      #
+      def execute!
+        Scrooge::Strategy::Controller.new( self ).run!
+      end
+      
     end
   end
 end

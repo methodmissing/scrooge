@@ -21,7 +21,7 @@ module Scrooge
       #
       def synchronize!
         GUARD.synchronize do
-          write_cache( syncronization_signature, Marshal.dump( self ) )
+          write_cache( synchronization_signature, marshal_dump )
           register_synchronization_signature!
         end
       end
@@ -44,7 +44,7 @@ module Scrooge
         return unless other_tracker
         resources.merge( other_tracker.resources )
         resources.each do |res|
-          resource.merge( other_tracker.resource( res )  )
+          res.merge( other_tracker.resource( res )  )
         end
       end
 
@@ -121,9 +121,9 @@ module Scrooge
       
         def register_synchronization_signature! #:nodoc:
           if bucket = read_cache( AGGREGATION_BUCKET )
-            write_cache( AGGREGATION_BUCKET, [synchronization_signature] )
-          else
             write_cache( AGGREGATION_BUCKET, (bucket << synchronization_signature) )
+          else
+            write_cache( AGGREGATION_BUCKET, [synchronization_signature] )
           end   
         end
       
