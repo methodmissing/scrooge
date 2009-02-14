@@ -13,6 +13,12 @@ describe Scrooge::Tracker::Resource do
     @model.stub!(:name).and_return( 'Product' )
     @model.stub!(:table_name).and_return( 'products' )  
     @model.stub!(:primary_key).and_return( 'id' )      
+    @other_resource = Scrooge::Tracker::Resource.new do |resource|
+                        resource.controller = 'categories'
+                        resource.action = 'show'
+                        resource.method = :get
+                        resource.format = :html
+                      end
   end
   
   it "should be able to determine if any models has been tracked" do
@@ -79,5 +85,20 @@ describe Scrooge::Tracker::Resource do
     @resource.inspect().should match( /products/ )
     @resource.inspect().should match( /Product/ )
   end  
+  
+  it "should be able to find a given model" do
+    @resource << @model
+    other_model = mock('model')
+    other_model.stub!(:name).and_return('Product')
+    @resource.model( other_model ).should == @model
+  end
+  
+  it "should be able to merge itself with another resource" do
+    @other_resource << @model
+    @resource.merge( @other_resource )
+    @resource.models.to_a.should eql( [@model] )
+    @resource.models.should_not_receive(:merge)
+    @resource.merge( nil )
+  end
   
 end

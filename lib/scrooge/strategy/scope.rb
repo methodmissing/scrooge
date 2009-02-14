@@ -4,7 +4,7 @@ module Scrooge
     
       stage :scope do
         
-        log "Scope ..." 
+        log( "Scope ...", true ) 
         scope = nil
         framework.install_scope_middleware( tracker )
        

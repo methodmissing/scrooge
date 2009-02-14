@@ -24,8 +24,26 @@ module Scrooge
       
       def aggregate!
         GUARD.synchronize do
-          
+          Scrooge::Base.profile.framework.read_cache( AGGREGATION_BUCKET ).each do |tracker|
+            merge( tracker )
+          end  
         end  
+      end
+      
+      # Merge this Tracker with another Tracker ( multi-process aggregation ) 
+      #      
+      def merge( other_tracker )
+        return unless other_tracker
+        resources.merge( other_tracker.resources )
+        resources.each do |res|
+          resource.merge( other_tracker.resource( res )  )
+        end
+      end
+
+      # Find a given resource instance
+      #      
+      def resource( resource )
+        resources.detect{|r| r.signature == resource.signature }
       end
       
       # Has any Resources been tracked ? 
@@ -79,8 +97,8 @@ module Scrooge
       # If we've seen this resource before, return the original, else, returns
       # the given resource.
       #
-      def resource_for( resource )
-        @resources.detect{|r| r.signature == resource.signature } || resource
+      def resource_for( res )
+        resource( res ) || res
       end
       
       private

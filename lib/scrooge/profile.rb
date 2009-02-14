@@ -84,8 +84,8 @@ module Scrooge
     
     # Log a message to the framework's logger.
     #
-    def log( message )
-      framework.log( message ) rescue ''
+    def log( message, flush = false )
+      framework.log( message, flush ) rescue ''
     end
         
     # Are we tracking ?

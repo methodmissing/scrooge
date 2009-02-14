@@ -13,6 +13,13 @@ module Scrooge
         @attributes = Set.new 
       end
 
+      # Merge this Tracker with another Tracker for the same model ( multi-process aggregation ) 
+      #
+      def merge( other_model )
+        return unless other_model
+        attributes.merge( other_model.attributes )
+      end
+
       # Has any Attributes been tracked ? 
       #
       def any?

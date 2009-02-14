@@ -4,10 +4,10 @@ module Scrooge
       
       stage :track, :for => 600 do
         
-        log "Tracking"
+        log( "Tracking", true )
         framework.install_tracking_middleware()
         ::Kernel.at_exit do
-          log "shutdown ..."
+          log( "Shutdown ...", true )
           framework.scope! if tracker.any?
         end
         

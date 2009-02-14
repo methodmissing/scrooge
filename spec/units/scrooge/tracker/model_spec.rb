@@ -7,6 +7,8 @@ describe Scrooge::Tracker::Model do
     @model.stub!(:name).and_return( 'Product' )
     @model.stub!(:table_name).and_return( 'products' )
     @model.stub!(:primary_key).and_return( 'id' )    
+    @other_model = Scrooge::Tracker::Model.new( 'OtherPost' )
+    @another_model = Scrooge::Tracker::Model.new( 'AnotherPost' )
   end
 
   it "should be able to determine if any attributes has been tracked" do
@@ -45,6 +47,16 @@ describe Scrooge::Tracker::Model do
     @model << [:name, :description]
     @model.inspect().should match( /Product/ )
     @model.inspect().should match( /:name/ )
+  end
+  
+  it "should be able to merge itself with another model tracker" do
+    @other_model << [:name, :description]
+    @model.merge( @other_model )
+    @model.attributes.to_a.should eql( [:name, :description] )
+    @another_model.merge( @model )
+    @another_model.attributes.to_a.should eql( [:name, :description] )
+    @another_model.attributes.should_not_receive(:merge)
+    @another_model.merge( nil )
   end
   
 end

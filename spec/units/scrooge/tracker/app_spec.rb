@@ -55,8 +55,12 @@ describe Scrooge::Tracker::App do
   end
   
   it "should be able to determine if a resource's been seen before" do
-    @app << @resource
     @app.resource_for( @resource ).should eql( @resource )
+  end
+  
+  it "should be able to find a resource" do
+    @app << @resource
+    @app.resource( @resource ).should eql( @resource )
   end
   
 end

@@ -28,12 +28,28 @@ module Scrooge
         yield self if block_given?
       end
 
+      # Merge this Tracker with another Tracker for the same resource ( multi-process aggregation ) 
+      #      
+      def merge( other_resource )
+        return unless other_resource
+        models.merge( other_resource.models )
+        models.each do |model|
+          model.merge( other_resource.model( model ) )
+        end
+      end
+
       # Has any Models been tracked ? 
       #
       def any?
         GUARD.synchronize do
           !@models.empty?
         end  
+      end
+      
+      # Search for a given model instance
+      #
+      def model( model )
+        models.detect{|m| m.name == model.name }
       end
       
       # Generates a signature / lookup key.
