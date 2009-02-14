@@ -2,24 +2,23 @@ module Scrooge
   module Strategy
     class Controller
       
-      attr_accessor :strategy,
+      attr_accessor :strategy
                     
-      
       def initialize( strategy )
         @strategy = strategy
       end
       
       def run!
         Thread.new do
-          stages.each do |stage|
+          stages.map do |stage|
             stage.execute!
           end
-        end
+        end.value
       end
       
       private
       
-        def stages
+        def stages #:nodoc:
           @strategy.stages
         end
       

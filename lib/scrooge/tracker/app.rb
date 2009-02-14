@@ -15,6 +15,10 @@ module Scrooge
         @resources = Set.new
       end
       
+      # Push this tracker instance to the framework's cache store. 
+      # A synchronization signature unique for this Process is also logged in a synchronization 
+      # bucket which maintain references to each Process's tracker.
+      #
       def synchronize!
         GUARD.synchronize do
           write_cache( syncronization_signature, Marshal.dump( self ) )
@@ -22,6 +26,9 @@ module Scrooge
         end
       end
       
+      # Process previously synchronized tracking data by recursively merging all trackers from
+      # all Processes to have a Tracker representative of the whole cluster.
+      #
       def aggregate!
         GUARD.synchronize do
           read_cache( AGGREGATION_BUCKET ).each do |tracker|

@@ -28,7 +28,7 @@ module Scrooge
         yield self if block_given?
       end
 
-      # Merge this Tracker with another Tracker for the same resource ( multi-process aggregation ) 
+      # Merge this Tracker with another Tracker for the same resource ( multi-process / cluster aggregation ) 
       #      
       def merge( other_resource )
         return unless other_resource
