@@ -30,7 +30,8 @@ describe Scrooge::Tracker::Model do
   
   it "should be able to restore itself from a serialized representation" do
     @model << [:name, :description, :price]
-    lambda{ @model.marshal_load( { "Product" => [:price] } ) }.should change( @model.attributes, :size ).from(3).to(1)
+    @model.marshal_load( { "Product" => [:price] } )
+    @model.attributes.size.should eql( 1 )
   end
   
   it "should be able to render a attribute selection SQL snippet from it's referenced attributes" do
@@ -50,11 +51,11 @@ describe Scrooge::Tracker::Model do
   end
   
   it "should be able to merge itself with another model tracker" do
-    @other_model << [:name, :description]
+    @other_model << %w(name description)
     @model.merge( @other_model )
-    @model.attributes.to_a.should eql( [:name, :description] )
+    @model.attributes.to_a.sort.should eql( %w(description name) )
     @another_model.merge( @model )
-    @another_model.attributes.to_a.should eql( [:name, :description] )
+    @another_model.attributes.to_a.sort.should eql( %w(description name) )
     @another_model.attributes.should_not_receive(:merge)
     @another_model.merge( nil )
   end

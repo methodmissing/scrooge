@@ -77,6 +77,7 @@ describe Scrooge::Framework::Base do
       @signature = Time.now.to_i.to_s
       FileUtils.mkdir_p( File.join( @base.scopes_path, @signature ) )
       @base.scopes.should include( @signature )   
+      FileUtils.rm_r( File.join( @base.scopes_path, @signature ) )
     end
   end
   
@@ -84,7 +85,7 @@ describe Scrooge::Framework::Base do
     with_rails do
       @base.stub!(:config).and_return( CONFIG )
       @base.send( :ensure_scopes_path )
-      @base.scopes?().should eql( true )
+      @base.scopes?().should eql( false )
     end
   end
   
@@ -106,7 +107,8 @@ describe Scrooge::Framework::Base do
     with_rails do
       @base.stub!(:config).and_return( CONFIG )
       ::Rails.stub!(:env).and_return( "test" )
-      lambda{ @base.to_scope! }.should change( @base.scopes, :size )
+      @base.to_scope!()
+      @base.scopes.size.should == 1
     end
   end
   
@@ -115,7 +117,7 @@ describe Scrooge::Framework::Base do
       @base.stub!(:config).and_return( CONFIG )
       ::Rails.stub!(:env).and_return( "test" )
       @scope = @base.to_scope!
-      lambda{ @base.from_scope!( @scope ) }.should change( Scrooge::Base.profile.tracker, :object_id )     
+      lambda{ Scrooge::Base.profile.scope = @base.from_scope!( @scope ) }.should change( Scrooge::Base.profile.tracker, :object_id )     
     end
   end  
   

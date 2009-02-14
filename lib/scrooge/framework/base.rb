@@ -208,7 +208,7 @@ module Scrooge
       # Return the scopes storage path for the current framework.
       #
       def scopes_path
-        @profiles_path ||= File.join( config, 'scrooge', 'scopes' )
+        @scopes_path ||= File.join( config, 'scrooge', 'scopes' )
       end
 
       # Return the scopes storage path for a given scope and optional filename.
@@ -258,7 +258,7 @@ module Scrooge
         GUARD.synchronize do
           scope = Time.now.to_i
           dump_scope!( scope )
-          scope
+          scope.to_s
         end  
       end      
       
