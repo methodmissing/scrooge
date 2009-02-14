@@ -17,15 +17,16 @@ module Scrooge
       
       def synchronize!
         GUARD.synchronize do
-          Scrooge::Base.profile.framework.write_cache( syncronization_signature, Marshal.dump( self ) )
+          write_cache( syncronization_signature, Marshal.dump( self ) )
           register_synchronization_signature!
         end
       end
       
       def aggregate!
         GUARD.synchronize do
-          Scrooge::Base.profile.framework.read_cache( AGGREGATION_BUCKET ).each do |tracker|
-            merge( tracker )
+          read_cache( AGGREGATION_BUCKET ).each do |tracker|
+            tracker_data = read_cache( tracker )
+            merge( self.class.load( tracker_data ) )
           end  
         end  
       end
@@ -103,11 +104,19 @@ module Scrooge
       
       private
       
+        def read_cache( key ) #:nodoc:
+          Scrooge::Base.profile.framework.read_cache( key )
+        end
+        
+        def write_cache( key, value ) #:nodoc:
+          Scrooge::Base.profile.framework.write_cache( key, value )
+        end
+      
         def register_synchronization_signature! #:nodoc:
-          if bucket = Scrooge::Base.profile.framework.read_cache( AGGREGATION_BUCKET )
-            Scrooge::Base.profile.framework.write_cache( AGGREGATION_BUCKET, [synchronization_signature] )
+          if bucket = read_cache( AGGREGATION_BUCKET )
+            write_cache( AGGREGATION_BUCKET, [synchronization_signature] )
           else
-            Scrooge::Base.profile.framework.write_cache( AGGREGATION_BUCKET, (bucket << synchronization_signature) )
+            write_cache( AGGREGATION_BUCKET, (bucket << synchronization_signature) )
           end   
         end
       
