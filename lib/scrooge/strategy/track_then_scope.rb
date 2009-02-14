@@ -2,17 +2,17 @@ module Scrooge
   module Strategy
     class TrackThenScope < Base
       
-      stage :track, :for => 600 do
+      stage :track, :for => Scrooge::Base.profile.warmup do
         
         log( "Tracking", true )
         framework.install_tracking_middleware()
-        framework.uninstall_tracking_middleware
       
       end
       
       stage :synchronize, :for => 10 do
         
         log( "Synchronize results with other processes ...", true )
+        framework.uninstall_tracking_middleware
         tracker.synchronize!
       
       end

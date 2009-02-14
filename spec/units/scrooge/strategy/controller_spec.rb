@@ -15,7 +15,7 @@ describe Scrooge::Strategy::Base do
   end
   
   it "should be able to execute a given strategy" do
-    @controller.run!().should include( 'payload' )
+    @controller.run!().value.should include( 'payload' )
   end
   
 end  

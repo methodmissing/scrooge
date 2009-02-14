@@ -124,7 +124,13 @@ module Scrooge
     #
     def raise_on_missing_attribute?
       @on_missing_attribute == :raise
-    end          
+    end        
+    
+    # Expose the warmup phase during which tracking occur.
+    #  
+    def warmup            
+      @warmup
+    end            
                 
     private
     
@@ -132,12 +138,17 @@ module Scrooge
         @orm = configure_with( @options['orm'], [:active_record], :active_record )
         @storage = configure_with( @options['storage'], [:memory], :memory )
         @strategy = configure_with( @options['strategy'], [:track, :scope, :track_then_scope], :track )
-        @scope = configure_with( @options['scope'].to_s, framework.scopes, ENV['scope'] )
+        @scope = configure_with( @options['scope'].to_s, framework_scopes, ENV['scope'] )
+        @warmup = configure_with( @options['warmup'].to_s, 0..14400, 600 )        
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
         reset_backends!
         memoize_backends!
       end        
+      
+      def framework_scopes #:nodoc:
+        framework.scopes rescue []
+      end
     
       def configure_with( given, valid, default ) #:nodoc:
         if given
@@ -157,7 +168,7 @@ module Scrooge
       # Force constant lookups as autoload is not threadsafe.
       #
       def memoize_backends! #:nodoc:
-        framework()
+        framework() rescue nil
         orm()
         storage()
         tracker()

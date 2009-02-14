@@ -17,7 +17,9 @@ describe "Scrooge::Profile instance" do
  
   before(:each) do
     @profile = Scrooge::Profile.setup( File.join( FIXTURES, 'config', 'scrooge.yml' ), :production )
-    @profile.framework.stub!(:scopes).and_return( %w(1234567891) )
+    with_rails do
+      @profile.framework.stub!(:scopes).and_return( %w(1234567891) )
+    end
     @profile.options = { 'scope' => '1234567891'}
   end  
   
@@ -60,6 +62,10 @@ describe "Scrooge::Profile instance" do
     
   it "should be able to yield a stategy instance" do
     @profile.strategy.class.should == Scrooge::Strategy::Track 
+  end  
+    
+  it "should be able to expose it's warmup tracking period" do
+    @profile.warmup.should == 600
   end  
     
 end

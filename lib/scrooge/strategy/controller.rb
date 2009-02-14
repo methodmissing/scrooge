@@ -13,7 +13,7 @@ module Scrooge
           stages.map do |stage|
             stage.execute!
           end
-        end.value
+        end
       end
       
       private

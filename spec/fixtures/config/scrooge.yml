@@ -3,10 +3,14 @@ production:
   storage: :memory
   scope: 1234567891 
   on_missing_attribute: :reload
+  strategy: :track_then_scope
+  warmup: 600 # warmup / track for 10 minutes
   enabled: true  
 test:
   orm: :active_record
   storage: :memory
   scope: 
   on_missing_attribute: :reload      
-  enabled: true      
+  strategy: :track_then_scope
+  warmup: 600 # warmup / track for 10 minutes
+  enabled: true  

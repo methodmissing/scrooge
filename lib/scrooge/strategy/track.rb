@@ -2,7 +2,7 @@ module Scrooge
   module Strategy
     class Track < Base
       
-      stage :track, :for => 600 do
+      stage :track, :for => Scrooge::Base.profile.warmup do
         
         log( "Tracking", true )
         framework.install_tracking_middleware()
