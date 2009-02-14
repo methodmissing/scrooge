@@ -65,7 +65,7 @@ describe "Scrooge::Profile instance" do
   end  
     
   it "should be able to expose it's warmup tracking period" do
-    @profile.warmup.should == 600
+    @profile.warmup.should == 0
   end  
     
 end

@@ -139,7 +139,7 @@ module Scrooge
         @storage = configure_with( @options['storage'], [:memory], :memory )
         @strategy = configure_with( @options['strategy'], [:track, :scope, :track_then_scope], :track )
         @scope = configure_with( @options['scope'].to_s, framework_scopes, ENV['scope'] )
-        @warmup = configure_with( @options['warmup'].to_s, 0..14400, 600 )        
+        @warmup = configure_with( @options['warmup'].to_s, 0..14400, 0 )        
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
         reset_backends!
