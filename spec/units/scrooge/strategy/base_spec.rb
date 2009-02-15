@@ -39,6 +39,7 @@ describe Scrooge::Strategy::Base do
       'payload'
     end
     @base = Scrooge::Strategy::Base.new
+    Scrooge::Base.profile.stub!(:enabled?).and_return(true)
   end
   
   after(:each) do

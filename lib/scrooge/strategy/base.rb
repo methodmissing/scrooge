@@ -64,7 +64,9 @@ module Scrooge
       # Enforce this strategy
       #
       def execute!
-        @thread = Scrooge::Strategy::Controller.new( self ).run!
+        if Scrooge::Base.profile.enabled?
+          @thread = Scrooge::Strategy::Controller.new( self ).run!
+        end
       end
       
     end

@@ -86,7 +86,6 @@ module Scrooge
       # Track a given Resource.
       #
       def track( resource )
-        profile.log "Track with resource #{resource.inspect}"
         begin
           yield
         ensure
