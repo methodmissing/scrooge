@@ -15,6 +15,8 @@ module Scrooge
       @@stages = Hash.new( [] )
       @@stages[self.name] = []
       
+      attr_reader :thread
+      
       class << self
         
         # Stage definition macro.
@@ -62,7 +64,7 @@ module Scrooge
       # Enforce this strategy
       #
       def execute!
-        Scrooge::Strategy::Controller.new( self ).run!
+        @thread = Scrooge::Strategy::Controller.new( self ).run!
       end
       
     end

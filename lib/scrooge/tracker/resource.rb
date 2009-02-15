@@ -127,7 +127,6 @@ module Scrooge
             #
             def filter( controller, &block )
               #{model.model.to_s}.#{profile.orm.resource_scope_method( resource ).to_s} do
-                Scrooge::Base.profile.log "Scope for Model #{model.inspect}"
                 block.call
               end
             end

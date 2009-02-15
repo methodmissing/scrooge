@@ -3,13 +3,14 @@ module Scrooge
     class Controller
       
       attr_accessor :strategy
+      attr_reader :thread
                     
       def initialize( strategy )
         @strategy = strategy
       end
       
       def run!
-        Thread.new do
+        @thread = Thread.new do
           Thread.current.abort_on_exception = true
           stages.map do |stage|
             stage.execute!

@@ -18,4 +18,9 @@ describe Scrooge::Strategy::Base do
     @controller.run!().value.should include( 'payload' )
   end
   
+  it "should be able to provide access to the background thread" do
+    @controller.run!()
+    @controller.thread.class.should == Thread
+  end  
+  
 end  

@@ -49,4 +49,13 @@ describe Scrooge::Strategy::Base do
     @base.stages.first.class.should eql( Scrooge::Strategy::Stage )
   end
   
+  it "should be able to execute itself" do
+    @base.execute!().class.should == Thread
+  end
+  
+  it "should provide access to it's controller Thread" do
+    @base.execute!
+    @base.thread.class.should == Thread
+  end
+  
 end
