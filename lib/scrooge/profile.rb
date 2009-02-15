@@ -191,7 +191,7 @@ module Scrooge
         
       def scope_to_signature!( scope_signature ) #:nodoc:
         log "Scope to signature #{scope_signature} ..."
-        @tracker_instance = framework.from_scope!( scope_signature )
+        @tracker_instance = framework.from_scope!( scope_signature )      
       end
 
       def scope_to_tracker!( tracker ) #:nodoc:

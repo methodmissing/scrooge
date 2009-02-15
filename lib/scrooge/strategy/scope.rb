@@ -3,9 +3,8 @@ module Scrooge
     class Scope < Base
     
       stage :scope do
-        
         log( "Scope ...", true )
-        scope = scope
+        self.scope = scope
         framework.install_scope_middleware( tracker )
        
       end    

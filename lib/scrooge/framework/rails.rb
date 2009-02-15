@@ -99,7 +99,7 @@ module Scrooge
       
       private 
       
-        def with_or_without_prepatation( callback_signature, &block )
+        def with_or_without_prepatation( callback_signature, &block ) #:nodoc:
           if development?
             ActionController::Dispatcher.to_prepare( callback_signature ) do
               block.call
