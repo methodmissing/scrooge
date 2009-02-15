@@ -57,9 +57,9 @@ module Scrooge
       #      
       def install_tracking_middleware
         GUARD.synchronize do
-          #ActionController::Dispatcher.to_prepare( :scrooge_install_tracking_middleware ) do
+          with_or_without_prepatation( :scrooge_install_tracking_middleware ) do
             ApplicationController.prepend_around_filter Scrooge::Middleware::Tracker
-          #end
+          end
         end
       end
       
@@ -67,6 +67,8 @@ module Scrooge
       #
       def uninstall_tracking_middleware
         GUARD.synchronize do
+          # Handle dev. mode
+          ActionController::Dispatcher.prepare_dispatch_callback_chain.delete( :scrooge_install_tracking_middleware )
           ApplicationController.skip_filter Scrooge::Middleware::Tracker
         end
       end
@@ -75,11 +77,11 @@ module Scrooge
       #
       def install_scope_middleware( tracker )
         GUARD.synchronize do
-         #ActionController::Dispatcher.to_prepare( :scrooge_install_scope_middleware ) do
+          with_or_without_prepatation( :scrooge_install_scope_middleware ) do
             tracker.resources.each do |resource|
               install_scope_middleware_for_resource!( resource )
             end
-         #end  
+         end  
         end  
       end
       
@@ -96,6 +98,20 @@ module Scrooge
       end
       
       private 
+      
+        def with_or_without_prepatation( callback_signature, &block )
+          if development?
+            ActionController::Dispatcher.to_prepare( callback_signature ) do
+              block.call
+            end
+          else
+            block.call
+          end      
+        end
+      
+        def development? #:nodoc:
+          environment == 'development'
+        end
       
         def install_scope_middleware_for_resource!( resource ) #:nodoc:
           resource.middleware.each do |resource_middleware|
