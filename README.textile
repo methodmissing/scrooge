@@ -14,11 +14,15 @@ h2. Why bother ?
 
 h2. Suggested Use
 
-Scrooge *requires* a comprehensive existing functional or integration test suite for best results.If test coverage is flaky or non-existent, then a) you shouldn't worry about performance tuning and b) shouldn't be reading this - go spec.
+There's 3 basic modes of operation :
 
-There's 2 basic modes of operation, a tracking or a scope phase.
+* Track : Track attribute access to dump a representative scope profile.
 
-h4. Resources
+* Scope : Scope the process and related resources to a previously persisted scope profile.
+
+* Track then scope : A multi-stage strategy that tracks attribute access for 
+
+h2. Resources
 
 A resource is :
 
@@ -28,24 +32,23 @@ A resource is :
 
 All Model to attribute mappings is tracked on a per Resource basis.Multiple Models per Resource is supported.
 
+h2. Strategies
+
 h4. Tracking
 
-In tracking mode, which is the default when no scope is given and Scrooge is enabled, Scrooge installs filters ( either through Rack middleware or framework specific hooks ) that track attribute access on a per Resource basis.
+In tracking mode Scrooge installs filters ( either through Rack middleware or framework specific hooks ) that track attribute access on a per Resource basis.
 
 A Kernel#at_exit callback dumps and timestamps this profile ( or scope ) to eg. *framework_configuration_directory/config/scopes/1234147851/scope.yml* 
 
-This typically happens during functional or integration testing.
+This typically works well with functional or integration testing and can yield a substantial birds eye view of attribute
+use.The accuracy is directly proportional to test coverage and the quality of the test suite.
 
-The test log may look like :
+Example log output :
 
 <pre>
 <code>
   Processing HotelsController#index (for 0.0.0.0 at 2009-02-09 02:55:55) [GET]
     Parameters: {"action"=>"index", "controller"=>"hotels"}
-  [Scrooge] Track with resource #< :/ ()
-  [Scrooge] Track for Resource #<GET :hotels/index (*/*)
-   - #<Hotel :from_price, :narrative, :star_rating, :latitude, :created_at, :hotel_name, :updated_at, :important_notes, :id, :apt, :location_id, :nearest_tube, :longitude, :telephone, :nearest_rail, :location_name, :distance>
-   - #<Image :thumbnail_width, :created_at, :title, :updated_at, :url, :thumbnail_height, :height, :thumbnail_url, :has_thumbnail, :hotel_id, :width>
     Hotel Load (0.3ms)   SELECT * FROM `hotels` LIMIT 0, 15
   Rendering template within layouts/application
   Rendering hotels/index
@@ -154,20 +157,18 @@ An example scope / profile, saved to disk :
 </code>
 </pre>
 
-h4. Scoping
+h4. Scope
 
 A previously persisted scope / profile can be restored from disk and injected to the applicable Resources.Database content retrieved will match that of the given scope timestamp.
 
-This is typically pushed to production and adjusted for each major release or deployment.
+This is typically pushed to production where a hybrid ( track then scope strategy) mode of operation is frowned upon and adjusted for each major release or deployment.
 
-Log output may look like :
+Example log output :
 
 <pre>
 <code>
   Processing HotelsController#index (for 0.0.0.0 at 2009-02-09 02:59:41) [GET]
     Parameters: {"action"=>"index", "controller"=>"hotels"}
-  [Scrooge] Scope for Model #<Image :created_at, :thumbnail_width, :title, :updated_at, :url, :id, :thumbnail_height, :height, :thumbnail_url, :has_thumbnail, :width, :hotel_id>
-  [Scrooge] Scope for Model #<Hotel :narrative, :from_price, :created_at, :latitude, :star_rating, :hotel_name, :updated_at, :important_notes, :apt, :id, :nearest_tube, :location_id, :nearest_rail, :telephone, :longitude, :distance, :location_name>
     Hotel Load (0.4ms)   SELECT hotels.narrative, hotels.from_price, hotels.created_at, hotels.latitude, hotels.star_rating, hotels.hotel_name, hotels.updated_at, hotels.important_notes, hotels.apt, hotels.id, hotels.nearest_tube, hotels.location_id, hotels.nearest_rail, hotels.telephone, hotels.longitude, hotels.distance, hotels.location_name FROM `hotels` LIMIT 0, 15
   Rendering template within layouts/application
   Rendering hotels/index
@@ -181,6 +182,164 @@ Log output may look like :
   Completed in 90ms (View: 5, DB: 1) | 200 OK [http://test.host/hotels]
     SQL (0.1ms)   ROLLBACK
     SQL (0.1ms)   BEGIN
+</code>
+</pre>
+
+h4. Track then scope
+
+Multi-stage and self configuring strategy that tracks attribute access for a given warmup period, synchronize the results across n-1 processes, aggregate the results to be representative of the whole cluster ( or seamless fallback to a single process ), remove the tracking filters and install functionality that scopes database access to that of the tracking phase.
+
+Recommended for production use.
+
+Example log output :
+
+<pre>
+<code>
+Processing HotelsController#index (for 127.0.0.1 at 2009-02-16 00:00:58) [GET]
+  Parameters: {"action"=>"index", "controller"=>"hotels"}
+  Hotel Load (0.5ms)   SELECT * FROM `hotels` LIMIT 0, 15
+  Hotel Columns (7.7ms)   SHOW FIELDS FROM `hotels`
+  SQL (3.9ms)   SELECT count(*) AS count_all FROM `hotels` 
+Rendering template within layouts/application
+Rendering hotels/index
+  Image Load (0.5ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 11381) LIMIT 1
+  Image Columns (3.6ms)   SHOW FIELDS FROM `images`
+Rendered hotels/_hotel (200.2ms)
+  Image Load (0.4ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 11382) LIMIT 1
+Rendered hotels/_hotel (2.4ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 11697) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 12693) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 12738) LIMIT 1
+Rendered hotels/_hotel (1.6ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 12886) LIMIT 1
+Rendered hotels/_hotel (1.9ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13007) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13074) LIMIT 1
+Rendered hotels/_hotel (1.5ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13077) LIMIT 1
+Rendered hotels/_hotel (1.6ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13078) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.3ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13079) LIMIT 1
+Rendered hotels/_hotel (2.4ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13080) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13082) LIMIT 1
+Rendered hotels/_hotel (1.5ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13085) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13105) LIMIT 1
+Rendered hotels/_hotel (1.6ms)
+Rendered shared/_header (0.4ms)
+Rendered shared/_navigation (0.8ms)
+Missing template hotels/_index_sidebar.erb in view path app/views
+Rendered shared/_sidebar (0.4ms)
+Rendered shared/_footer (0.3ms)
+Completed in 270ms (View: 243, DB: 20) | 200 OK [http://localhost/hotels]
+[Scrooge] Execute stage :synchronize ...
+[Scrooge] Uninstalling tracking middleware ... 
+[Scrooge] Stop tracking ... 
+[Scrooge] Synchronize results with other processes ...
+Cache write: 17619400_63223_756033
+Cache read: scrooge_tracker_aggregation
+Cache write: scrooge_tracker_aggregation
+[Scrooge] Execute stage :aggregate ...
+[Scrooge] Aggregate results from other processes ...
+
+
+Processing HotelsController#index (for 127.0.0.1 at 2009-02-16 00:01:37) [GET]
+  Parameters: {"action"=>"index", "controller"=>"hotels"}
+  Hotel Load (0.5ms)   SELECT * FROM `hotels` LIMIT 0, 15
+  SQL (0.2ms)   SELECT count(*) AS count_all FROM `hotels` 
+Rendering template within layouts/application
+Rendering hotels/index
+  Image Load (0.3ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 11381) LIMIT 1
+Rendered hotels/_hotel (2.0ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 11382) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 11697) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 12693) LIMIT 1
+Rendered hotels/_hotel (1.6ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 12738) LIMIT 1
+Rendered hotels/_hotel (1.5ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 12886) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13007) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13074) LIMIT 1
+Rendered hotels/_hotel (1.4ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13077) LIMIT 1
+Rendered hotels/_hotel (1.6ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13078) LIMIT 1
+Rendered hotels/_hotel (1.6ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13079) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13080) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13082) LIMIT 1
+Rendered hotels/_hotel (1.5ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13085) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT * FROM `images` WHERE (`images`.hotel_id = 13105) LIMIT 1
+Rendered hotels/_hotel (81.1ms)
+Rendered shared/_header (0.1ms)
+Rendered shared/_navigation (0.3ms)
+Missing template hotels/_index_sidebar.erb in view path app/views
+Rendered shared/_sidebar (0.1ms)
+Rendered shared/_footer (0.1ms)
+Completed in 113ms (View: 107, DB: 4) | 200 OK [http://localhost/hotels]
+Cache read: scrooge_tracker_aggregation
+Cache read: 17619400_63223_756033
+[Scrooge] Execute stage :scope ...
+[Scrooge] Scope ...
+
+
+Processing HotelsController#index (for 127.0.0.1 at 2009-02-16 00:01:53) [GET]
+  Parameters: {"action"=>"index", "controller"=>"hotels"}
+  Hotel Load (0.7ms)   SELECT hotels.narrative, hotels.from_price, hotels.created_at, hotels.latitude, hotels.star_rating, hotels.hotel_name, hotels.updated_at, hotels.important_notes, hotels.apt, hotels.id, hotels.nearest_tube, hotels.location_id, hotels.nearest_rail, hotels.telephone, hotels.longitude, hotels.distance, hotels.location_name FROM `hotels` LIMIT 0, 15
+  SQL (0.2ms)   SELECT count(*) AS count_all FROM `hotels` 
+Rendering template within layouts/application
+Rendering hotels/index
+  Image Load (0.3ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 11381) LIMIT 1
+Rendered hotels/_hotel (2.0ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 11382) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 11697) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 12693) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 12738) LIMIT 1
+Rendered hotels/_hotel (1.5ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 12886) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13007) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13074) LIMIT 1
+Rendered hotels/_hotel (1.4ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13077) LIMIT 1
+Rendered hotels/_hotel (1.5ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13078) LIMIT 1
+Rendered hotels/_hotel (1.8ms)
+  Image Load (0.3ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13079) LIMIT 1
+Rendered hotels/_hotel (1.9ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13080) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13082) LIMIT 1
+Rendered hotels/_hotel (1.5ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13085) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+  Image Load (0.2ms)   SELECT images.created_at, images.thumbnail_width, images.title, images.updated_at, images.url, images.id, images.thumbnail_height, images.height, images.thumbnail_url, images.has_thumbnail, images.width, images.hotel_id FROM `images` WHERE (`images`.hotel_id = 13105) LIMIT 1
+Rendered hotels/_hotel (1.7ms)
+Rendered shared/_header (0.1ms)
+Rendered shared/_navigation (0.2ms)
+Missing template hotels/_index_sidebar.erb in view path app/views
+Rendered shared/_sidebar (0.0ms)
+Rendered shared/_footer (0.0ms)
+Completed in 34ms (View: 27, DB: 4) | 200 OK [http://localhost/hotels]
 </code>
 </pre>
 
@@ -203,24 +362,34 @@ h2. Configuration
 
 Scrooge installs ( see recommended installation above ) a configuration file with the following format within *framework_configuration_directory/scrooge.yml ( RAILS_ROOT/config/scrooge.yml for a Rails setup ) :
 
+<pre>
+<code>
   production:
     orm: :active_record
     storage: :memory
+    strategy: :track_then_scope
+    warmup: 600 # warmup / track for 10 minutes
     scope:
     on_missing_attribute: :reload # or :raise
-    enabled: true    
-  development:
+    enabled: true     
+ development:
     orm: :active_record
     storage: :memory
+    strategy: :track
+    warmup: 600 # warmup / track for 10 minutes
     scope: 
     on_missing_attribute: :reload # or :raise
     enabled: true    
   test:
     orm: :active_record
     storage: :memory  
+    strategy: :track
+    warmup: 600 # warmup / track for 10 minutes
     scope:
     on_missing_attribute: :reload # or :raise
-    enabled: true 
+    enabled: true
+</code>
+</pre>
 
 h4. ORM 
 
@@ -233,6 +402,14 @@ h4. Storage backend
 Tracking results can be persisted to a given backend or storage option.Ships with a memory store, but can be extended to file system, memcached etc. as all Tracker components is designed to be Marshal friendly.
 
   storage: :memory
+
+h4. Strategy
+
+One of :track, :scope or :track_then_scope .Only the :track_then_scope strategy respects the :warmup configuration option.
+
+h4. Warmup
+
+The designated warmup period for the :track_then_scope strategy, given in seconds.Typically 600 to 3600.
 
 h4. Scope
 
@@ -254,9 +431,37 @@ Scrooge can be disabled with :
 
   enabled: false 
 
+h2. Rails specific rake tasks.
+
+Ships with tasks to assist in inspecting results.
+
+<pre>
+<code>
+methodmissing:superbreak_app lourens$ rake scrooge:list
+(in /Users/lourens/projects/superbreak_app)
+- 1234735663
+- 1234735722
+- 1234735744
+- 1234735790
+- 1234738880
+methodmissing:superbreak_app lourens$ rake scope=1234735790 scrooge:inspect
+(in /Users/lourens/projects/superbreak_app)
+#<GET :hotels/show (*/*)
+ - #<Hotel :important_notes, :location_id>
+ - #<Address :line1, :created_at, :line2, :postcode, :updated_at, :country_id, :county, :location_id, :town, :hotel_id>
+
+#<GET :countries/index (*/*)
+ - #<Country :name, :created_at, :code, :updated_at, :id, :location_id, :continent_id>
+
+#<GET :locations/index (*/*)
+ - #<Location :name, :created_at, :code, :updated_at, :level, :id>
+
+#<GET :hotels/index (*/*)
+ - #<Image :created_at, :thumbnail_width, :title, :updated_at, :url, :thumbnail_height, :height, :thumbnail_url, :has_thumbnail, :width, :hotel_id>
+ - #<Hotel :narrative, :from_price, :created_at, :latitude, :star_rating, :hotel_name, :updated_at, :important_notes, :apt, :id, :nearest_tube, :location_id, :nearest_rail, :telephone, :longitude, :distance, :location_name>
+</code>	
+</pre>
+
 h2. Notes
 
 This is an initial release, has not yet been battle tested in production and is pending Ruby 1.9.1 compatibility.
-
-Initially evaluated a centralized tracker concept for multi-server environments with minimal configuration overhead
-and on the fly scope injection after a given warmup threshold but found that to be overkill for a first release. 

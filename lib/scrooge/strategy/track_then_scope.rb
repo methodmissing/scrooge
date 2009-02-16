@@ -12,7 +12,7 @@ module Scrooge
       end
       
       stage :synchronize, :for => 10 do
-        
+
         log( "Uninstalling tracking middleware ... ", true )
         framework.uninstall_tracking_middleware
         log( "Stop tracking ... ", true )
@@ -23,14 +23,14 @@ module Scrooge
       end
       
       stage :aggregate, :for => 10 do
-        
+
         log( "Aggregate results from other processes ...", true )  
         tracker.aggregate!
       
       end      
       
       stage :scope do
-        
+
         log( "Scope ...", true ) 
         framework.install_scope_middleware( tracker )
       

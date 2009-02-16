@@ -12,7 +12,8 @@ describe Scrooge::Strategy::TrackThenScope do
   end
   
   it "should be able to execute a given strategy" do
-    Scrooge::Base.profile.stub!(:synchronize!).once
+    Scrooge::Base.profile.stub!(:synchronize!).and_return([])
+    Scrooge::Base.profile.stub!(:aggregate!).and_return([])
     with_rails do
       @controller.run!().value.should include( 'installed' )
     end
