@@ -20,7 +20,8 @@ There's 3 basic modes of operation :
 
 * Scope : Scope the process and related resources to a previously persisted scope profile.
 
-* Track then scope : A multi-stage strategy that tracks attribute access for 
+* Track then scope : A multi-stage strategy that tracks attribute access for a given warmup period, aggregates the results
+                     across multiple processes and enforce a scoping policy representative of the tracking phase.
 
 h2. Resources
 
