@@ -8,6 +8,7 @@ describe Scrooge::Tracker::Resource do
                   resource.action = 'show'
                   resource.method = :get
                   resource.format = :html
+                  resource.is_public = true
                 end
     @model = Scrooge::Tracker::Model.new( 'Class' )
     @model.stub!(:name).and_return( 'Product' )
@@ -18,11 +19,20 @@ describe Scrooge::Tracker::Resource do
                         resource.action = 'show'
                         resource.method = :get
                         resource.format = :html
+                        resource.is_public = true
                       end
   end
   
   it "should be able to determine if any models has been tracked" do
     @resource.any?().should equal( false )
+  end
+  
+  it "should be able to determine if it's a public resource" do
+    @resource.public?().should equal( true )
+  end
+  
+  it "should be able to determine if it's a private resource" do
+    @resource.private?().should equal( false )
   end
     
   it "should initialize with an empty set of models" do
@@ -50,15 +60,16 @@ describe Scrooge::Tracker::Resource do
   end
   
   it "should be able to generate a lookup signature" do
-    @resource.signature().should eql( "products_show_get" )
+    @resource.signature().should eql( "products_show_get_public" )
   end
   
   it "should be able to dump itself to a serializeable representation" do
-    @resource.marshal_dump().should eql( { "products_show_get" => { :models => [],
-                                                                    :method => :get,   
-                                                                    :format => :html,
-                                                                    :action => "show",   
-                                                                    :controller => "products"} } )
+    @resource.marshal_dump().should eql( { "products_show_get_public" => { :models => [],
+                                                                      :method => :get,   
+                                                                      :format => :html,
+                                                                      :action => "show",   
+                                                                      :controller => "products",
+                                                                      :is_public => true} } )
   end
   
   it "should be able to restore itself from a serialized representation" do

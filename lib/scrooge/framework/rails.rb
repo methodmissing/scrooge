@@ -124,6 +124,7 @@ module Scrooge
           Thread.scrooge_resource.action = request.path_parameters['action']
           Thread.scrooge_resource.method = request.method
           Thread.scrooge_resource.format = request.format.to_s  
+          Thread.scrooge_resource.is_public = request.session[Scrooge::Base.profile.logged_in_session].nil?
         end
       
     end

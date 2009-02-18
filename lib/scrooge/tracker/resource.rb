@@ -20,7 +20,8 @@ module Scrooge
                     :action,
                     :method,
                     :format,
-                    :models      
+                    :models,
+                    :is_public     
       
       def initialize
         super()
@@ -45,6 +46,18 @@ module Scrooge
           !@models.empty?
         end  
       end
+
+      # Is this a public ( not authenticated ) resource ?
+      #
+      def public?
+        @is_public == true
+      end
+      
+      # Is this a private ( not authenticated ) resource ?
+      #      
+      def private?
+        !public?
+      end
       
       # Search for a given model instance
       #
@@ -55,7 +68,7 @@ module Scrooge
       # Generates a signature / lookup key.
       #
       def signature
-        @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}"
+        @signature ||= "#{controller.to_s}_#{action.to_s}_#{method.to_s}_#{private_or_public}"
       end
       
       # Only track GET requests
@@ -78,7 +91,8 @@ module Scrooge
                            :action => @action,
                            :method => @method,
                            :format => @format,
-                           :models => dumped_models() } }
+                           :models => dumped_models(),
+                           :is_public => @is_public } }
         end
       end      
       
@@ -90,6 +104,7 @@ module Scrooge
           @method = data[:method]
           @format = data[:format]
           @models = restored_models( data[:models] )
+          @is_public = data[:is_public]
           self
         end  
       end
@@ -162,10 +177,14 @@ module Scrooge
       end
       
       def inspect #:nodoc:
-        "#<#{@method.to_s.upcase} :#{@controller}/#{@action} (#{@format})\n#{models_for_inspect()}"
+        "#<#{@method.to_s.upcase} #{private_or_public} :#{@controller}/#{@action} (#{@format})\n#{models_for_inspect()}"
       end
       
       private
+      
+        def private_or_public #:nodoc:
+          @is_public ? 'public' : 'private'
+        end
       
         def track_model_from( model ) #:nodoc:
           model.is_a?( Array ) ? model_from_enumerable( model ) : setup_model( model )

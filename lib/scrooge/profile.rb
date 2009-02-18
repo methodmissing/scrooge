@@ -147,6 +147,12 @@ module Scrooge
     def warmup            
       @warmup
     end            
+    
+    # A session key that indicates a logged in / private session.
+    #            
+    def logged_in_session
+      @logged_in_session  
+    end            
                 
     private
     
@@ -158,21 +164,22 @@ module Scrooge
         @warmup = configure_with( @options['warmup'], 0..14400, 0 )    
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
+        @logged_in_session = configure_with( @options['logged_in_session'], nil, :user_id )
         reset_backends!
         memoize_backends!
       end        
-      
-      def framework_scopes #:nodoc:
-        framework.scopes rescue []
-      end
-    
+          
       def configure_with( given, valid, default ) #:nodoc:
         if given
-          valid.include?( given ) ? given : default
+          valid && valid.include?( given ) ? given : default
         else
           default
         end    
       end
+      
+      def framework_scopes #:nodoc:
+        framework.scopes rescue []
+      end      
       
       def reset_backends! #:nodoc:
         @orm_instance = nil

@@ -5,6 +5,7 @@ production:
   on_missing_attribute: :reload
   strategy: :track_then_scope
   warmup: 600 # warmup / track for 10 minutes
+  logged_in_session: :user_id # session key that represents the logged in user   
   enabled: true  
 test:
   orm: :active_record
@@ -13,4 +14,5 @@ test:
   on_missing_attribute: :reload      
   strategy: :track_then_scope
   warmup: 600 # warmup / track for 10 minutes
+  logged_in_session: :user_id # session key that represents the logged in user  
   enabled: true  

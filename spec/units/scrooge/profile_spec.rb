@@ -67,5 +67,8 @@ describe "Scrooge::Profile instance" do
   it "should be able to expose it's warmup tracking period" do
     @profile.warmup.should == 0
   end  
-    
+  
+  it "should be able to return a session key that indicates a logged in session" do
+    @profile.logged_in_session.should == :user_id
+  end  
 end
