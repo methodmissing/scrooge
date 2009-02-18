@@ -51,6 +51,59 @@ module Scrooge
           self
         end
       end
+
+      # Return a valid Rack middleware instance for this model.
+      #
+      def middleware( resource )
+        profile.orm.scope_resource_to_model( resource, self )
+        klass = Class.new
+        klass.class_eval(<<-EOS, __FILE__, __LINE__)
+          
+          class << self
+            
+            def inspect
+              "#<Scrooge::Middleware #{inspect}>"
+            end
+            
+            # Around Filter compatible implementation for Rails as Dispatcher is 
+            # the root Rack application and as such don't provide access to the Rails
+            # Routing internals from other middleware.
+            #
+            def filter( controller, &block )
+              #{model.to_s}.#{profile.orm.resource_scope_method( resource ).to_s} do
+                block.call
+              end
+            end
+            
+          end
+          
+          def initialize(app)
+            @app = app
+          end
+
+          def call(env)
+            if scope?( env )
+              #{model.to_s}.#{profile.orm.resource_scope_method( resource ).to_s} do
+                @app.call(env)
+              end
+            else
+              @app.call(env)
+            end  
+          end
+          
+          private
+            
+            def scope?( env )
+              Scrooge::Base.profile.orm.resource_scope_method( resource( env ) ) == :#{profile.orm.resource_scope_method( resource ).to_s}                 
+            end  
+            
+            def resource( env )
+              Scrooge::Base.profile.framework.resource( env )
+            end
+          
+        EOS
+        klass        
+      end
       
       # Memoize the name lookup.
       #

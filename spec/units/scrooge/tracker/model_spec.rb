@@ -9,6 +9,13 @@ describe Scrooge::Tracker::Model do
     @model.stub!(:primary_key).and_return( 'id' )    
     @other_model = Scrooge::Tracker::Model.new( 'OtherPost' )
     @another_model = Scrooge::Tracker::Model.new( 'AnotherPost' )
+    @resource = Scrooge::Tracker::Resource.new do |resource|
+                  resource.controller = 'products'
+                  resource.action = 'show'
+                  resource.method = :get
+                  resource.format = :html
+                  resource.is_public = true
+                end    
   end
 
   it "should be able to determine if any attributes has been tracked" do
@@ -58,6 +65,15 @@ describe Scrooge::Tracker::Model do
     @another_model.attributes.to_a.sort.should eql( %w(description name) )
     @another_model.attributes.should_not_receive(:merge)
     @another_model.merge( nil )
+  end
+  
+  it "should be able to setup Rack middleware" do
+    @model << %w(name description)
+    @model.middleware( @resource ).class.should equal( Class )
+    @model.middleware( @resource ).inspect.should match( /Middleware/ )
+    @model.middleware( @resource ).inspect.should match( /Product/ )
+    @model.middleware( @resource ).inspect.should match( /description/ )    
+    @model.middleware( @resource ).new( @model ).should respond_to( :call )
   end
   
 end

@@ -53,7 +53,7 @@ module Scrooge
         @is_public == true
       end
       
-      # Is this a private ( not authenticated ) resource ?
+      # Is this a private ( authenticated ) resource ?
       #      
       def private?
         !public?
@@ -116,66 +116,12 @@ module Scrooge
         @middleware ||= begin
           GUARD.synchronize do
             models.map do |model|
-              middleware_for_model( model )
+              model.middleware( self )
             end
           end  
         end
       end      
-      
-      # Return a valid Rack middleware instance for a given model.
-      #
-      def middleware_for_model( model )
-        resource = self  
-        profile.orm.scope_resource_to_model( resource, model )
-        klass = Class.new
-        klass.class_eval(<<-EOS, __FILE__, __LINE__)
-          
-          class << self
-            
-            def inspect
-              "#<Scrooge::Middleware #{model.inspect}>"
-            end
-            
-            # Around Filter compatible implementation for Rails as Dispatcher is 
-            # the root Rack application and as such don't provide access to the Rails
-            # Routing internals from other middleware.
-            #
-            def filter( controller, &block )
-              #{model.model.to_s}.#{profile.orm.resource_scope_method( resource ).to_s} do
-                block.call
-              end
-            end
-            
-          end
-          
-          def initialize(app)
-            @app = app
-          end
 
-          def call(env)
-            if scope?( env )
-              #{model.model.to_s}.#{profile.orm.resource_scope_method( resource ).to_s} do
-                @app.call(env)
-              end
-            else
-              @app.call(env)
-            end  
-          end
-          
-          private
-            
-            def scope?( env )
-              Scrooge::Base.profile.orm.resource_scope_method( resource( env ) ) == :#{profile.orm.resource_scope_method( resource ).to_s}                 
-            end  
-            
-            def resource( env )
-              Scrooge::Base.profile.framework.resource( env )
-            end
-          
-        EOS
-        klass
-      end
-      
       def inspect #:nodoc:
         "#<#{@method.to_s.upcase} #{private_or_public} :#{@controller}/#{@action} (#{@format})\n#{models_for_inspect()}"
       end
