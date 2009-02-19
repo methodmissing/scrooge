@@ -2,7 +2,7 @@ module Scrooge
   module Core
     module Symbol
       
-      # See Scrooge::Core::Symbol
+      # See Scrooge::Core::String
       
       def to_const
         to_s.to_const

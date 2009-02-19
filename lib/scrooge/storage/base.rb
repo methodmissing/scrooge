@@ -1,7 +1,6 @@
 module Scrooge
   module Storage
    
-    autoload :Buffer, 'scrooge/storage/buffer'
     autoload :Memory, 'scrooge/storage/memory'
     
     class Base < Scrooge::Base

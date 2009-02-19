@@ -11,9 +11,13 @@ require 'spec/helpers/framework/rails/cache'
 
 Spec::Runner.configure do |config|
   
-  Kernel.const_set :FIXTURES, "#{Dir.pwd}/spec/fixtures" unless defined?(FIXTURES)
-  Kernel.const_set :TMP, "#{Dir.pwd}/spec/tmp" unless defined?(TMP)
-  Kernel.const_set :CONFIG, "#{Dir.pwd}/spec/config" unless defined?(CONFIG)
+  def self.set_constant( const, value )
+    eval( "Kernel.const_set :#{const.to_s}, #{value.inspect} unless defined?( #{const.to_s} )" )
+  end
+  
+  set_constant( :FIXTURES, "#{Dir.pwd}/spec/fixtures" )
+  set_constant( :TMP, "#{Dir.pwd}/spec/tmp" )
+  set_constant( :CONFIG, "#{Dir.pwd}/spec/config" )
   
   config.before :all do
     [TMP, CONFIG].each do |dir|

@@ -143,7 +143,7 @@ module Scrooge
         def restored_resources( data ) #:nodoc:
           GUARD.synchronize do
             data.map do |resource|
-              Resource.new.marshal_load( resource )
+              Resource.load( resource )
             end
           end
         end
