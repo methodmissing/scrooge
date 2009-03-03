@@ -28,6 +28,7 @@ module Scrooge
             
               def register_with_scrooge!( attr_name, caller ) #:nodoc:
                 if ::Scrooge::Base.profile.orm.track?
+                  ::Scrooge::Base.profile.log( "Register attribute #{attr_name.inspect} from #{caller}" ) if ::Scrooge::Base.profile.verbose?
                   Thread.scrooge_resource << [self.base_class, attr_name]
                 end
               end
@@ -54,6 +55,7 @@ module Scrooge
           
             def register_with_scrooge!( attr_name, caller ) #:nodoc:
               if ::Scrooge::Base.profile.orm.track?
+                ::Scrooge::Base.profile.log( "Register attribute #{attr_name.inspect} from #{caller}" ) if ::Scrooge::Base.profile.verbose?
                 Thread.scrooge_resource << [self.class.base_class, attr_name]
               end
             end

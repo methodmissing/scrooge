@@ -1,6 +1,7 @@
 production:
   orm: :active_record
   storage: :memory
+  verbose: false
   scope: 1234567891 
   on_missing_attribute: :reload
   strategy: :track_then_scope
@@ -10,6 +11,7 @@ production:
 test:
   orm: :active_record
   storage: :memory
+  verbose: true
   scope: 
   on_missing_attribute: :reload      
   strategy: :track_then_scope

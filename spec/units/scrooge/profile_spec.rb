@@ -71,4 +71,9 @@ describe "Scrooge::Profile instance" do
   it "should be able to return a session key that indicates a logged in session" do
     @profile.logged_in_session.should == :user_id
   end  
+  
+  it "should be able to determine if logging should be verbose" do
+    @profile.verbose?().should == false
+  end
+  
 end

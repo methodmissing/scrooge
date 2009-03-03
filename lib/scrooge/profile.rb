@@ -89,6 +89,12 @@ module Scrooge
     def log( message, flush = false )
       framework.log( message, flush ) rescue ''
     end
+       
+    # Log a message to the framework's logger.
+    #
+    def verbose_log( message, flush = false )
+      log( message, flush ) if verbose?
+    end       
         
     # Are we tracking ?
     #
@@ -135,6 +141,12 @@ module Scrooge
     def enabled?
       @enabled
     end         
+
+    # Should Scrooge be chatty ?
+    #         
+    def verbose?
+      @verbose
+    end         
     
     # Should we raise on missing attributes ?
     #
@@ -164,6 +176,7 @@ module Scrooge
         @warmup = configure_with( @options['warmup'], 0..14400, 0 )    
         @enabled = configure_with( @options['enabled'], [true, false], false )
         @on_missing_attribute = configure_with( @options['on_missing_attribute'], [:reload, :raise], :reload )
+        @verbose = configure_with( @options['verbose'], [true, false], false )
         @logged_in_session = configure_with( @options['logged_in_session'], nil, :user_id )
         reset_backends!
         memoize_backends!

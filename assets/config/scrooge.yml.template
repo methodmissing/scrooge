@@ -3,6 +3,7 @@ production:
   strategy: :track_then_scope
   warmup: 600 # warmup / track for 10 minutes
   scope:
+  verbose: false
   on_missing_attribute: :reload # or :raise
   logged_in_session: :user_id # session key that represents the logged in user 
   enabled: true    
@@ -11,6 +12,7 @@ development:
   strategy: :track
   warmup: 600 # warmup / track for 10 minutes
   scope: 
+  verbose: true
   on_missing_attribute: :reload # or :raise
   logged_in_session: :user_id # session key that represents the logged in user 
   enabled: true    
@@ -19,6 +21,7 @@ test:
   strategy: :track
   warmup: 600 # warmup / track for 10 minutes
   scope:
+  verbose: true
   on_missing_attribute: :reload # or :raise
   logged_in_session: :user_id # session key that represents the logged in user 
   enabled: true

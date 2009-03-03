@@ -420,6 +420,16 @@ Tracking results can be persisted to a given backend or storage option.Ships wit
 </pre>
 </code>
 
+h4. Verbose
+
+Log all tracking interactions to the framework logger when enabled.Disabled for production.
+
+<pre>
+<code>
+  verbose: false
+</pre>
+</code>
+
 h4. Strategy
 
 One of :track, :scope or :track_then_scope .Only the :track_then_scope strategy respects the :warmup configuration option.
