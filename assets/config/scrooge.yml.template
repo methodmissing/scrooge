@@ -1,6 +1,5 @@
 production:
   orm: :active_record
-  storage: :memory
   strategy: :track_then_scope
   warmup: 600 # warmup / track for 10 minutes
   scope:
@@ -9,7 +8,6 @@ production:
   enabled: true    
 development:
   orm: :active_record
-  storage: :memory
   strategy: :track
   warmup: 600 # warmup / track for 10 minutes
   scope: 
@@ -18,7 +16,6 @@ development:
   enabled: true    
 test:
   orm: :active_record
-  storage: :memory  
   strategy: :track
   warmup: 600 # warmup / track for 10 minutes
   scope:
