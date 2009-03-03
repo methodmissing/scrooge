@@ -412,7 +412,7 @@ Scrooge is ORM agnostic and ships with an ActiveRecord layer.
 
 h4. Storage backend
 
-Tracking results can be persisted to a given backend or storage option.Ships with a memory store, but can be extended to file system, memcached etc. as all Tracker components is designed to be Marshal friendly.
+Tracking results can be persisted to a given backend or storage option.Ships with a memory store, but can be extended to file system, memcached etc. as all Tracker components is designed to be Marshal friendly.A stub for future functionality.
 
 <pre>
 <code>
@@ -510,3 +510,16 @@ methodmissing:superbreak_app lourens$ rake scope=1234735790 scrooge:inspect
 h2. Notes
 
 This is an initial release, has not yet been battle tested in production and is pending Ruby 1.9.1 compatibility.
+
+Developed on and for Rails 2.3, known to work with Rails 2.2.2
+
+h2. Known pending issues
+
+* Do not track columns that isn't explicitly defined ( AR counter caching checks etc. ) : 
+<code>
+<pre>
+ActiveRecord::StatementInvalid (Mysql::Error: Unknown column 'orders.brochures_count' in 'field list': SELECT orders.brochures_count, orders.id FROM `orders` WHERE (`orders`.`id` = 1688139)  LIMIT 1)
+</code>	
+</pre>
+
+* alias_attribute compatibility
