@@ -7,31 +7,40 @@ module Scrooge
           
           private
      
-            # Attach to generated attribute reader methods.
-        
-            def define_read_method(symbol, attr_name, column)
-              register_with_scrooge!( attr_name, 'define read method' )
-              super(symbol, attr_name, column)
-            end
-          
-            def define_read_method_for_time_zone_conversion(attr_name)
-              register_with_scrooge!( attr_name, 'define read method for time zone conversion' )
-              super(attr_name)
+          # Define an attribute reader method.  Cope with nil column.
+          def define_read_method(symbol, attr_name, column)
+            cast_code = column.type_cast_code('v') if column
+            access_code = cast_code ? "(v=@attributes['#{attr_name}']) && #{cast_code}" : "@attributes['#{attr_name}']"
+
+            unless attr_name.to_s == self.primary_key.to_s
+              access_code = access_code.insert(0, "missing_attribute('#{attr_name}', caller) unless @attributes.has_key?('#{attr_name}'); ")
             end
 
-            def define_read_method_for_serialized_attribute(attr_name)
-              register_with_scrooge!( attr_name, 'define read method for serialized attribute' )
-              super(attr_name)
-            end  
+            if cache_attribute?(attr_name)
+              access_code = "@attributes_cache['#{attr_name}'] ||= (#{access_code})"
+            end
+            evaluate_attribute_method attr_name, "def #{symbol}; register_with_scrooge!(:#{attr_name}, 'define read method' ); #{access_code}; end"
+          end
 
-            private 
-            
-              def register_with_scrooge!( attr_name, caller ) #:nodoc:
-                if ::Scrooge::Base.profile.orm.track?
-                  ::Scrooge::Base.profile.log( "Register attribute #{attr_name.inspect} from #{caller}" ) if ::Scrooge::Base.profile.verbose?
-                  Thread.scrooge_resource << [self.base_class, attr_name]
-                end
+          # Define read method for serialized attribute.
+          def define_read_method_for_serialized_attribute(attr_name)
+            evaluate_attribute_method attr_name, "def #{attr_name}; register_with_scrooge!(:#{attr_name}, 'define read method for serialized attribute' ); unserialize_attribute('#{attr_name}'); end"
+          end
+
+          # Defined for all +datetime+ and +timestamp+ attributes when +time_zone_aware_attributes+ are enabled.
+          # This enhanced read method automatically converts the UTC time stored in the database to the time zone stored in Time.zone.
+          def define_read_method_for_time_zone_conversion(attr_name)
+            method_body = <<-EOV
+              def #{attr_name}(reload = false)
+                register_with_scrooge!(:#{attr_name}, 'define read method for time zone conversion' )
+                cached = @attributes_cache['#{attr_name}']
+                return cached if cached && !reload
+                time = read_attribute('#{attr_name}')
+                @attributes_cache['#{attr_name}'] = time.acts_like?(:time) ? time.in_time_zone : time
               end
+            EOV
+            evaluate_attribute_method attr_name, method_body
+          end
 
         end
         
