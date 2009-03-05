@@ -8,11 +8,11 @@ module Scrooge
         # the root Rack application and as such don't provide access to the Rails
         # Routing internals from other middleware.
         #
-        def filter( controller, &block )
+        def filter( controller )
           Scrooge::Base.profile.tracker.track( Thread.scrooge_resource ) do
             begin
               Scrooge::Base.profile.framework.resource( {}, controller.request )
-              block.call
+              yield
             ensure
               Thread.reset_scrooge_resource!
             end
