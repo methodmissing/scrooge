@@ -30,12 +30,16 @@ module Scrooge
       # directory.
       #
       def setup!
-        unless File.exist?( profile.framework.configuration_file )
+        unless configuration_file_exists?
           FileUtils.cp( configuration_template(), profile.framework.configuration_file )
         end  
       end
       
       private
+      
+        def configuration_file_exists? #:nodoc:
+          File.exist?( profile.framework.configuration_file )
+        end
       
         def configuration_template #:nodoc:
           File.join( File.dirname(__FILE__), '..', 'assets', 'config', 'scrooge.yml.template' )

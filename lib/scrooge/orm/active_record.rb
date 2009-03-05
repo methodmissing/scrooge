@@ -118,9 +118,9 @@ module Scrooge
         klass = klass_for_model( model )
         unless resource_scope_method?( resource, klass ) 
           klass.instance_eval(<<-EOS, __FILE__, __LINE__)
-            def #{method_name}(&block)
+            def #{method_name}
               with_scope( { :find => { :select => '#{model.to_sql}' } }) do
-                block.call
+                yield
               end 
             end  
           EOS

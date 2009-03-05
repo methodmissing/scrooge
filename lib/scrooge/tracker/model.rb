@@ -69,9 +69,9 @@ module Scrooge
             # the root Rack application and as such don't provide access to the Rails
             # Routing internals from other middleware.
             #
-            def filter( controller, &block )
+            def filter( controller )
               #{model.to_s}.#{profile.orm.resource_scope_method( resource ).to_s} do
-                block.call
+                yield
               end
             end
             
@@ -141,7 +141,7 @@ module Scrooge
           @attributes.map{|a| ":#{a}" }.join(', ')
         end
       
-        def attributes_with_primary_key #:nodoc:
+        def attributes_with_primary_key #:nodoc:          
           @attributes << primary_key
         end
       
