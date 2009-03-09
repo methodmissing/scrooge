@@ -154,6 +154,7 @@ module ActiveRecord
         evaluate_attribute_method attr_name, method_def
       end
       
+      # TODO: override callback rather than this method
       def instantiate_with_scrooge(record, callsite_signature, callsite_set)
         object =
           if subclass_name = record[inheritance_column]
@@ -275,7 +276,7 @@ module ActiveRecord
 
     # Marshal
     # force a full load if needed, and remove any possibility for missing attr flagging
-    #
+    # TODO: fix for nested objects?
     def _dump(depth)
       if @is_scrooged
         scrooge_full_reload unless @scrooge_fully_loaded
@@ -289,11 +290,12 @@ module ActiveRecord
     
     # Enables us to use Marshal.dump inside our _dump method without an infinite loop
     #
+    alias_method :respond_to_without_scrooge, :respond_to?
     def respond_to?(symbol, include_private=false)
       if symbol == :_dump && Thread.current[:scrooge_dumping]
         false
       else
-        super(symbol, include_private)
+        respond_to_without_scrooge(symbol, include_private)
       end
     end
 
