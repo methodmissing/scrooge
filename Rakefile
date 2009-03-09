@@ -23,13 +23,13 @@ begin
   Jeweler::Tasks.new do |s|
     s.name = "scrooge"
     s.summary = "Scrooge - Fetch exactly what you need"
-    s.email = "lourens@methodmissing.com"
+    s.email = "lourens@methodmissing.com or sds@switchstep.com"
     s.homepage = "http://github.com/methodmissing/scrooge"
-    s.description = "A Framework and ORM agnostic Model / record attribute tracker to ensure production
+    s.description = "An ActiveRecord attribute tracker to ensure production
     Ruby applications only fetch the database content needed to minimize wire traffic
     and reduce conversion overheads to native Ruby types."
-    s.authors = ["Lourens Naudé"]
-    s.files = FileList["[A-Z]*", "{lib,spec,rails,assets,tasks}/**/*"]
+    s.authors = ["Lourens Naudé", "Stephen Sykes"]
+    s.files = FileList["[A-Z]*", "{lib,test,rails,tasks}/**/*"]
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
