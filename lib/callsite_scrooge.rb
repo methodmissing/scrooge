@@ -205,6 +205,19 @@ module ActiveRecord
       
     end
 
+    # Make reload load the attributes that this model thinks it needs
+    # needed because reloading * will be defeated by scrooge
+    #
+    alias_method :reload_without_scrooge, :reload
+    def reload(options = nil)
+      if @is_scrooged && (!options || !options[:select])
+        options = {} unless options
+        options.update(:select=>self.class.scrooge_sql(@scrooge_own_callsite_set))
+        @scrooge_fully_loaded = false
+      end
+      reload_without_scrooge(options)
+    end
+
     # Augment the callsite with a fresh column reference.
     #
     def augment_scrooge_attribute!(attr_name)
@@ -216,14 +229,14 @@ module ActiveRecord
     # but continue record missing columns after this
     #
     def scrooge_missing_attribute(attr_name)
-      augment_scrooge_attribute!(attr_name)
       Rails.logger.info "********** added #{attr_name} for #{self.class.table_name}"
       scrooge_full_reload if !@scrooge_fully_loaded
+      augment_scrooge_attribute!(attr_name)
     end
 
     def scrooge_full_reload
       @scrooge_fully_loaded = true
-      reload(:select => self.class.scrooge_sql(all_column_names))
+      reload(:select => self.class.scrooge_sql(all_column_names - @scrooge_own_callsite_set.to_a))
     end
 
     def all_column_names
