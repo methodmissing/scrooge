@@ -242,13 +242,14 @@ module ActiveRecord
 
     # Wrap #write_attribute to gracefully handle missing attributes
     #
+    alias_method :write_attribute_without_scrooge, :write_attribute
     def write_attribute(attr_name, value)
       attr_s = attr_name.to_s
       if scrooge_attr_present?(attr_s) || !self.class.column_names.include?(attr_s)
-        super(attr_s, value)
+        write_attribute_without_scrooge(attr_s, value)
       else
         scrooge_missing_attribute(attr_s)
-        super(attr_s, value)
+        write_attribute_without_scrooge(attr_s, value)
       end
     end
 
