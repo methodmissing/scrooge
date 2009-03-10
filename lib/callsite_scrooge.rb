@@ -21,11 +21,15 @@ module ActiveRecord
       #     
       alias :find_by_sql_without_scrooge :find_by_sql
       def find_by_sql(sql)
+        saved_settings = Thread.current[:scrooge_settings]
+        Thread.current[:scrooge_settings] = nil
         if scope_with_scrooge?(sql)
-          find_by_sql_with_scrooge(sql)
+          result = find_by_sql_with_scrooge(sql)
         else
-          find_by_sql_without_scrooge(sql)
+          result = find_by_sql_without_scrooge(sql)
         end
+        Thread.current[:scrooge_settings] = saved_settings
+        result
       end
 
       # Only scope n-1 rows by default.
@@ -68,10 +72,14 @@ module ActiveRecord
       #
       def find_by_sql_with_scrooge( sql )
         callsite_signature = (caller[ScroogeCallsiteSample] << sql.gsub(ScroogeRegexWhere, ScroogeBlankString)).hash
-        callsite_set = set_for_callsite( callsite_signature )
-        sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql( callsite_set )}")
-        result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! { |record| instantiate_with_scrooge(record, callsite_signature, callsite_set) }
-        result
+        callsite_set = set_for_callsite(callsite_signature)
+        Thread.current[:scrooge_settings] = [callsite_signature, callsite_set]
+        sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)}")
+        result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
+          record = instantiate(record)
+          record.scrooge_setup unless record.is_scrooged
+          record
+        end
       end
 
       # Return an attribute Set for a given callsite signature.
@@ -153,58 +161,8 @@ module ActiveRecord
         EOV
         evaluate_attribute_method attr_name, method_def
       end
-      
-      # TODO: override callback rather than this method
-      def instantiate_with_scrooge(record, callsite_signature, callsite_set)
-        object =
-          if subclass_name = record[inheritance_column]
-            # No type given.
-            if subclass_name.empty?
-              allocate
 
-            else
-              # Ignore type if no column is present since it was probably
-              # pulled in from a sloppy join.
-              unless columns_hash.include?(inheritance_column)
-                allocate
-
-              else
-                begin
-                  compute_type(subclass_name).allocate
-                rescue NameError
-                  raise SubclassNotFound,
-                    "The single-table inheritance mechanism failed to locate the subclass: '#{record[inheritance_column]}'. " +
-                    "This error is raised because the column '#{inheritance_column}' is reserved for storing the class in case of inheritance. " +
-                    "Please rename this column if you didn't intend it to be used for storing the inheritance class " +
-                    "or overwrite #{self.to_s}.inheritance_column to use another column for that information."
-                end
-              end
-            end
-          else
-            allocate
-          end
-
-        object.instance_variable_set("@attributes", record)
-        object.instance_variable_set("@attributes_cache", Hash.new)
-
-        object.scrooge_callsite_signature = callsite_signature
-        # maintain separate record of columns that are loaded for just this record
-        # could be different from the class level columns
-        object.scrooge_own_callsite_set = callsite_set.dup
-        object.is_scrooged = true
-
-        if object.respond_to_without_attributes?(:after_find)
-          object.send(:callback, :after_find)
-        end
-
-        if object.respond_to_without_attributes?(:after_initialize)
-          object.send(:callback, :after_initialize)
-        end
-
-        object
-      end
-      
-    end
+    end  # class << self
 
     # Make reload load the attributes that this model thinks it needs
     # needed because reloading * will be defeated by scrooge
@@ -217,6 +175,26 @@ module ActiveRecord
         @scrooge_fully_loaded = false
       end
       reload_without_scrooge(options)
+    end
+
+    # Setup scrooge settings on an AR object
+    # Maintain separate record of columns that have been loaded for just this record
+    # could be different from the class level columns
+    #
+    def scrooge_setup
+      callsite_signature, callsite_set = Thread.current[:scrooge_settings]
+      @scrooge_own_callsite_set ||= callsite_set.dup
+      @scrooge_callsite_signature = callsite_signature
+      @is_scrooged = true
+    end
+
+    # Callbacks after_find and after_initialize can happen before instantiate returns
+    # so make sure that this record is marked as scrooged first
+    #
+    alias_method :callback_without_scrooge, :callback
+    def callback(method)
+      scrooge_setup if Thread.current[:scrooge_settings]
+      callback_without_scrooge(method)
     end
 
     # Augment the callsite with a fresh column reference.
