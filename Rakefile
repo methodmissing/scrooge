@@ -1,22 +1,22 @@
-begin
-  require 'spec'
-rescue LoadError
-  require 'rubygems'
-  require 'spec'
-end
+require 'rake'
+require 'rake/testtask'
+require 'test/helper'
 
-require 'spec/rake/spectask'
+task :default => [:test_with_active_record, :test_scrooge]
 
-$LOAD_PATH.unshift File.dirname(__FILE__) + '/../'
-$LOAD_PATH.unshift File.dirname(__FILE__) + '/lib'
+Rake::TestTask.new( :test_with_active_record ) { |t|
+  t.libs << AR_TEST_SUITE << Scrooge::Test.connection() 
+  #t.test_files = ["/Users/lourens/projects/rails/activerecord/test/cases/validations_test.rb"]
+  t.test_files = Scrooge::Test.active_record_test_files()
+  t.ruby_opts = ["-r #{File.join( File.dirname(__FILE__), 'test', 'setup' )}"]
+  t.verbose = true
+}
 
-require 'scrooge'
-
-desc "Run the specs under spec"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb']
-  t.spec_opts << "-c"
-end
+Rake::TestTask.new( :test_scrooge ) { |t|
+  t.libs << 'lib'
+  t.test_files = Scrooge::Test.test_files()
+  t.verbose = true
+}
 
 begin
   require 'jeweler'
