@@ -147,14 +147,14 @@ module ActiveRecord
         if cache_attribute?(attr_name)
           access_code = "@attributes_cache['#{attr_name}'] ||= (#{access_code})"
         end
-        define_with_scrooge(symbol, attr_name, access_code, "")
+        define_with_scrooge(symbol, attr_name, access_code)
       end
 
       # Graceful missing attribute wrapper.
       #
-      def define_with_scrooge(symbol, attr_name, access_code, args)
+      def define_with_scrooge(symbol, attr_name, access_code)
         method_def = <<-EOV
-        def #{symbol}#{args}
+        def #{symbol}
           begin
             #{access_code}
           rescue ActiveRecord::MissingAttributeError => e
@@ -316,12 +316,14 @@ module ActiveRecord
         became.instance_variable_set("@attributes", @attributes)
         became.instance_variable_set("@attributes_cache", @attributes_cache)
         became.instance_variable_set("@new_record", new_record?)
-        became.instance_variable_set("@is_scrooged", @is_scrooged)
-        became.instance_variable_set("@scrooge_fully_loaded", @scrooge_fully_loaded)
-        became.instance_variable_set("@scrooge_own_callsite_set", @scrooge_own_callsite_set)
-        became.instance_variable_set("@scrooge_callsite_set", @scrooge_callsite_set)
+        if @is_scrooged
+          became.instance_variable_set("@is_scrooged", true)
+          became.instance_variable_set("@scrooge_fully_loaded", @scrooge_fully_loaded)
+          became.instance_variable_set("@scrooge_own_callsite_set", @scrooge_own_callsite_set)
+          became.instance_variable_set("@scrooge_callsite_signature", @scrooge_callsite_signature)
+        end
       end
-    end    
+    end
     
     def scrooge_dump_flag_this
       Thread.current[:scrooge_dumping_objects] ||= []
