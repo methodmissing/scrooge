@@ -213,9 +213,23 @@ module ActiveRecord
       augment_scrooge_attribute!(attr_name)
     end
 
+    # Load the rest of the columns from the DB
+    # Take care not to reload the ones we already have, they
+    # might have been assigned to
+    #
     def scrooge_full_reload
       @scrooge_fully_loaded = true
       reload(:select => self.class.scrooge_sql(all_column_names - @scrooge_own_callsite_set.to_a))
+    end
+
+    # Complete the object - load it and record all attribute names
+    # Used by delete / destroy and marshal
+    #
+    def scrooge_complete_object
+      if @is_scrooged
+        scrooge_full_reload unless @scrooge_fully_loaded
+        @scrooge_own_callsite_set.merge(all_column_names)
+      end
     end
 
     def all_column_names
@@ -246,6 +260,22 @@ module ActiveRecord
       end
     end
 
+    # Delete should fully load all the attributes before the @attributes hash is frozen
+    #
+    alias_method :delete_without_scrooge, :delete
+    def delete
+      scrooge_complete_object
+      delete_without_scrooge
+    end
+
+    # Destroy should fully load all the attributes before the @attributes hash is frozen
+    #
+    alias_method :destroy_without_scrooge, :destroy
+    def destroy
+      scrooge_complete_object
+      destroy_without_scrooge
+    end
+    
     # Is the given column known to Scrooge ?
     #
     def scrooge_attr_present?(attr_name)
@@ -256,10 +286,7 @@ module ActiveRecord
     # force a full load if needed, and remove any possibility for missing attr flagging
     #
     def _dump(depth)
-      if @is_scrooged
-        scrooge_full_reload unless @scrooge_fully_loaded
-        @scrooge_own_callsite_set.merge(all_column_names)
-      end
+      scrooge_complete_object
       scrooge_dump_flag_this
       str = Marshal.dump(self)
       scrooge_dump_unflag_this
