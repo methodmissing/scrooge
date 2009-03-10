@@ -245,7 +245,7 @@ module ActiveRecord
     alias_method :write_attribute_without_scrooge, :write_attribute
     def write_attribute(attr_name, value)
       attr_s = attr_name.to_s
-      if scrooge_attr_present?(attr_s) || !self.class.column_names.include?(attr_s)
+      if scrooge_not_interested?( attr_s )
         write_attribute_without_scrooge(attr_s, value)
       else
         scrooge_missing_attribute(attr_s)
@@ -257,7 +257,7 @@ module ActiveRecord
     #
     def read_attribute(attr_name)
       attr_s = attr_name.to_s
-      if scrooge_attr_present?(attr_s) || !self.class.column_names.include?(attr_s)
+      if scrooge_not_interested?( attr_s )
         super(attr_s)
       else
         scrooge_missing_attribute(attr_s)
@@ -269,14 +269,18 @@ module ActiveRecord
     #
     def read_attribute_before_type_cast(attr_name)
       attr_s = attr_name.to_s
-      if scrooge_attr_present?(attr_s) || !self.class.column_names.include?(attr_s)
+      if scrooge_not_interested?( attr_s )
         super(attr_s)
       else
         scrooge_missing_attribute(attr_s)
         super(attr_s)
       end
     end
-
+    
+    def scrooge_not_interested?( attr_name )
+      scrooge_attr_present?(attr_name) || !self.class.column_names.include?(attr_name)
+    end
+     
     # Delete should fully load all the attributes before the @attributes hash is frozen
     #
     alias_method :delete_without_scrooge, :delete
