@@ -319,7 +319,7 @@ module ActiveRecord
         became.instance_variable_set("@is_scrooged", @is_scrooged)
         became.instance_variable_set("@scrooge_fully_loaded", @scrooge_fully_loaded)
         became.instance_variable_set("@scrooge_own_callsite_set", @scrooge_own_callsite_set)
-        became.instance_variable_set("@scrooge_callsite_set", @scrooge_callsite_set)
+        became.instance_variable_set("@scrooge_callsite_signature", @scrooge_callsite_set)
       end
     end    
     

@@ -1,4 +1,4 @@
-require "setup"
+require File.join( File.dirname(__FILE__), 'setup' )
 
 module Scrooge
   class Test
@@ -52,8 +52,7 @@ module Scrooge
       def setup_constants!
         set_constant( 'MYSQL_DB_USER' ){ 'rails' }
         set_constant( 'AR_TEST_SUITE' ) do 
-          #find_active_record_test_suite()
-          ENV['AR_TEST_SUITE'] || find_active_record_test_suite()
+          find_active_record_test_suite()
         end
       end
       
