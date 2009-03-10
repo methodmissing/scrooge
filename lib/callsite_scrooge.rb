@@ -276,23 +276,36 @@ module ActiveRecord
 
     # Marshal
     # force a full load if needed, and remove any possibility for missing attr flagging
-    # TODO: fix for nested objects?
+    #
     def _dump(depth)
       if @is_scrooged
         scrooge_full_reload unless @scrooge_fully_loaded
         @scrooge_own_callsite_set.merge(all_column_names)
       end
-      Thread.current[:scrooge_dumping] = true
+      scrooge_dump_flag_this
       str = Marshal.dump(self)
-      Thread.current[:scrooge_dumping] = false
+      scrooge_dump_unflag_this
       str
+    end
+    
+    def scrooge_dump_flag_this
+      Thread.current[:scrooge_dumping_objects] ||= []
+      Thread.current[:scrooge_dumping_objects] << object_id
+    end
+    
+    def scrooge_dump_unflag_this
+      Thread.current[:scrooge_dumping_objects].delete(object_id)
+    end
+    
+    def scrooge_dump_flagged?
+      Thread.current[:scrooge_dumping_objects] && Thread.current[:scrooge_dumping_objects].include?(object_id)
     end
     
     # Enables us to use Marshal.dump inside our _dump method without an infinite loop
     #
     alias_method :respond_to_without_scrooge, :respond_to?
     def respond_to?(symbol, include_private=false)
-      if symbol == :_dump && Thread.current[:scrooge_dumping]
+      if symbol == :_dump && scrooge_dump_flagged?
         false
       else
         respond_to_without_scrooge(symbol, include_private)
