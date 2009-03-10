@@ -227,7 +227,7 @@ module ActiveRecord
     #
     def scrooge_full_reload
       @scrooge_fully_loaded = true
-      reload(:select => self.class.scrooge_sql(all_column_names - @scrooge_own_callsite_set.to_a))
+      reload(:select => self.class.scrooge_sql(self.class.column_names - @scrooge_own_callsite_set.to_a))
     end
 
     # Complete the object - load it and record all attribute names
@@ -236,19 +236,27 @@ module ActiveRecord
     def scrooge_complete_object
       if @is_scrooged
         scrooge_full_reload unless @scrooge_fully_loaded
-        @scrooge_own_callsite_set.merge(all_column_names)
+        @scrooge_own_callsite_set.merge( self.class.column_names )
       end
     end
 
-    def all_column_names
-      @all_column_names ||= self.class.columns.collect(&:name)
+    # Wrap #write_attribute to gracefully handle missing attributes
+    #
+    def write_attribute(attr_name, value)
+      attr_s = attr_name.to_s
+      if scrooge_attr_present?(attr_s) || !self.class.column_names.include?(attr_s)
+        super(attr_s, value)
+      else
+        scrooge_missing_attribute(attr_s)
+        super(attr_s, value)
+      end
     end
 
     # Wrap #read_attribute to gracefully handle missing attributes
     #
     def read_attribute(attr_name)
       attr_s = attr_name.to_s
-      if scrooge_attr_present?(attr_s) || !all_column_names.include?(attr_s)
+      if scrooge_attr_present?(attr_s) || !self.class.column_names.include?(attr_s)
         super(attr_s)
       else
         scrooge_missing_attribute(attr_s)
@@ -260,7 +268,7 @@ module ActiveRecord
     #
     def read_attribute_before_type_cast(attr_name)
       attr_s = attr_name.to_s
-      if scrooge_attr_present?(attr_s) || !all_column_names.include?(attr_s)
+      if scrooge_attr_present?(attr_s) || !self.class.column_names.include?(attr_s)
         super(attr_s)
       else
         scrooge_missing_attribute(attr_s)
@@ -300,6 +308,20 @@ module ActiveRecord
       scrooge_dump_unflag_this
       str
     end
+    
+    # 
+    #
+    def becomes(klass)
+      returning klass.new do |became|
+        became.instance_variable_set("@attributes", @attributes)
+        became.instance_variable_set("@attributes_cache", @attributes_cache)
+        became.instance_variable_set("@new_record", new_record?)
+        became.instance_variable_set("@is_scrooged", @is_scrooged)
+        became.instance_variable_set("@scrooge_fully_loaded", @scrooge_fully_loaded)
+        became.instance_variable_set("@scrooge_own_callsite_set", @scrooge_own_callsite_set)
+        became.instance_variable_set("@scrooge_callsite_set", @scrooge_callsite_set)
+      end
+    end    
     
     def scrooge_dump_flag_this
       Thread.current[:scrooge_dumping_objects] ||= []
