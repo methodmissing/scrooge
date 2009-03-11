@@ -41,14 +41,14 @@ module ActiveRecord
       # Populate the storage for a given callsite signature
       #
       def scrooge_callsite_set!(callsite_signature, set)
-        @@scrooge_callsites[self][callsite_signature] = set
+        @@scrooge_callsites[self.table_name][callsite_signature] = set
       end  
 
       # Reference storage for a given callsite signature
       #
       def scrooge_callsite_set(callsite_signature)
-        @@scrooge_callsites[self] ||= {}
-        @@scrooge_callsites[self][callsite_signature]
+        @@scrooge_callsites[self.table_name] ||= {}
+        @@scrooge_callsites[self.table_name][callsite_signature]
       end
 
       # Augment a given callsite signature with a column / attribute.
@@ -109,7 +109,7 @@ module ActiveRecord
       # verbose SQL from JOINS etc.
       # 
       def scrooge_select_regex
-        @@scrooge_select_regexes[self] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*)" )
+        @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*)" )
       end
 
       # Link the column to it's table.
