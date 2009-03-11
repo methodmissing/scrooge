@@ -214,7 +214,7 @@ module ActiveRecord
     # Piggy back off column definitions instead
     #
     def attribute_names
-      self.class.column_names
+      self.class.column_names.sort
     end
 
     # Augment the callsite with a fresh column reference.
@@ -230,7 +230,7 @@ module ActiveRecord
     def scrooge_missing_attribute(attr_name)
       logger.info "********** added #{attr_name} for #{self.class.table_name}"
       scrooge_full_reload if !@scrooge_fully_loaded
-      augment_scrooge_attribute!(attr_name)
+      augment_scrooge_attribute!(attr_name.to_s)
     end
 
     # Load the rest of the columns from the DB
@@ -347,21 +347,95 @@ module ActiveRecord
     def scrooge_dump_flagged?
       Thread.current[:scrooge_dumping_objects] && Thread.current[:scrooge_dumping_objects].include?(object_id)
     end
-    
-    # Enables us to use Marshal.dump inside our _dump method without an infinite loop
-    #
-    alias_method :respond_to_without_scrooge, :respond_to?
-    def respond_to?(symbol, include_private=false)
-      if symbol == :_dump && scrooge_dump_flagged?
-        false
-      else
-        respond_to_without_scrooge(symbol, include_private)
-      end
-    end
 
     def self._load(str)
       Marshal.load(str)
     end
+     
+    # Detach the primary key from scrooge's callsite data as well
+    #
+    def rollback_active_record_state!
+      id_present = @attributes.has_key?(self.class.primary_key)#has_attribute?(self.class.primary_key)
+      previous_id = id
+      previous_new_record = new_record?
+      yield
+    rescue Exception
+      @new_record = previous_new_record
+      if id_present
+        self.id = previous_id
+      else
+        @attributes.delete(self.class.primary_key)
+        @attributes_cache.delete(self.class.primary_key)
+        @scrooge_own_callsite_set.delete(self.class.primary_key) if @scrooge_own_callsite_set
+      end
+      raise
+    end     
+     
+    # Override method_missing - original references @attributes directly
+    #
+    ActiveRecord::AttributeMethods.send(:remove_method, :method_missing)
+    def method_missing(method_id, *args, &block)
+      method_name = method_id.to_s
+
+      if self.class.private_method_defined?(method_name)
+        raise NoMethodError.new("Attempt to call private method", method_name, args)
+      end
+
+      # If we haven't generated any methods yet, generate them, then
+      # see if we've created the method we're looking for.
+      if !self.class.generated_methods?
+        self.class.define_attribute_methods
+        if self.class.generated_methods.include?(method_name)
+          return self.send(method_id, *args, &block)
+        end
+      end
+      
+      if self.class.primary_key.to_s == method_name
+        id
+      elsif md = self.class.match_attribute_method?(method_name)
+        attribute_name, method_type = md.pre_match, md.to_s
+        if self.class.column_names.include?(attribute_name)
+          __send__("attribute#{method_type}", attribute_name, *args, &block)
+        else
+          super
+        end
+      elsif self.class.column_names.include?(method_name)
+        read_attribute(method_name)
+      else
+        super
+      end
+    end  
+    
+    # Original respond_to references @attributes directly
+    #
+    ActiveRecord::AttributeMethods.send(:remove_method, :respond_to?)
+    def respond_to?(method, include_private_methods = false)
+      # Enables us to use Marshal.dump inside our _dump method without an infinite loop
+      #
+      return false if method == :_dump && scrooge_dump_flagged?
+      method_name = method.to_s
+      if super
+        return true
+      elsif !include_private_methods && super(method, true)
+        # If we're here than we haven't found among non-private methods
+        # but found among all methods. Which means that given method is private.
+        return false
+      elsif !self.class.generated_methods?
+        self.class.define_attribute_methods
+        if self.class.generated_methods.include?(method_name)
+          return true
+        end
+      end
+        
+      if @attributes.nil?
+        return super
+      elsif self.class.column_names.include?(method_name)
+        return true
+      elsif md = self.class.match_attribute_method?(method_name)
+        return true if self.class.column_names.include?(md.pre_match)
+      end
+      super
+    end    
     
   end
 end
