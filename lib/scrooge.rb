@@ -214,13 +214,13 @@ module ActiveRecord
       @is_scrooged ? self.class.column_names : @attributes.keys
     end
 
-    # Piggy back off column definitions instead
+    # Use scrooges list of potential attribute names instead of keys of @attributes
     #
     def has_attribute?(attr_name)
       scrooge_attribute_names.include?(attr_name.to_s)
     end
 
-    # Piggy back off column definitions instead
+    # Use scrooges list of potential attribute names instead of keys of @attributes
     #
     def attribute_names
       scrooge_attribute_names.sort
