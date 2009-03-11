@@ -21,14 +21,14 @@ module ActiveRecord
       #     
       alias :find_by_sql_without_scrooge :find_by_sql
       def find_by_sql(sql)
-        saved_settings = Thread.current[:scrooge_settings]
-        Thread.current[:scrooge_settings] = nil
+        saved_settings = Thread.current[:"#{self.table_name}_scrooge_settings"]
+        Thread.current[:"#{self.table_name}_scrooge_settings"] = nil
         if scope_with_scrooge?(sql)
           result = find_by_sql_with_scrooge(sql)
         else
           result = find_by_sql_without_scrooge(sql)
         end
-        Thread.current[:scrooge_settings] = saved_settings
+        Thread.current[:"#{self.table_name}_scrooge_settings"] = saved_settings
         result
       end
 
@@ -41,14 +41,14 @@ module ActiveRecord
       # Populate the storage for a given callsite signature
       #
       def scrooge_callsite_set!(callsite_signature, set)
-        @@scrooge_callsites[self.name][callsite_signature] = set
+        @@scrooge_callsites[self][callsite_signature] = set
       end  
 
       # Reference storage for a given callsite signature
       #
       def scrooge_callsite_set(callsite_signature)
-        @@scrooge_callsites[self.name] ||= {}
-        @@scrooge_callsites[self.name][callsite_signature]
+        @@scrooge_callsites[self] ||= {}
+        @@scrooge_callsites[self][callsite_signature]
       end
 
       # Augment a given callsite signature with a column / attribute.
@@ -73,7 +73,7 @@ module ActiveRecord
       def find_by_sql_with_scrooge( sql )
         callsite_signature = (caller[ScroogeCallsiteSample] << sql.gsub(ScroogeRegexWhere, ScroogeBlankString)).hash
         callsite_set = set_for_callsite(callsite_signature)
-        Thread.current[:scrooge_settings] = [callsite_signature, callsite_set]
+        Thread.current[:"#{self.table_name}_scrooge_settings"] = [callsite_signature, callsite_set]
         sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)}")
         result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
           record = instantiate(record)
@@ -109,7 +109,7 @@ module ActiveRecord
       # verbose SQL from JOINS etc.
       # 
       def scrooge_select_regex
-        @@scrooge_select_regexes[self.name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*)" )
+        @@scrooge_select_regexes[self] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*)" )
       end
 
       # Link the column to it's table.
@@ -190,7 +190,7 @@ module ActiveRecord
     # could be different from the class level columns
     #
     def scrooge_setup
-      callsite_signature, callsite_set = Thread.current[:scrooge_settings]
+      callsite_signature, callsite_set = Thread.current[:"#{self.class.table_name}_scrooge_settings"]
       @scrooge_own_callsite_set ||= callsite_set.dup
       @scrooge_callsite_signature = callsite_signature
       @is_scrooged = true
@@ -201,7 +201,7 @@ module ActiveRecord
     #
     alias_method :callback_without_scrooge, :callback
     def callback(method)
-      scrooge_setup if Thread.current[:scrooge_settings] && !new_record?
+      scrooge_setup if Thread.current[:"#{self.class.table_name}_scrooge_settings"] && !new_record?
       callback_without_scrooge(method)
     end
 
