@@ -97,6 +97,9 @@ module ActiveRecord
         end
       end
 
+      # Ensure that the inheritance column is defined for the callsite if
+      # this is an STI klass tree. 
+      #
       def scrooge_default_callsite_set
         if column_names.include?( self.inheritance_column.to_s )
           Set.new([self.primary_key.to_s, self.inheritance_column.to_s])
@@ -335,19 +338,27 @@ module ActiveRecord
       end
     end
     
+    # Flag Marshal dump in progress
+    #
     def scrooge_dump_flag_this
       Thread.current[:scrooge_dumping_objects] ||= []
       Thread.current[:scrooge_dumping_objects] << object_id
     end
     
+    # Flag Marhsal dump not in progress
+    #
     def scrooge_dump_unflag_this
       Thread.current[:scrooge_dumping_objects].delete(object_id)
     end
     
+    # Flag scrooge as dumping ( excuse my French )
+    #
     def scrooge_dump_flagged?
       Thread.current[:scrooge_dumping_objects] && Thread.current[:scrooge_dumping_objects].include?(object_id)
     end
 
+    # Marshal.load
+    # 
     def self._load(str)
       Marshal.load(str)
     end
@@ -355,7 +366,7 @@ module ActiveRecord
     # Detach the primary key from scrooge's callsite data as well
     #
     def rollback_active_record_state!
-      id_present = @attributes.has_key?(self.class.primary_key)#has_attribute?(self.class.primary_key)
+      id_present = @attributes.has_key?(self.class.primary_key)
       previous_id = id
       previous_new_record = new_record?
       yield
