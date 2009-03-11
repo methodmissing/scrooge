@@ -208,16 +208,22 @@ module ActiveRecord
       callback_without_scrooge(method)
     end
 
+    # Names of all the attributes we could have when fully loaded
+    # 
+    def scrooge_attribute_names
+      @is_scrooged ? self.class.column_names : @attributes.keys
+    end
+
     # Piggy back off column definitions instead
     #
     def has_attribute?(attr_name)
-      self.class.column_names.include?(attr_name.to_s)
+      scrooge_attribute_names.include?(attr_name.to_s)
     end
 
     # Piggy back off column definitions instead
     #
     def attribute_names
-      self.class.column_names.sort
+      scrooge_attribute_names.sort
     end
 
     # Augment the callsite with a fresh column reference.
@@ -405,12 +411,12 @@ module ActiveRecord
         id
       elsif md = self.class.match_attribute_method?(method_name)
         attribute_name, method_type = md.pre_match, md.to_s
-        if self.class.column_names.include?(attribute_name)
+        if scrooge_attribute_names.include?(attribute_name)
           __send__("attribute#{method_type}", attribute_name, *args, &block)
         else
           super
         end
-      elsif self.class.column_names.include?(method_name)
+      elsif scrooge_attribute_names.include?(method_name)
         read_attribute(method_name)
       else
         super
@@ -440,10 +446,10 @@ module ActiveRecord
         
       if @attributes.nil?
         return super
-      elsif self.class.column_names.include?(method_name)
+      elsif scrooge_attribute_names.include?(method_name)
         return true
       elsif md = self.class.match_attribute_method?(method_name)
-        return true if self.class.column_names.include?(md.pre_match)
+        return true if scrooge_attribute_names.include?(md.pre_match)
       end
       super
     end    
