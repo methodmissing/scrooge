@@ -251,20 +251,7 @@ module ActiveRecord
         @scrooge_own_callsite_set.merge( self.class.column_names )
       end
     end
-=begin
-    # Wrap #write_attribute to gracefully handle missing attributes
-    #
-    alias_method :write_attribute_without_scrooge, :write_attribute
-    def write_attribute(attr_name, value)
-      attr_s = attr_name.to_s
-      if scrooge_not_interested?( attr_s )
-        write_attribute_without_scrooge(attr_s, value)
-      else
-        scrooge_missing_attribute(attr_s)
-        write_attribute_without_scrooge(attr_s, value)
-      end
-    end
-=end
+
     # Wrap #read_attribute to gracefully handle missing attributes
     #
     def read_attribute(attr_name)
@@ -328,9 +315,10 @@ module ActiveRecord
       str
     end
     
-    # 
+    # Let STI identify changes also respect callsite data.
     #
     def becomes(klass)
+      scrooge_full_reload
       returning klass.new do |became|
         became.instance_variable_set("@attributes", @attributes)
         became.instance_variable_set("@attributes_cache", @attributes_cache)
@@ -340,6 +328,9 @@ module ActiveRecord
           became.instance_variable_set("@scrooge_fully_loaded", @scrooge_fully_loaded)
           became.instance_variable_set("@scrooge_own_callsite_set", @scrooge_own_callsite_set)
           became.instance_variable_set("@scrooge_callsite_signature", @scrooge_callsite_signature)
+          @scrooge_own_callsite_set.each do |attr|
+            became.class.augment_scrooge_callsite!( @scrooge_callsite_signature, attr )
+          end
         end
       end
     end
@@ -371,5 +362,6 @@ module ActiveRecord
     def self._load(str)
       Marshal.load(str)
     end
+    
   end
 end
