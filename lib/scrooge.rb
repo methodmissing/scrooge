@@ -205,6 +205,18 @@ module ActiveRecord
       callback_without_scrooge(method)
     end
 
+    # Piggy back off column definitions instead
+    #
+    def has_attribute?(attr_name)
+      self.class.column_names.include?(attr_name.to_s)
+    end
+
+    # Piggy back off column definitions instead
+    #
+    def attribute_names
+      self.class.column_names
+    end
+
     # Augment the callsite with a fresh column reference.
     #
     def augment_scrooge_attribute!(attr_name)
@@ -239,7 +251,7 @@ module ActiveRecord
         @scrooge_own_callsite_set.merge( self.class.column_names )
       end
     end
-
+=begin
     # Wrap #write_attribute to gracefully handle missing attributes
     #
     alias_method :write_attribute_without_scrooge, :write_attribute
@@ -252,7 +264,7 @@ module ActiveRecord
         write_attribute_without_scrooge(attr_s, value)
       end
     end
-
+=end
     # Wrap #read_attribute to gracefully handle missing attributes
     #
     def read_attribute(attr_name)
@@ -277,6 +289,8 @@ module ActiveRecord
       end
     end
     
+    # Does it make sense to track the given attribute ?
+    #
     def scrooge_not_interested?( attr_name )
       scrooge_attr_present?(attr_name) || !self.class.column_names.include?(attr_name)
     end
