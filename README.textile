@@ -1,6 +1,6 @@
 h1. Scrooge
 
-.h4 ** This is a complete rewrite from the initial coverage at "igvita.com":http://www.igvita.com/2009/02/27/activerecord-optimization-with-scrooge/ - read on below **
+.h4 This is a complete rewrite from the initial coverage at "igvita.com":http://www.igvita.com/2009/02/27/activerecord-optimization-with-scrooge/ - read on below
 
 Many thanks to Stephen Sykes ( "pennysmalls.com":http://pennysmalls.com ) for his time spent on shaping, implementing and troubleshooting this release.
 
