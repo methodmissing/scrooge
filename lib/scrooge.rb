@@ -81,7 +81,7 @@ module Scrooge
         columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
         unless columns_to_fetch.empty?
           begin
-            new_object = @klass.with_exclusive_scope do
+            new_object = @klass.send(:with_exclusive_scope) do
               @klass.find(@attributes[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
             end
           rescue ActiveRecord::RecordNotFound
