@@ -29,7 +29,7 @@ module Scrooge
     #
     def [](attr_name)
       attr_s = attr_name.to_s
-      if has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
+      if interesting_for_scrooge?( attr_s )
         augment_callsite!( attr_s )
         fetch_remaining
         @scrooge_columns << attr_s
@@ -86,9 +86,7 @@ module Scrooge
         columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
         unless columns_to_fetch.empty?
           begin
-            new_object = @klass.send(:with_exclusive_scope) do
-              @klass.find(@attributes[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
-            end
+            new_object = fetch_record_with_remaining_columns( columns_to_fetch )
           rescue ActiveRecord::RecordNotFound
             raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
           end
@@ -99,6 +97,16 @@ module Scrooge
     end
 
     protected
+
+    def fetch_record_with_remaining_columns( columns_to_fetch )
+      @klass.send(:with_exclusive_scope) do
+        @klass.find(@attributes[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
+      end
+    end
+
+    def interesting_for_scrooge?( attr_s )
+      has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
+    end
 
     def augment_callsite!( attr_s )
       @klass.augment_scrooge_callsite!(callsite_signature, attr_s)
