@@ -7,7 +7,7 @@ class ScroogeTest < ActiveSupport::TestCase
   teardown do
     MysqlUser.scrooge_flush_callsites!
   end
-    
+
   test "should not attempt to optimize models without a defined primary key" do
     MysqlUser.stubs(:primary_key).returns('undefined')
     MysqlUser.expects(:find_by_sql_with_scrooge).never
@@ -53,6 +53,13 @@ class ScroogeTest < ActiveSupport::TestCase
   
   test "should be able to generate a SQL select snippet from a given set" do
     assert_equal MysqlUser.scrooge_sql( Set['Password','User','Host'] ), "`user`.User,`user`.Password,`user`.Host"
+  end
+ 
+  test "should be able to augment an existing callsite when attributes is referenced that we haven't seen yet" do
+    user = MysqlUser.find(:first)
+    MysqlUser.expects(:augment_scrooge_callsite!).twice
+    user.attributes['Password']
+    user.attributes['Host']
   end
   
   def first_callsite

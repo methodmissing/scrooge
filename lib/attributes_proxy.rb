@@ -92,6 +92,7 @@ module Scrooge
           rescue ActiveRecord::RecordNotFound
             raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
           end
+          @scrooge_columns = columns_to_fetch.to_set
           @attributes = new_object.instance_variable_get(:@attributes).merge(@attributes)
         end
         @fully_fetched = true

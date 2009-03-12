@@ -30,14 +30,6 @@ module ActiveRecord
         end
       end
 
-      # Only scope n-1 rows by default.
-      # Stephen: Temp. relaxed the LIMIT constraint - please advise.
-      def scope_with_scrooge?( sql )
-        sql =~ scrooge_select_regex && 
-        column_names.include?(self.primary_key.to_s) &&
-        sql !~ ScroogeRegexJoin
-      end
-
       # Populate the storage for a given callsite signature
       #
       def scrooge_callsite_set!(callsite_signature, set)
@@ -79,6 +71,14 @@ module ActiveRecord
       end
 
       private
+
+      # Only scope n-1 rows by default.
+      # Stephen: Temp. relaxed the LIMIT constraint - please advise.
+      def scope_with_scrooge?( sql )
+        sql =~ scrooge_select_regex && 
+        column_names.include?(self.primary_key.to_s) &&
+        sql !~ ScroogeRegexJoin
+      end
 
       # Find through callsites.
       #
