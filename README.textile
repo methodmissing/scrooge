@@ -216,4 +216,6 @@ h2. Todo
 
 * Track both columns AND association invocations off Scrooge::Callsite
 
+* Avoid possible missing attribute exceptions for destroyed objects
+
 (c) 2009 Lourens Naudé (methodmissing) and Stephen Sykes (sdsykes)

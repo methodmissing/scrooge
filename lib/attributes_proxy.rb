@@ -90,7 +90,7 @@ module Scrooge
               @klass.find(@attributes[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
             end
           rescue ActiveRecord::RecordNotFound
-            raise ActiveRecord::MissingAttributeError, "missing attribute(s) because record went away - primary key: #{@attributes[@klass.primary_key]}, class #{@klass}, scrooge_cols #{@scrooge_columns.to_a.join(",")}"
+            raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
           end
           @attributes = new_object.instance_variable_get(:@attributes).merge(@attributes)
         end
