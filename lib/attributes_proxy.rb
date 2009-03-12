@@ -30,7 +30,7 @@ module Scrooge
     def [](attr_name)
       attr_s = attr_name.to_s
       if has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
-        @klass.augment_scrooge_callsite!(callsite_signature, attr_s)
+        augment_callsite!( attr_s )
         fetch_remaining
         @scrooge_columns << attr_s
       end
@@ -92,7 +92,6 @@ module Scrooge
           rescue ActiveRecord::RecordNotFound
             raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
           end
-          @scrooge_columns = columns_to_fetch.to_set
           @attributes = new_object.instance_variable_get(:@attributes).merge(@attributes)
         end
         @fully_fetched = true
@@ -100,6 +99,10 @@ module Scrooge
     end
 
     protected
+
+    def augment_callsite!( attr_s )
+      @klass.augment_scrooge_callsite!(callsite_signature, attr_s)
+    end
 
     def dup_self
       @attributes = @attributes.dup

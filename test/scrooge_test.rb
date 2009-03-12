@@ -57,7 +57,7 @@ class ScroogeTest < ActiveSupport::TestCase
  
   test "should be able to augment an existing callsite when attributes is referenced that we haven't seen yet" do
     user = MysqlUser.find(:first)
-    MysqlUser.expects(:augment_scrooge_callsite!).twice
+    MysqlUser.expects(:augment_scrooge_callsite!).times(36)
     user.attributes['Password']
     user.attributes['Host']
   end
