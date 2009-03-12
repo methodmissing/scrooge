@@ -1,83 +1,114 @@
 require 'set'
 
-module ActiveRecord
-  class ScroogeProxy < Hash                 
-    
-    attr_accessor :callsite,
-                  :klass,
-                  :columns
-    
-    class << self
-      
-      def from( callsite, klass, columns, attributes = {} )
-        proxy = new
-        proxy.callsite = callsite
-        proxy.klass = klass
-        proxy.columns = columns
-        proxy.update( attributes )
-        proxy    
-      end
-      
+module Scrooge
+  class AttributesProxy
+    attr_reader :callsite_signature
+
+    def initialize(record, scrooge_columns, klass, callsite_signature)
+      @attributes = record
+      @scrooge_columns = scrooge_columns.dup
+      @fully_fetched = false
+      @klass = klass
+      @callsite_signature = callsite_signature
     end
-    
-    def copy_callsite
-      cs = dup
-      cs.update({})
-      cs
-    end
-    
-    alias_method :keys_without_scrooge, :keys    
+
     def keys
-      columns.to_a
-      #klass.column_names 
-    end    
-    
-    def has_key?( key )
-      keys_without_scrooge.include?(key)
-    end   
-    
-    def scrooged?
-      true
+      @klass.column_names
     end
-    
-    def augment!( attr_name )
-      if klass.column_names.include?(attr_name)
-        columns << attr_name
-        klass.augment_scrooge_callsite!( @callsite, attr_name )
+
+    def has_key?(attr_name)
+      keys.include?(attr_name.to_s)
+    end
+
+    alias_method :include?, :has_key?
+    alias_method :key?, :has_key?
+
+    def [](attr_name)
+      attr_s = attr_name.to_s
+      if has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
+        @klass.augment_scrooge_callsite!(callsite_signature, attr_s)
+        fetch_remaining
+        @scrooge_columns << attr_s
+      end
+      @attributes[attr_s]
+    end
+
+    def fetch(*args, &block)
+      self[args[0]]
+      @attributes.fetch(*args, &block)
+    end
+
+    def []=(attr_name, value)
+      attr_s = attr_name.to_s
+      @attributes[attr_s] = value
+      @scrooge_columns << attr_s
+    end
+
+    def dup
+      super.dup_self
+    end
+
+    def to_a
+      fetch_remaining
+      @attributes.to_a
+    end
+
+    def delete(attr_name)
+      self[attr_name]
+      @attributes.delete(attr_name)
+    end
+
+    def update(hash)
+      hash.to_hash.each do |k, v|
+        self[k] = v
       end
     end
 
-=begin    
-    def keys
-      scrooged? ? klass.column_names : super
-    end
-=end    
-    def [](key)
-      result = super
-      augment!(key) unless result
-      result
-    end
-    
-    def delete(key)
-      @columns.delete(key)
-      super
+    def to_hash
+      fetch_remaining
+      @attributes
     end
 
-    def []=(key, value)
-      result = super
-      augment!(key) unless result
-      result
-    end
-    
     def freeze
-      @columns.freeze
-      super
+      @attributes.freeze
     end
-    
-  end
 
+    def frozen?
+      @attributes.frozen?
+    end
+
+    def fetch_remaining
+      unless @fully_fetched
+        columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
+        unless columns_to_fetch.empty?
+          begin
+            new_object = @klass.send(:with_exclusive_scope) do
+              @klass.find(@attributes[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
+            end
+          rescue ActiveRecord::RecordNotFound
+            raise ActiveRecord::MissingAttributeError, "missing attribute(s) because record went away - primary key: #{@attributes[@klass.primary_key]}, class #{@klass}, scrooge_cols #{@scrooge_columns.to_a.join(",")}"
+          end
+          @attributes = new_object.instance_variable_get(:@attributes).merge(@attributes)
+        end
+        @fully_fetched = true
+      end
+    end
+
+    protected
+
+    def dup_self
+      @attributes = @attributes.dup
+      @scrooge_columns = @scrooge_columns.dup
+      self
+    end
+  end
+end
+
+module ActiveRecord
   class Base
-   
+
+    attr_accessor :is_scrooged, :scrooge_callsite_signature, :scrooge_own_callsite_set
+
     @@scrooge_mutex = Mutex.new
     @@scrooge_callsites = {}
     @@scrooge_select_regexes = {}
@@ -86,7 +117,7 @@ module ActiveRecord
     ScroogeComma = ",".freeze 
     ScroogeRegexWhere = /WHERE.*/
     ScroogeCallsiteSample = 0..10
-    
+
     class << self
 
       # Determine if a given SQL string is a candidate for callsite <=> columns
@@ -104,7 +135,8 @@ module ActiveRecord
       # Only scope n-1 rows by default.
       # Stephen: Temp. relaxed the LIMIT constraint - please advise.
       def scope_with_scrooge?( sql )
-        sql =~ scrooge_select_regex && column_names.include?(self.primary_key.to_s) #&& sql !~ /LIMIT 1$/
+        sql =~ scrooge_select_regex && column_names.include?(self.primary_key.to_s) &&
+          sql !~ /INNER JOIN/  #&& sql !~ /LIMIT 1$/
       end
 
       # Populate the storage for a given callsite signature
@@ -123,36 +155,31 @@ module ActiveRecord
       # Augment a given callsite signature with a column / attribute.
       #
       def augment_scrooge_callsite!( callsite_signature, attr_name )
-        #puts "Augment #{callsite_signature.inspect} with #{attr_name.inspect}"
         set = set_for_callsite( callsite_signature )  # make set if needed - eg unserialized models after restart
         @@scrooge_mutex.synchronize do
           set << attr_name
         end
       end
-    
+
       # Generates a SELECT snippet for this Model from a given Set of columns
       #
       def scrooge_sql( set )
         set.map{|a| attribute_with_table( a ) }.join( ScroogeComma )
-      end    
-         
+      end
+
       private
-    
+
       # Find through callsites.
       #
       def find_by_sql_with_scrooge( sql )
         callsite_signature = (caller[ScroogeCallsiteSample] << sql.gsub(ScroogeRegexWhere, ScroogeBlankString)).hash
         callsite_set = set_for_callsite(callsite_signature)
-        #Thread.current[:"#{self.table_name}_scrooge_settings"] = [callsite_signature, callsite_set]
-        sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)}")
+        sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)} FROM")
         result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
-          instantiate( ActiveRecord::ScroogeProxy.from( callsite_signature, self, callsite_set, record ) )
-          #record = instantiate(record)
-          #record.scrooge_setup unless record.is_scrooged
-          #record
+          instantiate(Scrooge::AttributesProxy.new(record, callsite_set, self, callsite_signature))
         end
-      end    
-    
+      end
+
       # Return an attribute Set for a given callsite signature.
       # Respects already tracked columns and ensures at least the primary key
       # if this is a fresh callsite.
@@ -177,49 +204,104 @@ module ActiveRecord
         else
           Set.new([self.primary_key.to_s])
         end    
-      end    
-    
-        # Generate a regex that respects the table name as well to catch
-        # verbose SQL from JOINS etc.
-        # 
-        def scrooge_select_regex
-          @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*)" )
-        end    
-    
-        # Link the column to it's table.
-        #
-        def attribute_with_table( attr_name )
-          "#{quoted_table_name}.#{attr_name.to_s}"
-        end     
-    
+      end
+
+      # Generate a regex that respects the table name as well to catch
+      # verbose SQL from JOINS etc.
+      # 
+      def scrooge_select_regex
+        @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*) FROM" )
+      end
+
+      # Link the column to it's table.
+      #
+      def attribute_with_table( attr_name )
+        "#{quoted_table_name}.#{attr_name.to_s}"
+      end
+
+    end  # class << self
+
+    def scrooge_fetch_remaining
+      @attributes.fetch_remaining if @attributes.is_a?(Scrooge::AttributesProxy)
     end
-    
-    def scrooged?
-      @attributes.respond_to?(:scrooged?) && @attributes.scrooged?
+
+    # Delete should fully load all the attributes before the @attributes hash is frozen
+    #
+    alias_method :delete_without_scrooge, :delete
+    def delete
+      scrooge_fetch_remaining
+      delete_without_scrooge
     end
-    
-    def missing_attribute(attr_name, stack)
-      if scrooged?
-        #puts "scrooged"
-        #puts self.class.scrooge_sql(self.class.column_names - @attributes.columns.to_a).inspect
-        reload(:select => self.class.scrooge_sql(self.class.column_names - @attributes.columns.to_a))
-      else  
-        #puts "not scrooged"
-        raise ActiveRecord::MissingAttributeError, "missing attribute: #{attr_name}", stack
+
+    # Destroy should fully load all the attributes before the @attributes hash is frozen
+    #
+    alias_method :destroy_without_scrooge, :destroy
+    def destroy
+      scrooge_fetch_remaining
+      destroy_without_scrooge
+    end
+
+    # Let STI identify changes also respect callsite data.
+    #
+    def becomes(klass)
+      returning klass.new do |became|
+        became.instance_variable_set("@attributes", @attributes)
+        became.instance_variable_set("@attributes_cache", @attributes_cache)
+        became.instance_variable_set("@new_record", new_record?)
+        if @attributes.is_a?(Scrooge::AttributesProxy)
+          self.class.scrooge_callsite_set(@attributes.callsite_signature).each do |attrib|
+            became.class.augment_scrooge_callsite!(@attributes.callsite_signature, attrib)
+          end
+        end
       end
     end
-    
-    def clone
-      if scrooged?
-        attrs = clone_attributes(:read_attribute_before_type_cast, @attributes.copy_callsite)
+
+    # Marshal
+    # force a full load if needed, and remove any possibility for missing attr flagging
+    #
+    def _dump(depth)
+      scrooge_fetch_remaining
+      scrooge_dump_flag_this
+      str = Marshal.dump(self)
+      scrooge_dump_unflag_this
+      str
+    end
+
+    # Flag Marshal dump in progress
+    #
+    def scrooge_dump_flag_this
+      Thread.current[:scrooge_dumping_objects] ||= []
+      Thread.current[:scrooge_dumping_objects] << object_id
+    end
+
+    # Flag Marhsal dump not in progress
+    #
+    def scrooge_dump_unflag_this
+      Thread.current[:scrooge_dumping_objects].delete(object_id)
+    end
+
+    # Flag scrooge as dumping ( excuse my French )
+    #
+    def scrooge_dump_flagged?
+      Thread.current[:scrooge_dumping_objects] && Thread.current[:scrooge_dumping_objects].include?(object_id)
+    end
+
+    # Marshal.load
+    # 
+    def self._load(str)
+      Marshal.load(str)
+    end
+
+    # Enables us to use Marshal.dump inside our _dump method without an infinite loop
+    #
+    alias_method :respond_to_without_scrooge, :respond_to?
+    def respond_to?(symbol, include_private=false)
+      if symbol == :_dump && scrooge_dump_flagged?
+        false
       else
-        attrs = clone_attributes(:read_attribute_before_type_cast)
-      end  
-      attrs.delete(self.class.primary_key)
-      record = self.class.new
-      record.send :instance_variable_set, '@attributes', attrs
-      record
-    end    
-    
+        respond_to_without_scrooge(symbol, include_private)
+      end
+    end
+
   end
-end    
+end
