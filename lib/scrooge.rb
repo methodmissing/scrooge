@@ -107,8 +107,6 @@ end
 module ActiveRecord
   class Base
 
-    attr_accessor :is_scrooged, :scrooge_callsite_signature, :scrooge_own_callsite_set
-
     @@scrooge_mutex = Mutex.new
     @@scrooge_callsites = {}
     @@scrooge_select_regexes = {}
@@ -135,8 +133,9 @@ module ActiveRecord
       # Only scope n-1 rows by default.
       # Stephen: Temp. relaxed the LIMIT constraint - please advise.
       def scope_with_scrooge?( sql )
-        sql =~ scrooge_select_regex && column_names.include?(self.primary_key.to_s) &&
-          sql !~ /INNER JOIN/  #&& sql !~ /LIMIT 1$/
+        sql =~ scrooge_select_regex && 
+        column_names.include?(self.primary_key.to_s) &&
+        sql !~ /INNER JOIN/
       end
 
       # Populate the storage for a given callsite signature
@@ -222,7 +221,7 @@ module ActiveRecord
     end  # class << self
 
     def scrooge_fetch_remaining
-      @attributes.fetch_remaining if @attributes.is_a?(Scrooge::AttributesProxy)
+      @attributes.fetch_remaining if scrooge_attributes_proxy?
     end
 
     # Delete should fully load all the attributes before the @attributes hash is frozen
@@ -248,7 +247,7 @@ module ActiveRecord
         became.instance_variable_set("@attributes", @attributes)
         became.instance_variable_set("@attributes_cache", @attributes_cache)
         became.instance_variable_set("@new_record", new_record?)
-        if @attributes.is_a?(Scrooge::AttributesProxy)
+        if scrooge_attributes_proxy?
           self.class.scrooge_callsite_set(@attributes.callsite_signature).each do |attrib|
             became.class.augment_scrooge_callsite!(@attributes.callsite_signature, attrib)
           end
@@ -302,6 +301,12 @@ module ActiveRecord
         respond_to_without_scrooge(symbol, include_private)
       end
     end
+
+    private
+    
+      def scrooge_attributes_proxy?
+        @attributes.is_a?(Scrooge::AttributesProxy)
+      end
 
   end
 end
