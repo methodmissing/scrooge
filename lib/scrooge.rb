@@ -56,6 +56,12 @@ module ActiveRecord
       def scrooge_callsites
         @@scrooge_callsites[self.table_name] ||= {}
       end
+      
+      # Flush all known callsites.Mostly a test helper.
+      #      
+      def scrooge_flush_callsites!
+        @@scrooge_callsites[self.table_name] = {}
+      end
        
       # Augment a given callsite signature with a column / attribute.
       #
