@@ -13,6 +13,7 @@ module ActiveRecord
     ScroogeBlankString = "".freeze
     ScroogeComma = ",".freeze 
     ScroogeRegexWhere = /WHERE.*/
+    ScroogeRegexJoin = /INNER JOIN/
     ScroogeCallsiteSample = 0..10
 
     class << self
@@ -34,7 +35,7 @@ module ActiveRecord
       def scope_with_scrooge?( sql )
         sql =~ scrooge_select_regex && 
         column_names.include?(self.primary_key.to_s) &&
-        sql !~ /INNER JOIN/
+        sql !~ ScroogeRegexJoin
       end
 
       # Populate the storage for a given callsite signature
@@ -73,7 +74,7 @@ module ActiveRecord
         callsite_signature = (caller[ScroogeCallsiteSample] << sql.gsub(ScroogeRegexWhere, ScroogeBlankString)).hash
         callsite_set = set_for_callsite(callsite_signature)
         sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)} FROM")
-        result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
+        result = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
           instantiate(Scrooge::AttributesProxy.new(record, callsite_set, self, callsite_signature))
         end
       end
@@ -120,7 +121,7 @@ module ActiveRecord
     end  # class << self
 
     def scrooge_fetch_remaining
-      @attributes.fetch_remaining if scrooge_attributes_proxy?
+      @attributes.fetch_remaining if scrooged?
     end
 
     # Delete should fully load all the attributes before the @attributes hash is frozen
@@ -146,7 +147,7 @@ module ActiveRecord
         became.instance_variable_set("@attributes", @attributes)
         became.instance_variable_set("@attributes_cache", @attributes_cache)
         became.instance_variable_set("@new_record", new_record?)
-        if scrooge_attributes_proxy?
+        if scrooged?
           self.class.scrooge_callsite_set(@attributes.callsite_signature).each do |attrib|
             became.class.augment_scrooge_callsite!(@attributes.callsite_signature, attrib)
           end
@@ -201,11 +202,9 @@ module ActiveRecord
       end
     end
 
-    private
-    
-      def scrooge_attributes_proxy?
-        @attributes.is_a?(Scrooge::AttributesProxy)
-      end
+    def scrooged?
+      @attributes.is_a?(Scrooge::AttributesProxy)
+    end  
 
   end
 end
