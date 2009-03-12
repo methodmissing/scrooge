@@ -47,10 +47,16 @@ module ActiveRecord
       # Reference storage for a given callsite signature
       #
       def scrooge_callsite_set(callsite_signature)
-        @@scrooge_callsites[self.table_name] ||= {}
+        scrooge_callsites
         @@scrooge_callsites[self.table_name][callsite_signature]
       end
-
+      
+      # Expose known callsites for this model
+      #      
+      def scrooge_callsites
+        @@scrooge_callsites[self.table_name] ||= {}
+      end
+       
       # Augment a given callsite signature with a column / attribute.
       #
       def augment_scrooge_callsite!( callsite_signature, attr_name )
