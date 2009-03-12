@@ -26,9 +26,7 @@ module Scrooge
       attr_s = attr_name.to_s
       if has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
         @klass.augment_scrooge_callsite!(callsite_signature, attr_s)
-        unless @fully_fetched
-          fetch_remaining
-        end
+        fetch_remaining
         @scrooge_columns << attr_s
       end
       @attributes[attr_s]
@@ -67,15 +65,28 @@ module Scrooge
       @attributes
     end
 
+    def freeze
+      @attributes.freeze
+    end
+
+    def frozen?
+      @attributes.frozen?
+    end
+
     def fetch_remaining
-      begin
-        new_object = @klass.find(@attributes[@klass.primary_key], 
-          :select=>@klass.scrooge_sql(@klass.column_names - @scrooge_columns.to_a))
-      rescue ActiveRecord::RecordNotFound
-        raise ActiveRecord::MissingAttributeError, "missing attribute(s) because record went away"
+      unless @fully_fetched
+        columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
+        unless columns_to_fetch.empty?
+          begin
+            new_object = @klass.find(@attributes[@klass.primary_key], 
+              :select=>@klass.scrooge_sql(columns_to_fetch))
+          rescue ActiveRecord::RecordNotFound
+            raise ActiveRecord::MissingAttributeError, "missing attribute(s) because record went away - primary key: #{@attributes[@klass.primary_key]}, class #{@klass}, scrooge_cols #{@scrooge_columns.to_a.join(",")}"
+          end
+          @attributes = new_object.instance_variable_get(:@attributes).merge(@attributes)
+        end
+        @fully_fetched = true
       end
-      @attributes = new_object.instance_variable_get(:@attributes).merge(@attributes)
-      @fully_fetched = true
     end
 
     protected
@@ -157,7 +168,7 @@ module ActiveRecord
       def find_by_sql_with_scrooge( sql )
         callsite_signature = (caller[ScroogeCallsiteSample] << sql.gsub(ScroogeRegexWhere, ScroogeBlankString)).hash
         callsite_set = set_for_callsite(callsite_signature)
-        sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)}")
+        sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)} FROM")
         result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
           instantiate(Scrooge::AttributesProxy.new(record, callsite_set, self, callsite_signature))
         end
@@ -193,7 +204,7 @@ module ActiveRecord
       # verbose SQL from JOINS etc.
       # 
       def scrooge_select_regex
-        @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*)" )
+        @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*) FROM" )
       end
 
       # Link the column to it's table.
@@ -204,10 +215,15 @@ module ActiveRecord
 
     end  # class << self
 
+    def scrooge_fetch_remaining
+      @attributes.fetch_remaining if @attributes.is_a?(Scrooge::AttributesProxy)
+    end
+
     # Delete should fully load all the attributes before the @attributes hash is frozen
     #
     alias_method :delete_without_scrooge, :delete
     def delete
+      scrooge_fetch_remaining
       delete_without_scrooge
     end
 
@@ -215,13 +231,13 @@ module ActiveRecord
     #
     alias_method :destroy_without_scrooge, :destroy
     def destroy
+      scrooge_fetch_remaining
       destroy_without_scrooge
     end
 
     # Let STI identify changes also respect callsite data.
     #
     def becomes(klass)
-      scrooge_full_reload
       returning klass.new do |became|
         became.instance_variable_set("@attributes", @attributes)
         became.instance_variable_set("@attributes_cache", @attributes_cache)
@@ -238,7 +254,7 @@ module ActiveRecord
     # force a full load if needed, and remove any possibility for missing attr flagging
     #
     def _dump(depth)
-      @attributes.fetch_remaining if @attributes.is_a?(Scrooge::AttributesProxy)
+      scrooge_fetch_remaining
       scrooge_dump_flag_this
       str = Marshal.dump(self)
       scrooge_dump_unflag_this
