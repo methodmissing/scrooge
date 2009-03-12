@@ -32,7 +32,10 @@ module Scrooge
       @attributes[attr_s]
     end
 
-    alias_method :fetch, :[]
+    def fetch(*args, &block)
+      self[args[0]]
+      @attributes.fetch(*args, &block)
+    end
 
     def []=(attr_name, value)
       attr_s = attr_name.to_s
