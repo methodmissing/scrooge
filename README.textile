@@ -212,6 +212,8 @@ The tracking and scoping phases is superseded by this implementation - none of t
 
 h2. Todo
 
+* Deeper coverage for Scrooge::AttributesProxy ( pending conversion to a subclass of Hash instead )
+
 * Extract Scrooge::Callsite
 
 * Track both columns AND association invocations off Scrooge::Callsite
