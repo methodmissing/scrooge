@@ -78,8 +78,9 @@ module Scrooge
         columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
         unless columns_to_fetch.empty?
           begin
-            new_object = @klass.find(@attributes[@klass.primary_key], 
-              :select=>@klass.scrooge_sql(columns_to_fetch))
+            new_object = @klass.with_exclusive_scope do
+              @klass.find(@attributes[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
+            end
           rescue ActiveRecord::RecordNotFound
             raise ActiveRecord::MissingAttributeError, "missing attribute(s) because record went away - primary key: #{@attributes[@klass.primary_key]}, class #{@klass}, scrooge_cols #{@scrooge_columns.to_a.join(",")}"
           end
