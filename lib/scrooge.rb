@@ -124,7 +124,7 @@ module ActiveRecord
         @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*) FROM" )
       end
 
-      # Link the column to it's table.
+      # Link the column to its table
       #
       def attribute_with_table( attr_name )
         "#{quoted_table_name}.#{attr_name.to_s}"
@@ -132,10 +132,12 @@ module ActiveRecord
 
     end  # class << self
 
-    def scrooge_fetch_remaining
-      @attributes.fetch_remaining if scrooged?
+    # Is this instance being handled by scrooge?
+    #
+    def scrooged?
+      @attributes.is_a?(Scrooge::AttributesProxy)
     end
-
+    
     # Delete should fully load all the attributes before the @attributes hash is frozen
     #
     alias_method :delete_without_scrooge, :delete
@@ -152,7 +154,7 @@ module ActiveRecord
       destroy_without_scrooge
     end
 
-    # Let STI identify changes also respect callsite data.
+    # Augment callsite info for new model class when using STI
     #
     def becomes(klass)
       returning klass.new do |became|
@@ -178,6 +180,25 @@ module ActiveRecord
       str
     end
 
+    # Marshal.load
+    # 
+    def self._load(str)
+      Marshal.load(str)
+    end
+
+    # Enables us to use Marshal.dump inside our _dump method without an infinite loop
+    #
+    alias_method :respond_to_without_scrooge, :respond_to?
+    def respond_to?(symbol, include_private=false)
+      if symbol == :_dump && scrooge_dump_flagged?
+        false
+      else
+        respond_to_without_scrooge(symbol, include_private)
+      end
+    end
+
+    private
+
     # Flag Marshal dump in progress
     #
     def scrooge_dump_flag_this
@@ -197,26 +218,9 @@ module ActiveRecord
       Thread.current[:scrooge_dumping_objects] && Thread.current[:scrooge_dumping_objects].include?(object_id)
     end
 
-    # Marshal.load
-    # 
-    def self._load(str)
-      Marshal.load(str)
+    def scrooge_fetch_remaining
+      @attributes.fetch_remaining if scrooged?
     end
-
-    # Enables us to use Marshal.dump inside our _dump method without an infinite loop
-    #
-    alias_method :respond_to_without_scrooge, :respond_to?
-    def respond_to?(symbol, include_private=false)
-      if symbol == :_dump && scrooge_dump_flagged?
-        false
-      else
-        respond_to_without_scrooge(symbol, include_private)
-      end
-    end
-
-    def scrooged?
-      @attributes.is_a?(Scrooge::AttributesProxy)
-    end  
 
   end
 end
