@@ -1,4 +1,7 @@
 require File.join( File.dirname(__FILE__), 'setup' )
+require 'rubygems'
+require 'mocha'
+require 'active_support/test_case'
 
 module Scrooge
   class Test
@@ -34,9 +37,10 @@ module Scrooge
       private
 
       def connect!
-        ::ActiveRecord::Base.establish_connection(
-          :adapter => "sqlite3",
-          :dbfile => ":memory:" )
+        ::ActiveRecord::Base.establish_connection( :adapter  => 'mysql',
+                                                   :username => 'root',
+                                                   :database => 'mysql',
+                                                   :pool => 1 )
       end
 
       def require_models
