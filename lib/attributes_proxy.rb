@@ -44,8 +44,8 @@ module Scrooge
 
     def []=(attr_name, value)
       attr_s = attr_name.to_s
-      @attributes[attr_s] = value
       @scrooge_columns << attr_s
+      @attributes[attr_s] = value
     end
 
     def dup
