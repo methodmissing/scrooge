@@ -63,9 +63,8 @@ module Scrooge
     end
 
     def update(hash)
-      hash.to_hash.each do |k, v|
-        self[k] = v
-      end
+      @fully_fetched = true
+      @attributes.update(hash.to_hash)
     end
 
     def to_hash
