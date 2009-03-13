@@ -188,7 +188,7 @@ Only SQL statements that meet the following criteria is considered for optimizat
 
 * A SELECT statement
 
-* Not an INNER JOIN
+* Not a JOIN
 
 * The Model has a primary key defined
 

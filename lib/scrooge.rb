@@ -12,8 +12,8 @@ module ActiveRecord
 
     ScroogeBlankString = "".freeze
     ScroogeComma = ",".freeze 
-    ScroogeRegexWhere = /WHERE.*/
-    ScroogeRegexJoin = /INNER JOIN/
+    ScroogeRegexWhere = /WHERE.*/i
+    ScroogeRegexJoin = /INNER JOIN|LEFT OUTER JOIN/i
     ScroogeCallsiteSample = 0..10
 
     class << self
