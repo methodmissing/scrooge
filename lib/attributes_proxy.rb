@@ -79,7 +79,6 @@ module Scrooge
     end
 
     def update(hash)
-      hash.fetch_remaining if hash.is_a?(Scrooge::AttributesProxy)
       @fully_fetched = true
       super
     end
