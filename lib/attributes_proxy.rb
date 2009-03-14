@@ -1,3 +1,13 @@
+class Hash
+  
+  # TODO: Circumvent this hack  
+  alias_method :update_without_scrooge, :update
+  def update(other)
+    update_without_scrooge(other.to_hash)
+  end
+ 
+end
+
 module Scrooge
   class AttributesProxy < Hash
     attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass
@@ -50,6 +60,11 @@ module Scrooge
 
     def dup
       super.dup_self
+    end
+
+    def to_hash
+      fetch_remaining
+      super
     end
 
     def to_a
