@@ -37,27 +37,22 @@ class ScroogeTest < ActiveSupport::TestCase
   
   test "should be able to retrieve a callsite form a given signature" do
     assert MysqlUser.find(:first).scrooged?
-    assert_instance_of Set, MysqlUser.scrooge_callsite_set( first_callsite )
-  end
-  
-  test "should be able to populate the callsite for a given signature" do
-    MysqlUser.scrooge_callsite_set!(123456, Set[1,2,3])
-    assert_equal MysqlUser.scrooge_callsite_set(123456), Set[1,2,3]
+    assert_instance_of Scrooge::Callsite, MysqlUser.scrooge_callsite( first_callsite )
   end
   
   test "should be able to augment an existing callsite with attributes" do
     MysqlUser.find(:first)
-    MysqlUser.augment_scrooge_callsite!( first_callsite, 'Password' )
-    assert MysqlUser.scrooge_callsite_set( first_callsite ).include?( 'Password' )
+    MysqlUser.scrooge_seen_column!( first_callsite, 'Password' )
+    assert MysqlUser.scrooge_callsite( first_callsite ).columns.include?( 'Password' )
   end
   
   test "should be able to generate a SQL select snippet from a given set" do
-    assert_equal MysqlUser.scrooge_sql( Set['Password','User','Host'] ), "`user`.User,`user`.Password,`user`.Host"
+    assert_equal MysqlUser.scrooge_select_sql( Set['Password','User','Host'] ), "`user`.User,`user`.Password,`user`.Host"
   end
  
   test "should be able to augment an existing callsite when attributes is referenced that we haven't seen yet" do
     user = MysqlUser.find(:first)
-    MysqlUser.expects(:augment_scrooge_callsite!).times(2)
+    MysqlUser.expects(:scrooge_seen_column!).times(2)
     user.Password
     user.Host
   end

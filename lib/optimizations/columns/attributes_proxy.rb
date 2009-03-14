@@ -1,7 +1,21 @@
+class Hash
+  
+  # TODO: Circumvent this hack  
+  alias_method :update_without_scrooge, :update
+  def update(other)
+    update_without_scrooge(other.to_hash)
+  end
+  
+end
+
 module Scrooge
   module Optimizations
     module Columns
       class AttributesProxy < Hash
+        
+        # Hash like Proxy container for attributes
+        #        
+        
         attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass
 
         def self.setup(record, scrooge_columns, klass, callsite_signature)
@@ -70,7 +84,7 @@ module Scrooge
         end
 
         def update(hash)
-          hash.fetch_remaining if hash.is_a?(Scrooge::AttributesProxy)
+          hash.fetch_remaining if hash.respond_to?(:fetch_remaining)
           @fully_fetched = true
           super
         end
@@ -79,12 +93,7 @@ module Scrooge
           unless @fully_fetched
             columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
             unless columns_to_fetch.empty?
-              begin
-                new_object = fetch_record_with_remaining_columns( columns_to_fetch )
-              rescue ActiveRecord::RecordNotFound
-                raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
-              end
-              replace(new_object.instance_variable_get(:@attributes).merge(self))
+              fetch_remaining!( columns_to_fetch )
             end
             @fully_fetched = true
           end
@@ -92,24 +101,33 @@ module Scrooge
 
         protected
 
-        def fetch_record_with_remaining_columns( columns_to_fetch )
-          @klass.send(:with_exclusive_scope) do
-            @klass.find(self[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
+          def fetch_remaining!( columns_to_fetch )
+            begin
+              new_object = fetch_record_with_remaining_columns( columns_to_fetch )
+            rescue ActiveRecord::RecordNotFound
+              raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
+            end
+            replace(new_object.instance_variable_get(:@attributes).merge(self))
           end
-        end
 
-        def interesting_for_scrooge?( attr_s )
-          has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
-        end
+          def fetch_record_with_remaining_columns( columns_to_fetch )
+            @klass.send(:with_exclusive_scope) do
+              @klass.find(self[@klass.primary_key], :select=>@klass.scrooge_select_sql(columns_to_fetch))
+            end
+          end
 
-        def augment_callsite!( attr_s )
-          @klass.augment_scrooge_callsite!(callsite_signature, attr_s)
-        end
+          def interesting_for_scrooge?( attr_s )
+            has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
+          end
 
-        def dup_self
-          @scrooge_columns = @scrooge_columns.dup
-          self
-        end
+          def augment_callsite!( attr_s )
+            @klass.scrooge_seen_column!(callsite_signature, attr_s)
+          end
+
+          def dup_self
+            @scrooge_columns = @scrooge_columns.dup
+            self
+          end
       end
     end
   end
