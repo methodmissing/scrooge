@@ -45,6 +45,12 @@ module Scrooge
           set.map{|a| attribute_with_table( a ) }.join( ScroogeComma )
         end        
         
+        # Marshal.load
+        # 
+        def _load(str)
+          Marshal.load(str)
+        end
+        
         private
 
           # Only scope n-1 rows by default.
@@ -78,16 +84,14 @@ module Scrooge
             def truncate_conditions( sql )
               sql.gsub(ScroogeRegexConditions, ScroogeBlankString)
             end
-        
+                    
       end
       
       module InstanceMethods
         
         def self.included( klass )
           klass.class_eval do
-            alias_method :delete_without_scrooge, :delete
-            alias_method :destroy_without_scrooge, :destroy
-            alias_method :respond_to_without_scrooge, :respond_to?
+            # this is executed after included methods are defined, so can't alias here
           end
         end
         
@@ -138,14 +142,7 @@ module Scrooge
           scrooge_dump_unflag_this
           str
         end
-
-        # Marshal.load
-        # 
-        def self._load(str)
-          Marshal.load(str)
-        end
         
-=begin
         # Enables us to use Marshal.dump inside our _dump method without an infinite loop
         #
         #alias_method :respond_to_without_scrooge, :respond_to?
@@ -156,7 +153,7 @@ module Scrooge
             respond_to_without_scrooge(symbol, include_private)
           end
         end
-=end
+
         private
 
           # Flag Marshal dump in progress
