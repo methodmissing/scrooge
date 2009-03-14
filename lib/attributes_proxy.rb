@@ -35,6 +35,7 @@ module Scrooge
 
     alias_method :include?, :has_key?
     alias_method :key?, :has_key?
+    alias_method :member?, :has_key?
 
     # Lazily augment and load missing attributes
     #
