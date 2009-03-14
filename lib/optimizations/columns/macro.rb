@@ -9,12 +9,21 @@ module Scrooge
           #
           def install!
             if scrooge_installable?
+              scrooge_aliases!
               ActiveRecord::Base.send( :extend,  Scrooge::Optimizations::Columns::SingletonMethods )
               ActiveRecord::Base.send( :include, Scrooge::Optimizations::Columns::InstanceMethods )
             end  
           end
       
           private
+          
+            def scrooge_aliases!
+              ActiveRecord::Base.class_eval do
+                alias_method :delete_without_scrooge, :delete
+                alias_method :destroy_without_scrooge, :destroy
+                alias_method :respond_to_without_scrooge, :respond_to?
+              end
+            end
           
             def scrooge_installable?
               !ActiveRecord::Base.included_modules.include?( Scrooge::Optimizations::Columns::InstanceMethods )

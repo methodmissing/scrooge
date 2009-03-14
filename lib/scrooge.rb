@@ -7,9 +7,6 @@ require 'optimizations/columns/macro'
 
 module ActiveRecord
   class Base
-    alias_method :delete_without_scrooge, :delete
-    alias_method :destroy_without_scrooge, :destroy
-    alias_method :respond_to_without_scrooge, :respond_to?
 
     @@scrooge_callsites = {}
     ScroogeCallsiteSample = 0..10
