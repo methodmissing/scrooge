@@ -1,7 +1,6 @@
 $:.unshift(File.dirname(__FILE__))
 
 require 'set'
-require 'attributes_proxy'
 
 module ActiveRecord
   class Base
@@ -134,12 +133,14 @@ module ActiveRecord
 
     # Is this instance being handled by scrooge?
     #
+    # ------->
     def scrooged?
       @attributes.is_a?(Scrooge::AttributesProxy)
     end
     
     # Delete should fully load all the attributes before the @attributes hash is frozen
     #
+    # ------->
     alias_method :delete_without_scrooge, :delete
     def delete
       scrooge_fetch_remaining
@@ -148,6 +149,7 @@ module ActiveRecord
 
     # Destroy should fully load all the attributes before the @attributes hash is frozen
     #
+    # --------->
     alias_method :destroy_without_scrooge, :destroy
     def destroy
       scrooge_fetch_remaining
@@ -156,6 +158,7 @@ module ActiveRecord
 
     # Augment callsite info for new model class when using STI
     #
+    # --------->
     def becomes(klass)
       returning klass.new do |became|
         became.instance_variable_set("@attributes", @attributes)
@@ -172,6 +175,7 @@ module ActiveRecord
     # Marshal
     # force a full load if needed, and remove any possibility for missing attr flagging
     #
+    # --------->
     def _dump(depth)
       scrooge_fetch_remaining
       scrooge_dump_flag_this
@@ -182,12 +186,14 @@ module ActiveRecord
 
     # Marshal.load
     # 
+    # --------->
     def self._load(str)
       Marshal.load(str)
     end
 
     # Enables us to use Marshal.dump inside our _dump method without an infinite loop
     #
+    # --------->    
     alias_method :respond_to_without_scrooge, :respond_to?
     def respond_to?(symbol, include_private=false)
       if symbol == :_dump && scrooge_dump_flagged?
@@ -201,6 +207,7 @@ module ActiveRecord
 
     # Flag Marshal dump in progress
     #
+    # -------->
     def scrooge_dump_flag_this
       Thread.current[:scrooge_dumping_objects] ||= []
       Thread.current[:scrooge_dumping_objects] << object_id
@@ -208,16 +215,19 @@ module ActiveRecord
 
     # Flag Marhsal dump not in progress
     #
+    # -------->
     def scrooge_dump_unflag_this
       Thread.current[:scrooge_dumping_objects].delete(object_id)
     end
 
     # Flag scrooge as dumping ( excuse my French )
     #
+    # -------->    
     def scrooge_dump_flagged?
       Thread.current[:scrooge_dumping_objects] && Thread.current[:scrooge_dumping_objects].include?(object_id)
     end
 
+    # -------->
     def scrooge_fetch_remaining
       @attributes.fetch_remaining if scrooged?
     end
