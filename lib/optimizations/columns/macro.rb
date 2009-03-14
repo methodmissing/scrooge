@@ -37,7 +37,7 @@ module Scrooge
         
         ScroogeBlankString = "".freeze
         ScroogeComma = ",".freeze 
-        ScroogeRegexConditions = /(?:LIMIT|WHERE).*/i
+        ScroogeRegexSanitize = /(?:LIMIT|WHERE).*/i
         ScroogeRegexJoin = /(?:left|inner|outer|cross)*\s*(?:straight_join|join)/i
         
         @@scrooge_select_regexes = {}
@@ -73,7 +73,7 @@ module Scrooge
           # Find through callsites.
           #
           def find_by_sql_with_scrooge( sql )
-            callsite_signature = (caller[ActiveRecord::Base::ScroogeCallsiteSample] << truncate_conditions( sql )).hash
+            callsite_signature = (caller[ActiveRecord::Base::ScroogeCallsiteSample] << callsite_sql( sql )).hash
             callsite_set = scrooge_callsite(callsite_signature).columns
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_set)} FROM")
             result = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
@@ -90,8 +90,8 @@ module Scrooge
 
             # Trim any conditions
             #
-            def truncate_conditions( sql )
-              sql.gsub(ScroogeRegexConditions, ScroogeBlankString)
+            def callsite_sql( sql )
+              sql.gsub(ScroogeRegexSanitize, ScroogeBlankString)
             end
                     
       end
