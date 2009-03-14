@@ -1,13 +1,14 @@
 module Scrooge
-  class AttributesProxy
-    attr_reader :callsite_signature
+  class AttributesProxy < Hash
+    attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass
 
-    def initialize(record, scrooge_columns, klass, callsite_signature)
-      @attributes = record
-      @scrooge_columns = scrooge_columns.dup
-      @fully_fetched = false
-      @klass = klass
-      @callsite_signature = callsite_signature
+    def self.setup(record, scrooge_columns, klass, callsite_signature)
+      hash = new.replace(record)
+      hash.scrooge_columns = scrooge_columns.dup
+      hash.fully_fetched = false
+      hash.klass = klass
+      hash.callsite_signature = callsite_signature
+      hash
     end
 
     # Delegate Hash keys to all defined columns
@@ -34,18 +35,17 @@ module Scrooge
         fetch_remaining
         @scrooge_columns << attr_s
       end
-      @attributes[attr_s]
+      super
     end
 
     def fetch(*args, &block)
       self[args[0]]
-      @attributes.fetch(*args, &block)
+      super
     end
 
     def []=(attr_name, value)
-      attr_s = attr_name.to_s
-      @attributes[attr_s] = value
-      @scrooge_columns << attr_s
+      @scrooge_columns << attr_name.to_s
+      super
     end
 
     def dup
@@ -54,31 +54,18 @@ module Scrooge
 
     def to_a
       fetch_remaining
-      @attributes.to_a
+      super
     end
 
     def delete(attr_name)
       self[attr_name]
-      @attributes.delete(attr_name)
+      super
     end
 
     def update(hash)
-      hash.to_hash.each do |k, v|
-        self[k] = v
-      end
-    end
-
-    def to_hash
-      fetch_remaining
-      @attributes
-    end
-
-    def freeze
-      @attributes.freeze
-    end
-
-    def frozen?
-      @attributes.frozen?
+      hash.fetch_remaining if hash.is_a?(Scrooge::AttributesProxy)
+      @fully_fetched = true
+      super
     end
 
     def fetch_remaining
@@ -90,7 +77,7 @@ module Scrooge
           rescue ActiveRecord::RecordNotFound
             raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
           end
-          @attributes = new_object.instance_variable_get(:@attributes).merge(@attributes)
+          replace(new_object.instance_variable_get(:@attributes).merge(self))
         end
         @fully_fetched = true
       end
@@ -100,7 +87,7 @@ module Scrooge
 
     def fetch_record_with_remaining_columns( columns_to_fetch )
       @klass.send(:with_exclusive_scope) do
-        @klass.find(@attributes[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
+        @klass.find(self[@klass.primary_key], :select=>@klass.scrooge_sql(columns_to_fetch))
       end
     end
 
@@ -113,7 +100,6 @@ module Scrooge
     end
 
     def dup_self
-      @attributes = @attributes.dup
       @scrooge_columns = @scrooge_columns.dup
       self
     end

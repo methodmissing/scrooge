@@ -87,7 +87,7 @@ module ActiveRecord
         callsite_set = set_for_callsite(callsite_signature)
         sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_sql(callsite_set)} FROM")
         result = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
-          instantiate(Scrooge::AttributesProxy.new(record, callsite_set, self, callsite_signature))
+          instantiate(Scrooge::AttributesProxy.setup(record, callsite_set, self, callsite_signature))
         end
       end
 
