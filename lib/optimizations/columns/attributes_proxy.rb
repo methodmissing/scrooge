@@ -64,6 +64,8 @@ module Scrooge
           @scrooge_columns << attr_name.to_s
           super
         end
+        
+        alias_method :store, :[]=
 
         def dup
           super.dup_self
@@ -88,6 +90,8 @@ module Scrooge
           @fully_fetched = true
           super
         end
+        
+        alias_method :merge!, :update
 
         def fetch_remaining
           unless @fully_fetched

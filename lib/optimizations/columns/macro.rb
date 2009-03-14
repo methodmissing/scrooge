@@ -37,7 +37,7 @@ module Scrooge
         
         ScroogeBlankString = "".freeze
         ScroogeComma = ",".freeze 
-        ScroogeRegexConditions = /WHERE.*/i
+        ScroogeRegexConditions = /(?:LIMIT|WHERE).*/i
         ScroogeRegexJoin = /(?:left|inner|outer|cross)*\s*(?:straight_join|join)/i
         
         @@scrooge_select_regexes = {}
