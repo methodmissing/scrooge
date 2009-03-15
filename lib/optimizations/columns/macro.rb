@@ -89,10 +89,13 @@ module Scrooge
       
       module InstanceMethods
         
+        ScroogeSpecialCallbacks = Set[:after_find,:after_initialize]
+        
         def self.included( base )
           base.alias_method_chain :delete, :scrooge
           base.alias_method_chain :destroy, :scrooge
           base.alias_method_chain :respond_to?, :scrooge
+          base.alias_method_chain :callback, :scrooge
         end
         
         # Is this instance being handled by scrooge?
@@ -152,6 +155,14 @@ module Scrooge
         end
 
         private
+
+          # Handle #after_find and #after_initialize.
+          # Dog ugly inspect hack - couldn't get anyting else going
+          #
+          def callback_with_scrooge( method )
+            self.inspect if ScroogeSpecialCallbacks.include?( method.to_sym )
+            callback_without_scrooge( method )
+          end
 
           # Flag Marshal dump in progress
           #
