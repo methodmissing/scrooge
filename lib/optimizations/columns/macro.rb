@@ -55,7 +55,8 @@ module Scrooge
         # underlying connection.
         #
         def scrooge_reload( p_key, missing_columns )
-          connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{table_name} WHERE #{table_name}.#{primary_key} = '#{p_key}'" ).first
+          attributes = connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{primary_key} = '#{p_key}'" ).first
+          attributes ? attributes : raise( ActiveRecord::RecordNotFound )
         end
         
         private
