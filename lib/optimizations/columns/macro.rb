@@ -196,7 +196,7 @@ module Scrooge
           # New objects should get an UnscroogedAttributes as their @attributes hash
           #
           def attributes_from_column_definition_with_scrooge
-            Scrooge::Optimizations::Columns::UnscroogedAttributes.setup(attributes_from_column_definition_without_scrooge)
+            UnscroogedAttributes.setup(attributes_from_column_definition_without_scrooge)
           end
         
       end
