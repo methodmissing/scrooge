@@ -63,6 +63,11 @@ class ScroogeTest < ActiveSupport::TestCase
     user.User
   end
   
+  test "should only fire after_initialize once" do
+    # should not raise ActiveRecord::MissingAttributeError
+    [:max_connections, :max_user_connections].each {|f| MysqlUser.find(:first).read_attribute(f)}
+  end
+  
   def first_callsite
     MysqlUser.scrooge_callsites.to_a.flatten.first
   end
