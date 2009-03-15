@@ -3,6 +3,6 @@ class MysqlUser < ActiveRecord::Base
   set_primary_key 'User'
   
   def after_initialize
-    max_connections
+    max_connections if @attributes.has_key?("max_user_connections")
   end
 end
