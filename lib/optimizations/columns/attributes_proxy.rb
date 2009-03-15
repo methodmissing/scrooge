@@ -97,7 +97,7 @@ module Scrooge
 
         def update(hash)
           @fully_fetched = true
-          super
+          super(hash.to_hash)
         end
         
         alias_method :merge!, :update
