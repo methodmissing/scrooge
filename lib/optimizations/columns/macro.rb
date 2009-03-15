@@ -28,7 +28,7 @@ module Scrooge
      
         ScroogeBlankString = "".freeze
         ScroogeComma = ",".freeze 
-        ScroogeRegexSanitize = /(?:LIMIT|WHERE).*/i
+        ScroogeRegexSanitize = /(?:LIMIT|WHERE|FROM|GROUP\s*BY|HAVING|ORDER\s*BY|PROCEDURE|FOR\s*UPDATE|INTO\s*OUTFILE).*/i
         ScroogeRegexJoin = /(?:left|inner|outer|cross)*\s*(?:straight_join|join)/i
         
         @@scrooge_select_regexes = {}
