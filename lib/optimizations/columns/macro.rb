@@ -68,10 +68,16 @@ module Scrooge
             callsite_set = scrooge_callsite(callsite_signature).columns
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_set)} FROM")
             result = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
-              instantiate( Scrooge::Optimizations::Columns::AttributesProxy.setup(record, callsite_set, self, callsite_signature) )
+              instantiate( Scrooge::Optimizations::Columns::ScroogedAttributes.setup(record, callsite_set, self, callsite_signature) )
             end
           end        
         
+          def find_by_sql_without_scrooge( sql )
+            result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
+              instantiate( Scrooge::Optimizations::Columns::UnscroogedAttributes.setup(record) )
+            end
+          end
+          
             # Generate a regex that respects the table name as well to catch
             # verbose SQL from JOINS etc.
             # 
@@ -95,13 +101,14 @@ module Scrooge
           base.alias_method_chain :delete, :scrooge
           base.alias_method_chain :destroy, :scrooge
           base.alias_method_chain :respond_to?, :scrooge
-          base.alias_method_chain :callback, :scrooge
+#          base.alias_method_chain :callback, :scrooge
+          base.alias_method_chain :attributes_from_column_definition, :scrooge
         end
         
         # Is this instance being handled by scrooge?
         #
         def scrooged?
-          @attributes.is_a?(Scrooge::Optimizations::Columns::AttributesProxy)
+          @attributes.is_a?(Scrooge::Optimizations::Columns::ScroogedAttributes)
         end        
         
         # Delete should fully load all the attributes before the @attributes hash is frozen
@@ -188,6 +195,12 @@ module Scrooge
           #
           def scrooge_fetch_remaining
             @attributes.fetch_remaining if scrooged?
+          end
+          
+          # New objects should get an UnscroogedAttributes as their @attributes hash
+          #
+          def attributes_from_column_definition_with_scrooge
+            Scrooge::Optimizations::Columns::UnscroogedAttributes.setup(attributes_from_column_definition_without_scrooge)
           end
         
       end

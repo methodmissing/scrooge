@@ -1,21 +1,30 @@
-class Hash
-  
-  # TODO: Circumvent this hack  
-  alias_method :update_without_scrooge, :update
-  def update(other)
-    update_without_scrooge(other.to_hash)
-  end
-  
-end
-
 module Scrooge
   module Optimizations
     module Columns
-      class AttributesProxy < Hash
-        
-        # Hash like Proxy container for attributes
+      class UnscroogedAttributes < Hash
+
+        # Hash container for attributes when scrooge is not used
         #        
+
+        def self.setup(record)
+          new.replace(record)
+        end
+
+        # Must call to_hash - other hash may be ScroogedAttributes and
+        # must be fully fetched if so
+        #
+        def update(hash)
+          super(hash.to_hash)
+        end
+
+        alias_method :merge!, :update
+      end
+
+      class ScroogedAttributes < Hash
         
+        # Hash container for attributes with scrooge monitoring of attribute access
+        #        
+
         attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass
 
         def self.setup(record, scrooge_columns, klass, callsite_signature)

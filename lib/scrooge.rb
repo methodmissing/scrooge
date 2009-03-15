@@ -16,7 +16,6 @@ module ActiveRecord
       # Determine if a given SQL string is a candidate for callsite <=> columns
       # optimization.
       #     
-      alias :find_by_sql_without_scrooge :find_by_sql
       def find_by_sql(sql)
         if scope_with_scrooge?(sql)
           find_by_sql_with_scrooge(sql)
