@@ -51,6 +51,13 @@ module Scrooge
           Marshal.load(str)
         end
         
+        # Efficient reloading - get the hash with missing attributes directly from the 
+        # underlying connection.
+        #
+        def scrooge_reload( p_key, missing_columns )
+          connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{table_name} WHERE #{table_name}.#{primary_key} = '#{p_key}'" ).first
+        end
+        
         private
 
           # Only scope n-1 rows by default.

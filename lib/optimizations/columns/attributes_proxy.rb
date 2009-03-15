@@ -116,17 +116,15 @@ module Scrooge
 
           def fetch_remaining!( columns_to_fetch )
             begin
-              new_object = fetch_record_with_remaining_columns( columns_to_fetch )
+              remaining_attributes = fetch_record_with_remaining_columns( columns_to_fetch )
             rescue ActiveRecord::RecordNotFound
               raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) #{columns_to_fetch.to_a.join(', ')} because record went away"
             end
-            replace(new_object.instance_variable_get(:@attributes).merge(self))
+            replace(remaining_attributes.merge(self))
           end
 
           def fetch_record_with_remaining_columns( columns_to_fetch )
-            @klass.send(:with_exclusive_scope) do
-              @klass.find(self[@klass.primary_key], :select=>@klass.scrooge_select_sql(columns_to_fetch))
-            end
+            @klass.scrooge_reload(self[@klass.primary_key], columns_to_fetch)
           end
 
           def interesting_for_scrooge?( attr_s )
