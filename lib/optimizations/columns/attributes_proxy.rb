@@ -109,7 +109,7 @@ module Scrooge
             begin
               new_object = fetch_record_with_remaining_columns( columns_to_fetch )
             rescue ActiveRecord::RecordNotFound
-              raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) because record went away"
+              raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) #{columns_to_fetch.to_a.join(', ')} because record went away"
             end
             replace(new_object.instance_variable_get(:@attributes).merge(self))
           end

@@ -9,21 +9,12 @@ module Scrooge
           #
           def install!
             if scrooge_installable?
-              scrooge_aliases!
               ActiveRecord::Base.send( :extend,  Scrooge::Optimizations::Columns::SingletonMethods )
-              ActiveRecord::Base.send( :include, Scrooge::Optimizations::Columns::InstanceMethods )
+              ActiveRecord::Base.send( :include, Scrooge::Optimizations::Columns::InstanceMethods )              
             end  
           end
       
           private
-          
-            def scrooge_aliases!
-              ActiveRecord::Base.class_eval do
-                alias_method :delete_without_scrooge, :delete
-                alias_method :destroy_without_scrooge, :destroy
-                alias_method :respond_to_without_scrooge, :respond_to?
-              end
-            end
           
             def scrooge_installable?
               !ActiveRecord::Base.included_modules.include?( Scrooge::Optimizations::Columns::InstanceMethods )
@@ -34,7 +25,7 @@ module Scrooge
       end
       
       module SingletonMethods
-        
+     
         ScroogeBlankString = "".freeze
         ScroogeComma = ",".freeze 
         ScroogeRegexSanitize = /(?:LIMIT|WHERE).*/i
@@ -98,10 +89,10 @@ module Scrooge
       
       module InstanceMethods
         
-        def self.included( klass )
-          klass.class_eval do
-            # this is executed after included methods are defined, so can't alias here
-          end
+        def self.included( base )
+          base.alias_method_chain :delete, :scrooge
+          base.alias_method_chain :destroy, :scrooge
+          base.alias_method_chain :respond_to?, :scrooge
         end
         
         # Is this instance being handled by scrooge?
@@ -112,16 +103,14 @@ module Scrooge
         
         # Delete should fully load all the attributes before the @attributes hash is frozen
         #
-        #alias_method :delete_without_scrooge, :delete
-        def delete
+        def delete_with_scrooge
           scrooge_fetch_remaining
           delete_without_scrooge
         end        
       
         # Destroy should fully load all the attributes before the @attributes hash is frozen
         #
-        #alias_method :destroy_without_scrooge, :destroy
-        def destroy
+        def destroy_with_scrooge
           scrooge_fetch_remaining
           destroy_without_scrooge
         end      
@@ -154,12 +143,11 @@ module Scrooge
         
         # Enables us to use Marshal.dump inside our _dump method without an infinite loop
         #
-        #alias_method :respond_to_without_scrooge, :respond_to?
-        def respond_to?(symbol, include_private=false)
+        def respond_to_with_scrooge?(symbol, include_private=false)
           if symbol == :_dump && scrooge_dump_flagged?
             false
           else
-            respond_to_without_scrooge(symbol, include_private)
+            respond_to_without_scrooge?(symbol, include_private)
           end
         end
 
