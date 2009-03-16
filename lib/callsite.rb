@@ -27,6 +27,12 @@ module Scrooge
       end
     end
     
+    # Diff known associations with given includes
+    #
+    def preload( includes )
+      @columns.merge( includes.to_set ).to_a
+    end  
+    
     # Flag an association as seen
     #
     def association!( association )
