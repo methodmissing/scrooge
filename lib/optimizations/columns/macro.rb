@@ -108,6 +108,7 @@ module Scrooge
           base.alias_method_chain :destroy, :scrooge
           base.alias_method_chain :respond_to?, :scrooge
           base.alias_method_chain :attributes_from_column_definition, :scrooge
+          base.alias_method_chain :becomes, :scrooge
         end
         
         # Is this instance being handled by scrooge?
@@ -132,17 +133,13 @@ module Scrooge
         
         # Augment callsite info for new model class when using STI
         #
-        def becomes(klass)
-          returning klass.new do |became|
-            became.instance_variable_set("@attributes", @attributes)
-            became.instance_variable_set("@attributes_cache", @attributes_cache)
-            became.instance_variable_set("@new_record", new_record?)
-            if scrooged?
-              self.class.scrooge_callsite(@attributes.callsite_signature).columns.each do |attrib|
-                became.class.scrooge_seen_column!(@attributes.callsite_signature, attrib)
-              end
+        def becomes_with_scrooge(klass)
+          if scrooged?
+            self.class.scrooge_callsite(@attributes.callsite_signature).columns.each do |attrib|
+              klass.scrooge_seen_column!(@attributes.callsite_signature, attrib)
             end
           end
+          becomes_without_scrooge(klass)
         end     
 
         # Marshal
