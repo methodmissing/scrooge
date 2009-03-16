@@ -9,15 +9,15 @@ module Scrooge
           #
           def install!
             if scrooge_installable?
-              ActiveRecord::Base.send( :extend,  Scrooge::Optimizations::Columns::SingletonMethods )
-              ActiveRecord::Base.send( :include, Scrooge::Optimizations::Columns::InstanceMethods )              
+              ActiveRecord::Base.send( :extend,  SingletonMethods )
+              ActiveRecord::Base.send( :include, InstanceMethods )              
             end  
           end
       
           private
           
             def scrooge_installable?
-              !ActiveRecord::Base.included_modules.include?( Scrooge::Optimizations::Columns::InstanceMethods )
+              !ActiveRecord::Base.included_modules.include?( InstanceMethods )
             end
          
         end
@@ -75,30 +75,30 @@ module Scrooge
             callsite_signature = (caller[ActiveRecord::Base::ScroogeCallsiteSample] << callsite_sql( sql )).hash
             callsite_set = scrooge_callsite(callsite_signature).columns
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_set)} FROM")
-            result = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
-              instantiate( Scrooge::Optimizations::Columns::ScroogedAttributes.setup(record, callsite_set, self, callsite_signature) )
+            connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
+              instantiate( ScroogedAttributes.setup(record, callsite_set, self, callsite_signature) )
             end
           end        
         
           def find_by_sql_without_scrooge( sql )
-            result = connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
-              instantiate( Scrooge::Optimizations::Columns::UnscroogedAttributes.setup(record) )
+            connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
+              instantiate( UnscroogedAttributes.setup(record) )
             end
           end
-          
-            # Generate a regex that respects the table name as well to catch
-            # verbose SQL from JOINS etc.
-            # 
-            def scrooge_select_regex
-              @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*) FROM" )
-            end
 
-            # Trim any conditions
-            #
-            def callsite_sql( sql )
-              sql.gsub(ScroogeRegexSanitize, ScroogeBlankString)
-            end
-                    
+          # Generate a regex that respects the table name as well to catch
+          # verbose SQL from JOINS etc.
+          # 
+          def scrooge_select_regex
+            @@scrooge_select_regexes[self.table_name] ||= Regexp.compile( "SELECT (`?(?:#{table_name})?`?.?\\*) FROM" )
+          end
+
+          # Trim any conditions
+          #
+          def callsite_sql( sql )
+            sql.gsub(ScroogeRegexSanitize, ScroogeBlankString)
+          end
+
       end
       
       module InstanceMethods
@@ -108,12 +108,13 @@ module Scrooge
           base.alias_method_chain :destroy, :scrooge
           base.alias_method_chain :respond_to?, :scrooge
           base.alias_method_chain :attributes_from_column_definition, :scrooge
+          base.alias_method_chain :becomes, :scrooge
         end
         
         # Is this instance being handled by scrooge?
         #
         def scrooged?
-          @attributes.is_a?(Scrooge::Optimizations::Columns::ScroogedAttributes)
+          @attributes.is_a?(ScroogedAttributes)
         end        
         
         # Delete should fully load all the attributes before the @attributes hash is frozen
@@ -132,17 +133,13 @@ module Scrooge
         
         # Augment callsite info for new model class when using STI
         #
-        def becomes(klass)
-          returning klass.new do |became|
-            became.instance_variable_set("@attributes", @attributes)
-            became.instance_variable_set("@attributes_cache", @attributes_cache)
-            became.instance_variable_set("@new_record", new_record?)
-            if scrooged?
-              self.class.scrooge_callsite(@attributes.callsite_signature).columns.each do |attrib|
-                became.class.scrooge_seen_column!(@attributes.callsite_signature, attrib)
-              end
+        def becomes_with_scrooge(klass)
+          if scrooged?
+            self.class.scrooge_callsite(@attributes.callsite_signature).columns.each do |attrib|
+              klass.scrooge_seen_column!(@attributes.callsite_signature, attrib)
             end
           end
+          becomes_without_scrooge(klass)
         end     
 
         # Marshal
