@@ -11,6 +11,7 @@ module ActiveRecord
 
     @@scrooge_callsites = {}
     ScroogeCallsiteSample = 0..10
+    FindAssociatedRegex = /find_associated_records/ 
 
     class << self
       
@@ -21,15 +22,20 @@ module ActiveRecord
                              :order, :select, :readonly, :group, :having, :from, :lock, :scrooge_callsite ]
 
       
-      # Let .find
+      # Let .find setup callsite information and preloading.
       #
       def find(*args)
         options = args.extract_options!
         validate_find_options(options)
         set_readonly_option!(options)
-
-        options[:scrooge_callsite] = callsite_signature( caller, options.except(:conditions, :limit, :offset) )  
-        options[:include] = scrooge_callsite(options[:scrooge_callsite]).preload( options[:include] )
+        
+        # Guard against inifinite recursion from .find called from preloading.
+        # Discusses with Stephen.
+        #
+        if (_caller = caller).grep( FindAssociatedRegex ).empty?
+          cs_signature = callsite_signature( _caller, options.except(:conditions, :limit, :offset) )
+          options[:scrooge_callsite], options[:include] = cs_signature, scrooge_callsite(cs_signature).preload( options[:include] )
+        end
 
         case args.first
           when :first then find_initial(options)

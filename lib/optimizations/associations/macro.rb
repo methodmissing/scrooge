@@ -28,7 +28,7 @@ module Scrooge
       end
       
       module InstanceMethods
-
+                
         # Association getter with Scrooge support
         #
         def association_instance_get(name)
@@ -49,10 +49,17 @@ module Scrooge
         # Register an association with Scrooge
         #
         def scrooge_seen_association!( association )
-          if scrooged?
+          if scrooged? && !scrooge_seen_association?( association )
+            @attributes.scrooge_associations << association
             self.class.scrooge_callsite( @attributes.callsite_signature ).association!( association ) 
           end
         end
+        
+        private
+        
+          def scrooge_seen_association?( association )
+            @attributes.scrooge_associations.include?( association )
+          end
         
       end
       
