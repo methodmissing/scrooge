@@ -25,14 +25,15 @@ module Scrooge
         # Hash container for attributes with scrooge monitoring of attribute access
         #        
 
-        attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass
+        attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass, :sql, :result_set
 
-        def self.setup(record, scrooge_columns, klass, callsite_signature)
+        def self.setup(record, scrooge_columns, klass, callsite_signature, result_set)
           hash = new.replace(record)
           hash.scrooge_columns = scrooge_columns.dup
           hash.fully_fetched = false
           hash.klass = klass
           hash.callsite_signature = callsite_signature
+          hash.result_set = result_set
           hash
         end
 
@@ -116,17 +117,28 @@ module Scrooge
 
           def fetch_remaining!( columns_to_fetch )
             begin
-              remaining_attributes = fetch_record_with_remaining_columns( columns_to_fetch )
+              remaining_attributes = fetch_records_with_remaining_columns( columns_to_fetch )
             rescue ActiveRecord::RecordNotFound
               raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) #{columns_to_fetch.to_a.join(', ')} because record went away"
             end
-            replace(remaining_attributes.merge(self))
+            if remaining_attributes.size != result_set_attributes_with_self.size
+              raise "In fetch_remaining! fetched: #{remaining_attributes.size}, expecting #{result_set_attributes_with_self.size}, keys #{result_set_attributes_with_self.collect{|r| r[@klass.primary_key]}.join(",")}"
+            else
+              0.upto(result_set_attributes_with_self.size - 1) do |i|
+                old_attributes = result_set_attributes_with_self[i]
+                old_attributes.update(remaining_attributes[i].merge(old_attributes))
+              end
+            end
           end
 
-          def fetch_record_with_remaining_columns( columns_to_fetch )
-            @klass.scrooge_reload(self[@klass.primary_key], columns_to_fetch)
+          def fetch_records_with_remaining_columns( columns_to_fetch )
+            @klass.scrooge_reload(result_set_attributes_with_self.collect{|r| r[@klass.primary_key]}, columns_to_fetch)
           end
 
+          def result_set_attributes_with_self
+            result_set_attributes_with_self ||= @result_set.collect{|r| r.instance_variable_get(:@attributes)} | [self]
+          end
+          
           def interesting_for_scrooge?( attr_s )
             has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
           end

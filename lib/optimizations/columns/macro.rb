@@ -54,9 +54,10 @@ module Scrooge
         # Efficient reloading - get the hash with missing attributes directly from the 
         # underlying connection.
         #
-        def scrooge_reload( p_key, missing_columns )
-          attributes = connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{primary_key} = '#{p_key}'" ).first
-          attributes ? attributes : raise( ActiveRecord::RecordNotFound )
+        def scrooge_reload( p_keys, missing_columns )
+          sql_keys = p_keys.collect{|pk| "'#{pk}'"}.join(",")
+          attributes = connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{primary_key} IN (#{sql_keys})" )
+          attributes or raise( ActiveRecord::RecordNotFound )
         end
         
         private
@@ -75,10 +76,11 @@ module Scrooge
             callsite_signature = (caller[ActiveRecord::Base::ScroogeCallsiteSample] << callsite_sql( sql )).hash
             callsite_set = scrooge_callsite(callsite_signature).columns
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_set)} FROM")
-            connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
-              instantiate( ScroogedAttributes.setup(record, callsite_set, self, callsite_signature) )
+            results = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged")
+            results.inject([]) do |memo, record|
+              memo << instantiate( ScroogedAttributes.setup(record, callsite_set, self, callsite_signature, memo) )
             end
-          end        
+          end
         
           def find_by_sql_without_scrooge( sql )
             connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
