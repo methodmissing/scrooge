@@ -26,7 +26,7 @@ module Scrooge
       end
 
       def active_record_test_files
-        (files ||= [] ) << glob( "#{AR_TEST_SUITE}/cases/**/*_test.rb" )
+        (files ||= [] ) << glob( "#{AR_TEST_SUITE}/cases/**/join_model_test.rb" )
         files.sort
       end
 

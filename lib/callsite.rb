@@ -30,7 +30,8 @@ module Scrooge
     # Diff known associations with given includes
     #
     def preload( includes )
-      @columns.merge( includes.to_set ).to_a
+      #TODO: handle nested includes
+      @associations.merge( Array(includes) ).to_a
     end  
     
     # Flag an association as seen
