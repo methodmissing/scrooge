@@ -31,6 +31,7 @@ module Scrooge
     #
     def preload( includes )
       # Ignore nested includes for the time being
+      #
       if includes.is_a?(Hash)
         includes
       else  
