@@ -71,15 +71,17 @@ module Scrooge
         
           # Find through callsites.
           #
-          def find_by_sql_with_scrooge( sql )
-            callsite_signature = (caller[ActiveRecord::Base::ScroogeCallsiteSample] << callsite_sql( sql )).hash
-            callsite_set = scrooge_callsite(callsite_signature).columns
+          def find_by_sql_with_scrooge( sql, callsite = nil )
+            callsite_sig ||= callsite_signature( caller, callsite_sql( sql ) )
+            callsite_set = scrooge_callsite(callsite_sig).columns
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_set)} FROM")
             connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
-              instantiate( ScroogedAttributes.setup(record, callsite_set, self, callsite_signature) )
+              instantiate( ScroogedAttributes.setup(record, callsite_set, self, callsite_sig) )
             end
           end        
         
+          # Find and instantiate as usual
+          #
           def find_by_sql_without_scrooge( sql )
             connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
               instantiate( UnscroogedAttributes.setup(record) )

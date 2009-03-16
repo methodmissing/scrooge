@@ -24,6 +24,16 @@ module Scrooge
         
       end
       
+      module SingletonMethods
+        
+        
+        
+      end
+      
+      module InstanceMethods
+        
+      end
+      
     end
   end
 end      
