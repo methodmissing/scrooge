@@ -30,8 +30,12 @@ module Scrooge
     # Diff known associations with given includes
     #
     def preload( includes )
-      #TODO: handle nested includes
-      @associations.merge( Array(includes) ).to_a
+      # Ignore nested includes for the time being
+      if includes.is_a?(Hash)
+        includes
+      else  
+        @associations.merge( Array(includes) ).to_a
+      end
     end  
     
     # Flag an association as seen
