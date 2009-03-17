@@ -80,9 +80,10 @@ module Scrooge
             end
           end        
         
-          # Find and instantiate as usual
+          # Find and instantiate as usual.Unset a registered callsite if given.
           #
-          def find_by_sql_without_scrooge( sql )
+          def find_by_sql_without_scrooge( sql, callsite = nil )
+            scrooge_unlink_callsite!( callsite ) if callsite
             connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
               instantiate( UnscroogedAttributes.setup(record) )
             end
