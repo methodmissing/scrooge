@@ -35,7 +35,6 @@ module Scrooge
             #
             remove_const(:VALID_FIND_OPTIONS)
             const_set( :VALID_FIND_OPTIONS, [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :having, :from, :lock, :scrooge_callsite ] )
-            #const_set( :FindAssociatedRegex, /find_associated_records/ )
           end
           eigen.alias_method_chain :find, :scrooge
           eigen.alias_method_chain :find_every, :scrooge
