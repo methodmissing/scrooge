@@ -26,6 +26,8 @@ module Scrooge
       
       module SingletonMethods
       
+        FindAssociatedRegex = /find_associated_records/
+      
         def self.extended( base )
           eigen = class << base; self; end
           eigen.instance_eval do
@@ -33,20 +35,23 @@ module Scrooge
             #
             remove_const(:VALID_FIND_OPTIONS)
             const_set( :VALID_FIND_OPTIONS, [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :having, :from, :lock, :scrooge_callsite ] )
+            #const_set( :FindAssociatedRegex, /find_associated_records/ )
           end
           eigen.alias_method_chain :find, :scrooge
           eigen.alias_method_chain :find_every, :scrooge
         end
       
-        # Let .find inject / remove callsite tracked associations
+        # Let .find setup callsite information and preloading.
         #
         def find_with_scrooge(*args)
           options = args.extract_options!
           validate_find_options(options)
           set_readonly_option!(options)
 
-          options[:scrooge_callsite] = callsite_signature( caller, options.except(:conditions, :limit, :offset) )  
-          options[:include] = scrooge_callsite(options[:scrooge_callsite]).preload( options[:include] )
+          if (_caller = caller).grep( FindAssociatedRegex ).empty?
+            cs_signature = callsite_signature( _caller, options.except(:conditions, :limit, :offset) )
+            options[:scrooge_callsite], options[:include] = cs_signature, scrooge_callsite(cs_signature).preload( options[:include] )
+          end
 
           case args.first
             when :first then find_initial(options)
@@ -78,7 +83,7 @@ module Scrooge
       end
       
       module InstanceMethods
-
+                
         # Association getter with Scrooge support
         #
         def association_instance_get(name)
@@ -99,10 +104,17 @@ module Scrooge
         # Register an association with Scrooge
         #
         def scrooge_seen_association!( association )
-          if scrooged?
+          if scrooged? && !scrooge_seen_association?( association )
+            @attributes.scrooge_associations << association
             self.class.scrooge_callsite( @attributes.callsite_signature ).association!( association ) 
           end
         end
+        
+        private
+        
+          def scrooge_seen_association?( association )
+            @attributes.scrooge_associations.include?( association )
+          end
         
       end
       

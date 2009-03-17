@@ -11,9 +11,10 @@ module ActiveRecord
 
     @@scrooge_callsites = {}
     ScroogeCallsiteSample = 0..10
+    FindAssociatedRegex = /find_associated_records/ 
 
     class << self
-
+      
       # Determine if a given SQL string is a candidate for callsite <=> columns
       # optimization.
       #     
