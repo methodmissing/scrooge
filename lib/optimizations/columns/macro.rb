@@ -77,7 +77,7 @@ module Scrooge
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_set)} FROM")
             results = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged")
             results.inject([]) do |memo, record|
-              memo << instantiate( ScroogedAttributes.setup(record, callsite_set, self, callsite_signature, memo) )
+              memo << instantiate( ScroogedAttributes.setup(record, callsite_set, self, callsite_signature, memo.object_id) )
             end
           end
         

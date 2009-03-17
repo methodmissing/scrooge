@@ -1,7 +1,6 @@
 $:.unshift(File.dirname(__FILE__))
 
 require 'set'
-require 'weakref'
 require 'callsite'
 require 'optimizations/columns/attributes_proxy'
 require 'optimizations/columns/macro'
