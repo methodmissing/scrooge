@@ -3,13 +3,16 @@ module Scrooge
     module ResultSets
       class UpdateableResultSet
         
-        # Contains weak referernce to result set, and can update from DB
+        # Contains a weak referernce to the result set, and can update from DB
         #
         
         attr_accessor :updaters_attributes
         
         def initialize(result_set_array, klass)
-          @result_set_object_id = result_set_array.object_id if result_set_array.is_a?(Array)
+          if result_set_array
+            @result_set_object_id = result_set_array.object_id
+            @unique_id = result_set_array.unique_id ||= "#{Time.now.to_f}#{object_id}"  # avoid recycled object ids
+          end
           @klass = klass  # expected class of items in the array
         end
         
@@ -27,19 +30,22 @@ module Scrooge
         end
 
         def result_set_attributes
-          if @result_set_object_id
-            result_set = ObjectSpace._id2ref(@result_set_object_id)
-            result_set.inject(default_attributes) do |memo, r|
-              if r.is_a?(@klass)
-                memo |= [r.instance_variable_get(:@attributes)]
-              end
-              memo
+          rs = result_set
+          return default_attributes unless rs
+          rs.inject(default_attributes) do |memo, r|
+            if r.is_a?(@klass)
+              memo |= [r.instance_variable_get(:@attributes)]
             end
-          else
-            default_attributes
+            memo
           end
+        end
+        
+        def result_set
+          return nil unless @result_set_object_id
+          result_set = ObjectSpace._id2ref(@result_set_object_id)
+          result_set.is_a?(ResultArray) && result_set.unique_id == @unique_id ? result_set : nil
         rescue RangeError
-          default_attributes
+          nil
         end
         
         def default_attributes
@@ -68,7 +74,8 @@ module Scrooge
         
         def primary_key_name
           @klass.primary_key
-        end      
+        end
+        
       end
     end
   end

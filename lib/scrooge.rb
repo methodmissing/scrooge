@@ -5,6 +5,7 @@ require 'callsite'
 require 'optimizations/columns/attributes_proxy'
 require 'optimizations/columns/macro'
 require 'optimizations/result_sets/updateable_result_set'
+require 'optimizations/result_sets/result_array'
 
 module ActiveRecord
   class Base
