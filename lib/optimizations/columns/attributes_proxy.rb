@@ -31,7 +31,7 @@ module Scrooge
         # Hash container for attributes with scrooge monitoring of attribute access
         #        
 
-        attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass, :sql, :updateable_result_set
+        attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass, :updateable_result_set
 
         def self.setup(record, scrooge_columns, klass, callsite_signature, updateable_result_set)
           hash = new.replace(record)
