@@ -4,6 +4,7 @@ require 'set'
 require 'callsite'
 require 'optimizations/columns/attributes_proxy'
 require 'optimizations/columns/macro'
+require 'optimizations/result_sets/updateable_result_set'
 
 module ActiveRecord
   class Base
