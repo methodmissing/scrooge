@@ -18,6 +18,12 @@ module Scrooge
         end
 
         alias_method :merge!, :update
+        
+        # Don't try to reload one of these
+        #
+        def fully_fetched
+          true
+        end
       end
 
       class ScroogedAttributes < Hash
@@ -116,27 +122,45 @@ module Scrooge
         protected
 
           def fetch_remaining!( columns_to_fetch )
-            begin
-              remaining_attributes = fetch_records_with_remaining_columns( columns_to_fetch )
-            rescue ActiveRecord::RecordNotFound
+            remaining_attributes = fetch_records_with_remaining_columns( columns_to_fetch, result_set_ids )
+            if !remaining_attributes.detect {|r| r[@klass.primary_key] == self[@klass.primary_key]}
               raise ActiveRecord::MissingAttributeError, "scrooge cannot fetch missing attribute(s) #{columns_to_fetch.to_a.join(', ')} because record went away"
-            end
-            if remaining_attributes.size != result_set_attributes_with_self.size
-              raise "In fetch_remaining! fetched: #{remaining_attributes.size}, expecting #{result_set_attributes_with_self.size}, keys #{result_set_attributes_with_self.collect{|r| r[@klass.primary_key]}.join(",")}"
             else
-              0.upto(result_set_attributes_with_self.size - 1) do |i|
-                old_attributes = result_set_attributes_with_self[i]
-                old_attributes.update(remaining_attributes[i].merge(old_attributes))
+              update_result_set_with(remaining_attributes)
+            end
+          end
+
+          def fetch_records_with_remaining_columns( columns_to_fetch, result_ids_to_fetch )
+            @klass.scrooge_reload(result_ids_to_fetch, columns_to_fetch + [@klass.primary_key])
+          end
+
+          def result_set_attributes
+            @result_set.inject([self]) do |memo, r|
+              if r.is_a?(@klass)
+                memo |= [r.instance_variable_get(:@attributes)]
+              end
+              memo
+            end
+          end
+          
+          def result_set_ids
+            result_set_attributes.inject([]) do |memo, attributes|
+              unless attributes.fully_fetched
+                memo << attributes[@klass.primary_key]
+              end
+              memo
+            end
+          end
+          
+          def update_result_set_with(remaining_attributes)
+            current_attributes = result_set_attributes
+            remaining_attributes.each do |r_att|
+              r_id = r_att[@klass.primary_key]
+              old_attributes = current_attributes.detect {|a| a[@klass.primary_key] == r_id}
+              if old_attributes
+                old_attributes.update(r_att.merge(old_attributes))
               end
             end
-          end
-
-          def fetch_records_with_remaining_columns( columns_to_fetch )
-            @klass.scrooge_reload(result_set_attributes_with_self.collect{|r| r[@klass.primary_key]}, columns_to_fetch)
-          end
-
-          def result_set_attributes_with_self
-            result_set_attributes_with_self ||= @result_set.collect{|r| r.instance_variable_get(:@attributes)} | [self]
           end
           
           def interesting_for_scrooge?( attr_s )

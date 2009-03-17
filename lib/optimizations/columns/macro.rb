@@ -55,9 +55,8 @@ module Scrooge
         # underlying connection.
         #
         def scrooge_reload( p_keys, missing_columns )
-          sql_keys = p_keys.collect{|pk| "'#{pk}'"}.join(",")
-          attributes = connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{primary_key} IN (#{sql_keys})" )
-          attributes or raise( ActiveRecord::RecordNotFound )
+          sql_keys = p_keys.collect{|pk| "'#{pk}'"}.join(ScroogeComma)
+          connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{primary_key} IN (#{sql_keys})" )
         end
         
         private
