@@ -39,7 +39,7 @@ module Scrooge
           hash.fully_fetched = false
           hash.klass = klass
           hash.callsite_signature = callsite_signature
-          hash.result_set = result_set
+          hash.result_set = WeakRef.new(result_set)  # don't prevent GC of result set
           hash
         end
 
@@ -141,6 +141,8 @@ module Scrooge
               end
               memo
             end
+          rescue WeakRef::RefError
+            [self]
           end
           
           def result_set_ids
