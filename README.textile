@@ -4,49 +4,51 @@ h4. This is a complete rewrite from the initial coverage at "igvita.com":http://
 
 Many thanks to Stephen Sykes ( "pennysmalls.com":http://pennysmalls.com ) for his time spent on shaping, implementing and troubleshooting this release.
 
-An ActiveRecord attribute tracker to ensure production Ruby applications only fetch the database content needed to minimize wire traffic and reduce conversion overheads to native Ruby types.
+An ActiveRecord optimization layer to ensure production Ruby applications only fetch the database content needed to minimize wire traffic, excessive SQL queries and reduce conversion overheads to native Ruby types.
 
 h2. Why bother ?
 
 * Object conversion and moving unnecessary data is both expensive and tax existing infrastructure in high load setups
 * Manually extracting and scoping SELECT clauses is not sustainable in a clean and painless manner with iterative development, even less so in large projects.
+* Preloading associations can be painful - delegate to Scrooge instead.
 
 h2. What it does
 
 <pre>
 <code>
-	Processing HotelsController#show (for 127.0.0.1 at 2009-03-12 14:32:45) [GET]
+	Processing HotelsController#show (for 127.0.0.1 at 2009-03-18 19:29:38) [GET]
 	  Parameters: {"action"=>"show", "id"=>"8699-radisson-hotel-waterfront-cape-town", "controller"=>"hotels"}
 	  Hotel Load Scrooged (0.3ms)   SELECT `hotels`.id FROM `hotels` WHERE (`hotels`.`id` = 8699) 
 	Rendering template within layouts/application
 	Rendering hotels/show
-	  Hotel Load (0.2ms)   SELECT `hotels`.location_id,`hotels`.hotel_name,`hotels`.location,`hotels`.from_price,`hotels`.star_rating,`hotels`.apt,`hotels`.latitude,`hotels`.longitude,`hotels`.distance,`hotels`.narrative,`hotels`.telephone,`hotels`.important_notes,`hotels`.nearest_tube,`hotels`.nearest_rail,`hotels`.created_at,`hotels`.updated_at FROM `hotels` WHERE (`hotels`.`id` = 8699) 
+	  SQL (0.2ms)   SELECT `hotels`.location_id,`hotels`.hotel_name,`hotels`.location,`hotels`.from_price,`hotels`.star_rating,`hotels`.apt,`hotels`.latitude,`hotels`.longitude,`hotels`.distance,`hotels`.narrative,`hotels`.telephone,`hotels`.important_notes,`hotels`.nearest_tube,`hotels`.nearest_rail,`hotels`.created_at,`hotels`.updated_at,`hotels`.id FROM `hotels` WHERE `hotels`.id IN ('8699')
 	  Image Load Scrooged (0.2ms)   SELECT `images`.id FROM `images` WHERE (`images`.hotel_id = 8699) LIMIT 1
-	  Image Load (0.2ms)   SELECT `images`.hotel_id,`images`.title,`images`.url,`images`.width,`images`.height,`images`.thumbnail_url,`images`.thumbnail_width,`images`.thumbnail_height,`images`.has_thumbnail,`images`.created_at,`images`.updated_at FROM `images` WHERE (`images`.`id` = 488) 
+	  SQL (0.2ms)   SELECT `images`.hotel_id,`images`.title,`images`.url,`images`.width,`images`.height,`images`.thumbnail_url,`images`.thumbnail_width,`images`.thumbnail_height,`images`.has_thumbnail,`images`.created_at,`images`.updated_at,`images`.id FROM `images` WHERE `images`.id IN ('488')
 	Rendered shared/_header (0.0ms)
 	Rendered shared/_navigation (0.2ms)
 	  Image Load Scrooged (0.2ms)   SELECT `images`.id FROM `images` WHERE (`images`.hotel_id = 8699) 
-	  CACHE (0.0ms)   SELECT `images`.hotel_id,`images`.title,`images`.url,`images`.width,`images`.height,`images`.thumbnail_url,`images`.thumbnail_width,`images`.thumbnail_height,`images`.has_thumbnail,`images`.created_at,`images`.updated_at FROM `images` WHERE (`images`.`id` = 488) 
-	  Address Columns (44.8ms)   SHOW FIELDS FROM `addresses`
-	  Address Load Scrooged (0.5ms)   SELECT `addresses`.id FROM `addresses` WHERE (`addresses`.hotel_id = 8699) LIMIT 1
-	Rendered hotels/_show_sidebar (49.4ms)
+	  SQL (0.2ms)   SELECT `images`.hotel_id,`images`.title,`images`.url,`images`.width,`images`.height,`images`.thumbnail_url,`images`.thumbnail_width,`images`.thumbnail_height,`images`.has_thumbnail,`images`.created_at,`images`.updated_at,`images`.id FROM `images` WHERE `images`.id IN ('488')
+	  Address Columns (306.2ms)   SHOW FIELDS FROM `addresses`
+	  Address Load Scrooged (3.6ms)   SELECT `addresses`.id FROM `addresses` WHERE (`addresses`.hotel_id = 8699) LIMIT 1
+	Rendered hotels/_show_sidebar (313.2ms)
 	Rendered shared/_footer (0.1ms)
-	Completed in 56ms (View: 8, DB: 46) | 200 OK [http://localhost/hotels/8699-radisson-hotel-waterfront-cape-town]
+	Completed in 320ms (View: 8, DB: 311) | 200 OK [http://localhost/hotels/8699-radisson-hotel-waterfront-cape-town]
 
 
-	Processing HotelsController#show (for 127.0.0.1 at 2009-03-12 14:32:48) [GET]
+	Processing HotelsController#show (for 127.0.0.1 at 2009-03-18 19:29:40) [GET]
 	  Parameters: {"action"=>"show", "id"=>"8699-radisson-hotel-waterfront-cape-town", "controller"=>"hotels"}
 	  Hotel Load Scrooged (0.3ms)   SELECT `hotels`.narrative,`hotels`.from_price,`hotels`.star_rating,`hotels`.hotel_name,`hotels`.id FROM `hotels` WHERE (`hotels`.`id` = 8699) 
+	  Address Load Scrooged (0.2ms)   SELECT `addresses`.id FROM `addresses` WHERE (`addresses`.hotel_id = 8699) 
 	Rendering template within layouts/application
 	Rendering hotels/show
 	  Image Load Scrooged (0.3ms)   SELECT `images`.url,`images`.id,`images`.height,`images`.width FROM `images` WHERE (`images`.hotel_id = 8699) LIMIT 1
-	Rendered shared/_header (0.0ms)
+	Rendered shared/_header (0.1ms)
 	Rendered shared/_navigation (0.2ms)
 	  Image Load Scrooged (0.3ms)   SELECT `images`.thumbnail_width,`images`.id,`images`.thumbnail_height,`images`.thumbnail_url FROM `images` WHERE (`images`.hotel_id = 8699) 
-	  Address Load Scrooged (0.2ms)   SELECT `addresses`.id FROM `addresses` WHERE (`addresses`.hotel_id = 8699) LIMIT 1
-	Rendered hotels/_show_sidebar (1.3ms)
-	Rendered shared/_footer (0.0ms)
-	Completed in 7ms (View: 5, DB: 1) | 200 OK [http://localhost/hotels/8699-radisson-hotel-waterfront-cape-town]	
+	Rendered hotels/_show_sidebar (1.0ms)
+	Rendered shared/_footer (0.1ms)
+	Completed in 8ms (View: 5, DB: 1) | 200 OK [http://localhost/hotels/8699-radisson-hotel-waterfront-cape-town]
+	
 </code>
 </pre>		
 
@@ -184,7 +186,7 @@ Callsites are tracked on a per model ( table name ) basis.
 
 h4. Scope
 
-Only SQL statements that meet the following criteria is considered for optimization :
+Only SQL statements that meet the following criteria is considered for column optimizations :
 
 * A SELECT statement
 
@@ -192,9 +194,16 @@ Only SQL statements that meet the following criteria is considered for optimizat
 
 * The Model has a primary key defined
 
+Only associations that meet the following criteria is associated with a callsite and preloaded
+on subsequent requests :
+
+* Not a polymorphic association
+
+* Not a collection ( has_many etc. )
+
 h4. How it tracks
 
-The ActiveRecord attributes Hash is replaced with a proxy that automatically augments the callsite with any attributes referenced through the Hash lookup keys.
+The ActiveRecord attributes Hash is replaced with a proxy that automatically augments the callsite with any attributes referenced through the Hash lookup keys.We're also able to learn which associations is invoked from a given callsite, for preloading on subsequent requests.
 
 h4. Storage
 
@@ -202,7 +211,7 @@ There's a slight memory hit for each model as the callsites is stored as a class
 
 <pre>
 <code>
-{-113952497=>#<Set: {"User", "Password"}>}	
+#<Scrooge::Callsite:0x3969968 @primary_key="id", @columns=#<Set: {"narrative", "from_price", "star_rating", "hotel_name", "id"}>, @associations=#<Set: {:address}>, @signature=-736202783, @klass=Hotel(id: integer, location_id: integer, hotel_name: string, location: string, from_price: float, star_rating: integer, apt: boolean, latitude: float, longitude: float, distance: float, narrative: text, telephone: string, important_notes: text, nearest_tube: string, nearest_rail: string, created_at: datetime, updated_at: datetime), @inheritance_column="type">
 </code>
 </pre>
 
@@ -215,8 +224,6 @@ h2. Todo
 * Deeper coverage for Scrooge::AttributesProxy ( pending conversion to a subclass of Hash instead )
 
 * Test cases for Scrooge::Callsite
-
-* Track both columns AND association invocations off Scrooge::Callsite
 
 * Have invoking Model#attributes not associate all columns with the callsite
 
