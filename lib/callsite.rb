@@ -43,11 +43,15 @@ module Scrooge
     #
     def association!( association )
       Mutex.synchronize do
-        @associations << association
+        @associations << association if preloadable_association?( association )
       end
     end
     
     private
+    
+      def preloadable_association?( association )
+        @klass.preloadable_associations.include?( association.to_sym )
+      end
     
       # Is the table a container for STI models ?
       # 
