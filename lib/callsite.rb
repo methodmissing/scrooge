@@ -49,6 +49,8 @@ module Scrooge
     
     private
     
+      # Only register associations that isn't polymorphic or a collection
+      #
       def preloadable_association?( association )
         @klass.preloadable_associations.include?( association.to_sym )
       end
