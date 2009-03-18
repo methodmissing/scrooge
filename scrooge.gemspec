@@ -2,15 +2,14 @@
 
 Gem::Specification.new do |s|
   s.name = %q{scrooge}
-  s.version = "2.2.2"
+  s.version = "2.2.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Lourens Naud\303\251", "Stephen Sykes"]
-  s.date = %q{2009-03-16}
+  s.date = %q{2009-03-18}
   s.description = %q{An ActiveRecord attribute tracker to ensure production Ruby applications only fetch the database content needed to minimize wire traffic and reduce conversion overheads to native Ruby types.}
   s.email = %q{lourens@methodmissing.com or sds@switchstep.com}
-  s.extra_rdoc_files = ["README", "README.textile"]
-  s.files = ["Rakefile", "README", "README.textile", "VERSION.yml", "lib/callsite.rb", "lib/optimizations", "lib/optimizations/columns", "lib/optimizations/columns/attributes_proxy.rb", "lib/optimizations/columns/macro.rb", "lib/scrooge.rb", "test/helper.rb", "test/models", "test/models/mysql_user.rb", "test/scrooge_test.rb", "test/setup.rb", "rails/init.rb"]
+  s.files = ["Rakefile", "README", "README.textile", "VERSION.yml", "lib/callsite.rb", "lib/optimizations", "lib/optimizations/associations", "lib/optimizations/associations/macro.rb", "lib/optimizations/columns", "lib/optimizations/columns/attributes_proxy.rb", "lib/optimizations/columns/macro.rb", "lib/optimizations/result_sets", "lib/optimizations/result_sets/result_array.rb", "lib/optimizations/result_sets/updateable_result_set.rb", "lib/scrooge.rb", "test/helper.rb", "test/models", "test/models/mysql_user.rb", "test/scrooge_test.rb", "test/setup.rb", "rails/init.rb"]
   s.has_rdoc = true
   s.homepage = %q{http://github.com/methodmissing/scrooge}
   s.rdoc_options = ["--inline-source", "--charset=UTF-8"]
