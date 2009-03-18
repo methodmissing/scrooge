@@ -5,7 +5,7 @@ module Scrooge
     # associations ( coming soon ) referenced at the callsite.
     #
     
-    Mutex = Mutex.new
+    Mtx = Mutex.new
     
     attr_accessor :klass,
                   :signature,
@@ -22,7 +22,7 @@ module Scrooge
     # Flag a column as seen
     #
     def column!( column )
-      Mutex.synchronize do 
+      Mtx.synchronize do 
         @columns << column
       end
     end
@@ -42,7 +42,7 @@ module Scrooge
     # Flag an association as seen
     #
     def association!( association )
-      Mutex.synchronize do
+      Mtx.synchronize do
         @associations << association if preloadable_association?( association )
       end
     end
