@@ -54,9 +54,9 @@ module Scrooge
         # Efficient reloading - get the hash with missing attributes directly from the 
         # underlying connection.
         #
-        def scrooge_reload( p_key, missing_columns )
-          attributes = connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{primary_key} = '#{p_key}'" ).first
-          attributes ? attributes : raise( ActiveRecord::RecordNotFound )
+        def scrooge_reload( p_keys, missing_columns )
+          sql_keys = p_keys.collect{|pk| "'#{pk}'"}.join(ScroogeComma)
+          connection.send( :select, "SELECT #{scrooge_select_sql(missing_columns)} FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{primary_key} IN (#{sql_keys})" )
         end
         
         private
@@ -76,13 +76,14 @@ module Scrooge
             callsite_columns = scrooge_callsite(callsite_sig).columns
             callsite_associations = scrooge_callsite(callsite_sig).associations
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_columns)} FROM")
-            connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged").collect! do |record|
-              instantiate( ScroogedAttributes.setup(record, callsite_columns, callsite_associations, self, callsite_sig) )
+            results = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged")
+            result_set = ResultSets::ResultArray.new
+            updateable = ResultSets::UpdateableResultSet.new(result_set, self)
+            results.inject(result_set) do |memo, record|
+              memo << instantiate(ScroogedAttributes.setup(record, callsite_columns, callsite_associations, self, callsite_sig, updateable))
             end
-          end        
+          end
         
-          # Find and instantiate as usual.Unset a registered callsite if given.
-          #
           def find_by_sql_without_scrooge( sql, callsite = nil )
             scrooge_unlink_callsite!( callsite ) if callsite
             connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
@@ -151,6 +152,7 @@ module Scrooge
         #
         def _dump(depth)
           scrooge_fetch_remaining
+          scrooge_invalidate_updateable_result_set
           scrooge_dump_flag_this
           str = Marshal.dump(self)
           scrooge_dump_unflag_this
@@ -193,6 +195,12 @@ module Scrooge
           #
           def scrooge_fetch_remaining
             @attributes.fetch_remaining if scrooged?
+          end
+          
+          # Dumped objects should not contain object_ids of old result sets
+          #
+          def scrooge_invalidate_updateable_result_set
+            @attributes.updateable_result_set = ResultSets::UpdateableResultSet.new(nil, self) if scrooged?
           end
           
           # New objects should get an UnscroogedAttributes as their @attributes hash
