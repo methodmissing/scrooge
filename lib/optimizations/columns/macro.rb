@@ -168,6 +168,12 @@ module Scrooge
             respond_to_without_scrooge?(symbol, include_private)
           end
         end
+        
+        # Expose this record's callsite signature
+        #
+        def callsite_signature
+          scrooged? ? @attributes.callsite_signature : nil
+        end
 
         private
 

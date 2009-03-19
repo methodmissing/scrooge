@@ -107,17 +107,19 @@ module Scrooge
           instance_variable_set("@#{name}", association)
         end
         
-        # Register an association with Scrooge
-        #
-        def scrooge_seen_association!( association )
-          if scrooged? && !scrooge_seen_association?( association )
-            @attributes.scrooge_associations << association
-            self.class.scrooge_callsite( @attributes.callsite_signature ).association!( association ) 
-          end
-        end
-        
         private
         
+          # Register an association with Scrooge
+          #
+          def scrooge_seen_association!( association )
+            if scrooged? && !scrooge_seen_association?( association )
+              @attributes.scrooge_associations << association
+              self.class.scrooge_callsite( @attributes.callsite_signature ).association!( association ) 
+            end
+          end        
+        
+          # Has this association already been flagged for the callsite ? 
+          #
           def scrooge_seen_association?( association )
             @attributes.scrooge_associations.include?( association )
           end

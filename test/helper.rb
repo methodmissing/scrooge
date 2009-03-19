@@ -31,7 +31,7 @@ module Scrooge
       end
 
       def test_files
-        glob( "#{File.dirname(__FILE__)}/*_test.rb" )
+        glob( "#{File.dirname(__FILE__)}/**/*_test.rb" )
       end
 
       private
