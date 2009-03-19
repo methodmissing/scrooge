@@ -27,7 +27,7 @@ module Scrooge
       module SingletonMethods
       
         @@preloadable_associations = {}
-        FindAssociatedRegex = /preload_associations|preload_one_association/
+        FindAssociatedRegex = /preload_associations|preload_one_association|find_associated_records/
       
         def self.extended( base )
           eigen = class << base; self; end
@@ -48,10 +48,10 @@ module Scrooge
           options = args.extract_options!
           validate_find_options(options)
           set_readonly_option!(options)
-
-          if (_caller = caller).grep( FindAssociatedRegex ).empty?
-            cs_signature = callsite_signature( _caller, options.except(:conditions, :limit, :offset) )
-            options[:scrooge_callsite], options[:include] = cs_signature, scrooge_callsite(cs_signature).preload( options[:include] )
+           
+          options[:scrooge_callsite] = callsite_signature( (_caller = caller), options.except(:conditions, :limit, :offset) ) 
+          if _caller.grep( FindAssociatedRegex ).empty?
+            options[:include] = scrooge_callsite(options[:scrooge_callsite]).preload( options[:include] ) 
           end
 
           case args.first

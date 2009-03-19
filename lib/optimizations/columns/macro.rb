@@ -140,8 +140,8 @@ module Scrooge
         #
         def becomes_with_scrooge(klass)
           if scrooged?
-            self.class.scrooge_callsite(@attributes.callsite_signature).columns.each do |attrib|
-              klass.scrooge_seen_column!(@attributes.callsite_signature, attrib)
+            self.class.scrooge_callsite(callsite_signature).columns.each do |attrib|
+              klass.scrooge_seen_column!(callsite_signature, attrib)
             end
           end
           becomes_without_scrooge(klass)
@@ -172,7 +172,7 @@ module Scrooge
         # Expose this record's callsite signature
         #
         def callsite_signature
-          scrooged? ? @attributes.callsite_signature : nil
+          @attributes.callsite_signature
         end
 
         private
