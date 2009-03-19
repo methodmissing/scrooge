@@ -1,3 +1,5 @@
+# coding: UTF-8
+
 require 'rake'
 require 'rake/testtask'
 require 'test/helper'
