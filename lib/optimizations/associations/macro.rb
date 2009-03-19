@@ -27,7 +27,7 @@ module Scrooge
       module SingletonMethods
       
         @@preloadable_associations = {}
-        FindAssociatedRegex = /find_associated_records/
+        FindAssociatedRegex = /preload_associations|preload_one_association/
       
         def self.extended( base )
           eigen = class << base; self; end
