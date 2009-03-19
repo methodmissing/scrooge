@@ -34,8 +34,9 @@ module Scrooge
           eigen.instance_eval do
             # Let :scrooge_callsite be a valid find option
             #
+            valid_find_options = eigen::VALID_FIND_OPTIONS
             remove_const(:VALID_FIND_OPTIONS)
-            const_set( :VALID_FIND_OPTIONS, [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :having, :from, :lock, :scrooge_callsite ] )
+            const_set( :VALID_FIND_OPTIONS, valid_find_options << :scrooge_callsite )
           end
           eigen.alias_method_chain :find, :scrooge
           eigen.alias_method_chain :find_every, :scrooge
