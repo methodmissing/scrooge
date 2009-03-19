@@ -47,7 +47,15 @@ module Scrooge
       end
     end
     
+    def inspect
+      "<##{@klass.name} :select => '#{@klass.scrooge_select_sql( @columns )}', :include => [#{associations_for_inspect}]>"
+    end
+    
     private
+    
+      def associations_for_inspect
+        @associations.map{|a| ":#{a.to_s}" }.join(', ')
+      end
     
       # Only register associations that isn't polymorphic or a collection
       #
@@ -68,7 +76,7 @@ module Scrooge
         if inheritable?
           Set.new([primary_key, inheritance_column])
         else
-          Set.new([primary_key])
+          primary_key.blank? ? Set.new : Set.new([primary_key])
         end    
       end
     
