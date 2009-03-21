@@ -43,7 +43,7 @@ class CallsiteTest < ActiveSupport::TestCase
     assert_equal @callsite.preload( [:column_privilege] ), [:column_privilege]
     @callsite.association! :column_privilege
     @callsite.association! :mysql_user
-    assert_equal @callsite.preload( nil ), [:column_privilege, :mysql_user]
+    assert_equal @callsite.preload( nil ).sort_by(&:to_s), [:column_privilege, :mysql_user].sort_by(&:to_s)
   end
   
   
