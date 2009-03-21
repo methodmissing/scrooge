@@ -15,7 +15,8 @@ module Scrooge
     def initialize( klass, signature )
       @klass = klass
       @signature = signature
-      @columns = setup_columns 
+      @default_columns = setup_columns 
+      @columns = @default_columns.dup
       @associations = setup_associations
     end
     
@@ -25,6 +26,18 @@ module Scrooge
       Mtx.synchronize do 
         @columns << column
       end
+    end
+    
+    # Has any columns other than the primary key or possible inheritance column been generated
+    #
+    def augmented_columns?
+      !augmented_columns.empty?
+    end
+    
+    # Return all augmented ( excluding primary key or inheritance column ) columns
+    #
+    def augmented_columns
+      @columns - @default_columns
     end
     
     # Diff known associations with given includes

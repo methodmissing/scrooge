@@ -2,6 +2,7 @@ require File.join( File.dirname(__FILE__), 'setup' )
 require 'rubygems'
 require 'mocha'
 require 'active_support/test_case'
+ENV["BACKTRACE"] = "1"
 
 module Scrooge
   class Test

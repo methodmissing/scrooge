@@ -27,7 +27,7 @@ module Scrooge
       module SingletonMethods
       
         @@preloadable_associations = {}
-        FindAssociatedRegex = /preload_associations|preload_one_association|find_associated_records/
+        FindAssociatedRegex = /preload_associations|preload_one_association/
       
         def self.extended( base )
           eigen = class << base; self; end
@@ -49,10 +49,7 @@ module Scrooge
           validate_find_options(options)
           set_readonly_option!(options)
            
-          options[:scrooge_callsite] = callsite_signature( (_caller = caller), options.except(:conditions, :limit, :offset) ) 
-          if _caller.grep( FindAssociatedRegex ).empty?
-            options[:include] = scrooge_callsite(options[:scrooge_callsite]).preload( options[:include] ) 
-          end
+          options = scrooge_optimize_preloading!( options )
 
           case args.first
             when :first then find_initial(options)
@@ -70,7 +67,7 @@ module Scrooge
           if include_associations.any? && references_eager_loaded_tables?(options)
             records = find_with_associations(options)
           else
-            records = find_by_sql(construct_finder_sql(options), options[:scrooge_callsite])
+            records = find_by_sql(construct_finder_sql(options), options[:scrooge_callsite]) #scrooged_records_for_find_every( options ) 
             if include_associations.any?
               preload_associations(records, include_associations)
             end
@@ -86,6 +83,46 @@ module Scrooge
         def preloadable_associations
           @@preloadable_associations[self.name] ||= reflect_on_all_associations.reject{|a| a.options[:polymorphic] || a.macro == :has_many }.map{|a| a.name }
         end              
+        
+        private
+          
+          def scrooge_optimize_preloading!( options )
+            options[:scrooge_callsite] = callsite_signature( (_caller = caller), options.except(:conditions, :limit, :offset) ) 
+            if should_optimize_preloading?( _caller )
+              options[:include] = scrooge_callsite(options[:scrooge_callsite]).preload( options[:include] ) 
+            end
+
+            if should_augment_select_options?( options )
+              options[:select] = augment_given_select_option( options )
+            end
+            options
+          end
+          
+          # Should a given :select option be optimized ?
+          #
+          def should_augment_select_options?( options )
+            options[:select] && scrooge_callsite(options[:scrooge_callsite]).augmented_columns?
+          end
+          
+          # Should preloading be optimized ( ignore recursion via association_preload.rb ) ?
+          #
+          def should_optimize_preloading?( call_tree )
+            call_tree.grep( FindAssociatedRegex ).empty?
+          end
+          
+          # Ensure a scrooged instance for custom :select options
+          #
+          def scrooged_records_for_find_every( options )
+            if options[:select]
+              find_by_sql_with_scrooge(construct_finder_sql(options.merge!( :select => augment_given_select_option( options ) ) ), options[:scrooge_callsite])
+            else
+              find_by_sql(construct_finder_sql(options), options[:scrooge_callsite])
+            end    
+          end
+          
+          def augment_given_select_option( options )
+            "#{options[:select]}, #{scrooge_select_sql( scrooge_callsite( options[:scrooge_callsite] ).columns )}"
+          end  
               
       end
       
