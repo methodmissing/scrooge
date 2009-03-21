@@ -31,12 +31,11 @@ module Scrooge
         # Hash container for attributes with scrooge monitoring of attribute access
         #        
 
-        attr_accessor :callsite_signature, :scrooge_columns, :scrooge_associations, :fully_fetched, :klass, :updateable_result_set
+        attr_accessor :callsite_signature, :scrooge_columns, :fully_fetched, :klass, :updateable_result_set
 
-        def self.setup(record, scrooge_columns, scrooge_associations, klass, callsite_signature, updateable_result_set)
+        def self.setup(record, scrooge_columns, klass, callsite_signature, updateable_result_set)
           hash = new.replace(record)
           hash.scrooge_columns = scrooge_columns.dup
-          hash.scrooge_associations = scrooge_associations.dup
           hash.fully_fetched = false
           hash.klass = klass
           hash.callsite_signature = callsite_signature
@@ -141,7 +140,6 @@ module Scrooge
 
           def dup_self
             @scrooge_columns = @scrooge_columns.dup
-            @scrooge_associations = @scrooge_associations.dup
             self
           end
       end

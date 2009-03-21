@@ -19,11 +19,11 @@ module ActiveRecord
       # Determine if a given SQL string is a candidate for callsite <=> columns
       # optimization.
       #     
-      def find_by_sql(sql, callsite_signature = nil)
+      def find_by_sql(sql)
         if scope_with_scrooge?(sql)
-          find_by_sql_with_scrooge(sql, callsite_signature)
+          find_by_sql_with_scrooge(sql)
         else
-          find_by_sql_without_scrooge(sql, callsite_signature)
+          find_by_sql_without_scrooge(sql)
         end
       end
       

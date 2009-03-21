@@ -71,8 +71,8 @@ module Scrooge
         
           # Find through callsites.
           #
-          def find_by_sql_with_scrooge( sql, callsite_sig = nil )
-            callsite_sig ||= callsite_signature( caller, callsite_sql( sql ) )
+          def find_by_sql_with_scrooge(sql)
+            callsite_sig = callsite_signature( caller, callsite_sql( sql ) )
             callsite_columns = scrooge_callsite(callsite_sig).columns
             callsite_associations = scrooge_callsite(callsite_sig).associations
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_columns)} FROM")
@@ -80,8 +80,14 @@ module Scrooge
             result_set = ResultSets::ResultArray.new
             updateable = ResultSets::UpdateableResultSet.new(result_set, self)
             results.inject(result_set) do |memo, record|
-              memo << instantiate(ScroogedAttributes.setup(record, callsite_columns, callsite_associations, self, callsite_sig, updateable))
+              memo << instantiate(ScroogedAttributes.setup(record, callsite_columns, self, callsite_sig, updateable))
             end
+            unless Thread.current[:scrooge_preloading]
+              Thread.current[:scrooge_preloading] = true
+              preload_associations(result_set, callsite_associations.to_a)
+              Thread.current[:scrooge_preloading] = false
+            end
+            result_set
           end
         
           def find_by_sql_without_scrooge( sql, callsite = nil )

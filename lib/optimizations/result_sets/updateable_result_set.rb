@@ -83,7 +83,7 @@ module Scrooge
           remaining_attributes.each do |r_id, r_att|
             old_attributes = current_attributes[r_id]
             if old_attributes
-              old_attributes.update(r_att.merge(old_attributes))
+              old_attributes.update(r_att.merge(old_attributes)) # must call update, do not use reverse_update
             end
           end
         end
