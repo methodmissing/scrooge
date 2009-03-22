@@ -73,15 +73,19 @@ module Scrooge
           #
           def find_by_sql_with_scrooge(sql)
             callsite_sig = callsite_signature( caller, callsite_sql( sql ) )
-            callsite_columns = scrooge_callsite(callsite_sig).columns
-            sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_columns)} FROM")
+            callsite = scrooge_callsite(callsite_sig)
+            callsite.reset
+
+            sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite.columns)} FROM")
             results = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged")
 
             result_set = ResultSets::ResultArray.new
             updateable = ResultSets::UpdateableResultSet.new(result_set, self)
             results.inject(result_set) do |memo, record|
-              memo << instantiate(ScroogedAttributes.setup(record, callsite_columns, self, callsite_sig, updateable))
+              memo << instantiate(ScroogedAttributes.setup(record, callsite.columns, self, callsite_sig, updateable))
             end
+
+            callsite.register_result_set(result_set)
 
             if Associations::Macro.scrooge_installed?
               preload_scrooge_associations(result_set, callsite_sig)
@@ -90,7 +94,7 @@ module Scrooge
             result_set
           end
         
-          def find_by_sql_without_scrooge( sql)
+          def find_by_sql_without_scrooge(sql)
             connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
               instantiate( UnscroogedAttributes.setup(record) )
             end

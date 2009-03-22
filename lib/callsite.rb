@@ -27,9 +27,12 @@ module Scrooge
     
     # Flag an association as seen
     #
-    def association!( association )
-      Mtx.synchronize do
-        associations << association if preloadable_association?( association )
+    def association!(association, record_id)
+      if preloadable_association?(association)
+        Mtx.synchronize do
+          associations << association
+        end
+        register_record_id(record_id)
       end
     end
     
@@ -53,6 +56,21 @@ module Scrooge
     #
     def associations
       @associations ||= setup_associations
+    end
+    
+    # Analyze previously collected information
+    # and reset ready for a new query
+    #
+    def reset
+      # placeholder
+    end
+    
+    def register_result_set(result_set)
+      # placeholder
+    end
+    
+    def register_record_id(record_id)
+      # placeholder
     end
     
     private
