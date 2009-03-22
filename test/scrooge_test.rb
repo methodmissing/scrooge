@@ -1,9 +1,9 @@
 require "#{File.dirname(__FILE__)}/helper"
- 
+
 Scrooge::Test.prepare!
- 
-class ScroogeTest < ActiveSupport::TestCase
-  
+
+class ScroogeTest < ActiveRecord::TestCase
+
   teardown do
     MysqlUser.scrooge_flush_callsites!
   end
@@ -70,6 +70,10 @@ class ScroogeTest < ActiveSupport::TestCase
   test "should only fire after_initialize once" do
     # should not raise ActiveRecord::MissingAttributeError
     [:max_connections, :max_user_connections].each {|f| MysqlUser.find(:first).read_attribute(f)}
+  end
+  
+  test "should make 3 queries to fetch same item twice due to reload and remembering" do
+    assert_queries(3) {2.times {MysqlUser.find(:first).max_connections}}
   end
   
   def first_callsite

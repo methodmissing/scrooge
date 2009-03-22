@@ -30,12 +30,13 @@ module Scrooge
       
         def self.extended( base )
           eigen = class << base; self; end
+          # not used at present
         end
 
         def preload_scrooge_associations(result_set, callsite_sig)
           scrooge_preloading_exclude do
             callsite_associations = scrooge_callsite(callsite_sig).associations.to_a
-            preload_associations(result_set, callsite_associations)
+            preload_associations(result_set, callsite_associations) unless callsite_associations.empty?
           end
         end
 

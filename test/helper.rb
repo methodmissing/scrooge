@@ -14,7 +14,8 @@ module Scrooge
       def prepare!
         require 'test/unit'
         connect!
-        require_models()
+        require File.join( File.dirname(__FILE__), 'scrooge_helper' ) unless defined?(ActiveRecord::Base.connection.class::IGNORED_SQL)
+        require_models()      
       end
             
       def setup!

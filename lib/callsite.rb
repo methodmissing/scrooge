@@ -2,7 +2,7 @@ module Scrooge
   class Callsite
     
     # Represents a Callsite and is a container for any columns and 
-    # associations ( coming soon ) referenced at the callsite.
+    # associations referenced at the callsite.
     #
     
     Mtx = Mutex.new
@@ -40,7 +40,7 @@ module Scrooge
     # Lazy init default columns
     #
     def default_columns
-      @default_columns ||= setup_columns()
+      @default_columns ||= setup_columns
     end
     
     # Lazy init columns
@@ -52,7 +52,7 @@ module Scrooge
     # Lazy init associations
     #
     def associations
-      @associations ||= setup_associations()
+      @associations ||= setup_associations
     end
     
     private
@@ -84,7 +84,7 @@ module Scrooge
         end    
       end
     
-      # Stubbed for future use
+      # Start with no registered associations
       #
       def setup_associations
         Set.new
