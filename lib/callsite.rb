@@ -15,16 +15,13 @@ module Scrooge
     def initialize( klass, signature )
       @klass = klass
       @signature = signature
-      @default_columns = setup_columns 
-      @columns = @default_columns.dup
-      @associations = setup_associations
     end
     
     # Flag a column as seen
     #
     def column!( column )
       Mtx.synchronize do 
-        @columns << column
+        columns << column
       end
     end
     
@@ -37,7 +34,7 @@ module Scrooge
     # Return all augmented ( excluding primary key or inheritance column ) columns
     #
     def augmented_columns
-      @columns - @default_columns
+      columns - default_columns
     end
     
     # Diff known associations with given includes
@@ -48,7 +45,7 @@ module Scrooge
       if includes.is_a?(Hash)
         includes
       else  
-        @associations.merge( Array(includes) ).to_a
+        associations.merge( Array(includes) ).to_a
       end
     end  
     
@@ -56,18 +53,36 @@ module Scrooge
     #
     def association!( association )
       Mtx.synchronize do
-        @associations << association if preloadable_association?( association )
+        associations << association if preloadable_association?( association )
       end
     end
     
     def inspect
-      "<##{@klass.name} :select => '#{@klass.scrooge_select_sql( @columns )}', :include => [#{associations_for_inspect}]>"
+      "<##{@klass.name} :select => '#{@klass.scrooge_select_sql( columns )}', :include => [#{associations_for_inspect}]>"
+    end
+    
+    # Lazy init default columns
+    #
+    def default_columns
+      @default_columns ||= setup_columns()
+    end
+    
+    # Lazy init columns
+    #
+    def columns
+      @columns ||= default_columns.dup
+    end  
+  
+    # Lazy init associations
+    #
+    def associations
+      @associations ||= setup_associations()
     end
     
     private
     
       def associations_for_inspect
-        @associations.map{|a| ":#{a.to_s}" }.join(', ')
+        associations.map{|a| ":#{a.to_s}" }.join(', ')
       end
     
       # Only register associations that isn't polymorphic or a collection
