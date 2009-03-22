@@ -39,6 +39,10 @@ class ScroogeTest < ActiveSupport::TestCase
     assert MysqlUser.find(:first).scrooged?
     assert_instance_of Scrooge::Callsite, MysqlUser.scrooge_callsite( first_callsite )
   end
+
+  test "should not flag records via Model.find with a custom :select requirement as scrooged" do
+    assert !MysqlUser.find(:first, :select => 'user.Password' ).scrooged?
+  end
   
   test "should be able to augment an existing callsite with attributes" do
     MysqlUser.find(:first)

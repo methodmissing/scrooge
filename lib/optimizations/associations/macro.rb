@@ -51,7 +51,7 @@ module Scrooge
         #      
         def preloadable_associations
           @@preloadable_associations[self.name] ||= 
-            reflect_on_all_associations.reject{|a| a.options[:xxxpolymorphic] || a.macro == :xxxhas_many}.map(&:name)
+            reflect_on_all_associations.reject{|a| a.options[:polymorphic] || a.macro == :has_many}.map(&:name)
         end
 
       end

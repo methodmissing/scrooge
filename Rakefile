@@ -26,7 +26,7 @@ begin
   Jeweler::Tasks.new do |s|
     s.name = "scrooge"
     s.summary = "Scrooge - Fetch exactly what you need"
-    s.email = "lourens@methodmissing.com or sds@switchstep.com"
+    s.email = "lourens@methodmissing.com or sdsykes@gmail.com"
     s.homepage = "http://github.com/methodmissing/scrooge"
     s.description = "An ActiveRecord attribute tracker to ensure production
     Ruby applications only fetch the database content needed to minimize wire traffic

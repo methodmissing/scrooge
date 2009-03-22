@@ -72,7 +72,7 @@ h4. As a Gem
 
 h2. Stability
 
-The whole ActiveRecord test suite passes with scrooge, except for 9 failures related to callsite augmentation (note the SQL reload snippets below).Thoughts on handling or circumventing this much appreciated. 
+The whole Rails 2.3.2 ActiveRecord test suite passes with scrooge, except for 13 failures related to callsite augmentation (note the SQL reload snippets below). Thoughts on handling or circumventing this much appreciated. 
 
 <pre>
 <code>
@@ -203,7 +203,7 @@ on subsequent requests :
 
 h4. How it tracks
 
-The ActiveRecord attributes Hash is replaced with a proxy that automatically augments the callsite with any attributes referenced through the Hash lookup keys.We're also able to learn which associations is invoked from a given callsite, for preloading on subsequent requests.
+The ActiveRecord attributes Hash is replaced with a proxy that automatically augments the callsite with any attributes referenced through the Hash lookup keys. We're also able to learn which associations is invoked from a given callsite, for preloading on subsequent requests.
 
 h4. Storage
 
@@ -221,12 +221,14 @@ The tracking and scoping phases is superseded by this implementation - none of t
 
 h2. Todo
 
-* Deeper coverage for Scrooge::AttributesProxy ( pending conversion to a subclass of Hash instead )
+* Deeper coverage for Scrooge::AttributesProxy, possible handling of replace
 
-* Test cases for Scrooge::Callsite
+* More test cases for Scrooge::Callsite
 
 * Have invoking Model#attributes not associate all columns with the callsite
 
 * Avoid possible missing attribute exceptions for destroyed objects
+
+* Track rows of result set to allow more targeted loading of associations for a callsite
 
 (c) 2009 Lourens Naudé (methodmissing) and Stephen Sykes (sdsykes)

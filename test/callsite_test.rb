@@ -15,19 +15,7 @@ class CallsiteTest < ActiveSupport::TestCase
     Scrooge::Callsite.any_instance.stubs(:inheritance_column).returns("inheritance")
     assert_equal Scrooge::Callsite.new( MysqlUser, 123456 ).columns, Set["User","inheritance"]
   end
-  
-  test "should be able to return all augmented columns" do
-    assert_equal @callsite.augmented_columns, Set.new
-    @callsite.column! :Db
-    assert_equal @callsite.augmented_columns, Set[:Db] 
-  end
-  
-  test "should be able to determine if any columns has been augmented" do
-    assert !@callsite.augmented_columns?
-    @callsite.column! :Db
-    assert @callsite.augmented_columns?
-  end
-  
+
   test "should be inspectable" do
     @callsite.association! :mysql_user
     @callsite.column! :db
@@ -49,14 +37,5 @@ class CallsiteTest < ActiveSupport::TestCase
       @callsite.association! :mysql_user
     end
   end
-  
-  test "should be able to overload given association preload options" do
-    assert_equal @callsite.preload( { :nested => :include } ), { :nested => :include }
-    assert_equal @callsite.preload( [:column_privilege] ), [:column_privilege]
-    @callsite.association! :column_privilege
-    @callsite.association! :mysql_user
-    assert_equal @callsite.preload( nil ).sort_by(&:to_s), [:column_privilege, :mysql_user].sort_by(&:to_s)
-  end
-  
-  
+
 end  
