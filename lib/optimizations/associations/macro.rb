@@ -8,16 +8,16 @@ module Scrooge
           # Inject into ActiveRecord
           #
           def install!
-            if scrooge_installable?
+            unless scrooge_installed?
               ActiveRecord::Base.send( :extend,  SingletonMethods )
-              ActiveRecord::Base.send( :include, InstanceMethods )              
+              ActiveRecord::Associations::AssociationProxy.send( :include, InstanceMethods )              
             end  
           end
       
-          private
+          protected
           
-            def scrooge_installable?
-              !ActiveRecord::Base.included_modules.include?( InstanceMethods )
+            def scrooge_installed?
+              ActiveRecord::Base.included_modules.include?( InstanceMethods )
             end
          
         end
@@ -31,7 +31,22 @@ module Scrooge
         def self.extended( base )
           eigen = class << base; self; end
         end
-              
+
+        def preload_scrooge_associations(result_set, callsite_sig)
+          scrooge_preloading_exclude do
+            callsite_associations = scrooge_callsite(callsite_sig).associations.to_a
+            preload_associations(result_set, callsite_associations)
+          end
+        end
+
+        def scrooge_preloading_exclude
+          unless Thread.current[:scrooge_preloading]
+            Thread.current[:scrooge_preloading] = true
+            yield
+            Thread.current[:scrooge_preloading] = false
+          end
+        end
+        
         # Let's not preload polymorphic associations or collections
         #      
         def preloadable_associations
@@ -41,33 +56,32 @@ module Scrooge
       end
       
       module InstanceMethods
-                
-        # Association getter with Scrooge support
-        #
-        def association_instance_get(name)
-          association = instance_variable_get("@#{name}")
-          if association.respond_to?(:loaded?)
-            scrooge_seen_association!( name )
-            association
-          end
-        end
         
-        # Association setter with Scrooge support
-        #
-        def association_instance_set(name, association)
-          scrooge_seen_association!( name )
-          instance_variable_set("@#{name}", association)
+        def self.included( base )
+          base.alias_method_chain :load_target, :scrooge
         end
-        
+
+        # note AssociationCollection has its own version of load_target, but we don't
+        # do collections at the moment anyway
+        #
+        def load_target_with_scrooge
+          scrooge_seen_association!(@reflection.name)
+          load_target_without_scrooge
+        end
+
         private
         
           # Register an association with Scrooge
           #
           def scrooge_seen_association!( association )
-            if scrooged?
-              self.class.scrooge_callsite( @attributes.callsite_signature ).association!( association ) 
+            if @owner.scrooged? && !@loaded
+              @owner.class.scrooge_callsite(callsite_signature).association!(association)
             end
-          end        
+          end
+          
+          def callsite_signature
+            @owner.instance_variable_get(:@attributes).callsite_signature
+          end
         
       end
       
