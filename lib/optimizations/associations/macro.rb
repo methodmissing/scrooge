@@ -50,9 +50,10 @@ module Scrooge
         # Let's not preload polymorphic associations or collections
         #      
         def preloadable_associations
-          @@preloadable_associations[self.name] ||= reflect_on_all_associations.reject{|a| a.options[:polymorphic] || a.macro == :has_many }.map{|a| a.name }
-        end              
-              
+          @@preloadable_associations[self.name] ||= 
+            reflect_on_all_associations.reject{|a| a.options[:xxxpolymorphic] || a.macro == :xxxhas_many}.map(&:name)
+        end
+
       end
       
       module InstanceMethods

@@ -7,6 +7,10 @@ class OptimizationsAssociationsMacroTest < ActiveSupport::TestCase
   test "should flag a record as being scrooged when found through a supported SQL query" do
     assert MysqlUser.find(:first).scrooged?
   end
+  
+  test "should always flag records via Model.find with a custom :select requirement as scrooged" do
+    assert MysqlUser.find(:first, :select => 'user.Password' ).scrooged?
+  end
 
   test "should be able to flag any associations instantiated from a record" do
     @user = MysqlUser.find(:first)
