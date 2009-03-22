@@ -17,7 +17,7 @@ class OptimizationsAssociationsMacroTest < ActiveSupport::TestCase
   test "should only flag preloadable associations" do
     Scrooge::Callsite.any_instance.expects(:association!).once
     @user = MysqlUser.find(:first)
-    @user.table_privileges
+    @user.host
     assert_equal MysqlUser.scrooge_callsite( @user.callsite_signature ).associations, Set.new
   end
   

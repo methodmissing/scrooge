@@ -17,7 +17,7 @@ module Scrooge
           protected
           
             def scrooge_installed?
-              ActiveRecord::Base.included_modules.include?( InstanceMethods )
+              ActiveRecord::Associations::AssociationProxy.included_modules.include?( InstanceMethods )
             end
          
         end
