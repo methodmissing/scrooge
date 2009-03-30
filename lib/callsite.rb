@@ -92,7 +92,7 @@ module Scrooge
       # Is the table a container for STI models ?
       # 
       def inheritable?
-        @klass.column_names.include?( inheritance_column )
+        @klass.columns_hash.has_key?( inheritance_column )
       end
     
       # Ensure that at least the primary key and optionally the inheritance

@@ -63,7 +63,7 @@ module Scrooge
         # 
         def scope_with_scrooge?( sql )
           sql =~ scrooge_select_regex && 
-          column_names.include?(self.primary_key.to_s) &&
+          columns_hash.has_key?(self.primary_key.to_s) &&
           sql !~ ScroogeRegexJoin
         end
         
@@ -84,9 +84,10 @@ module Scrooge
             updateable = ResultSets::UpdateableResultSet.new(result_set, self)
             site_columns = callsite.columns
 
-            results.each do |record|
-              result_set << instantiate(ScroogedAttributes.setup(record, site_columns, self, callsite_sig, updateable))
+            results.collect! do |record|
+              instantiate(ScroogedAttributes.setup(record, site_columns, self, callsite_sig, updateable))
             end
+            result_set.replace(results)
 
             callsite.register_result_set(result_set)
 
