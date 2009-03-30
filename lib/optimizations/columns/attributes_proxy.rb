@@ -52,7 +52,7 @@ module Scrooge
         # Let #has_key? consider defined columns
         #
         def has_key?(attr_name)
-          keys.include?(attr_name.to_s)
+          @klass.column_names_hashed.has_key?(attr_name.to_s)
         end
 
         alias_method :include?, :has_key?
@@ -111,7 +111,7 @@ module Scrooge
 
         def fetch_remaining
           unless @fully_fetched
-            columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
+            columns_to_fetch = keys - @scrooge_columns.to_a
             unless columns_to_fetch.empty?
               fetch_remaining!( columns_to_fetch )
             end
@@ -127,7 +127,7 @@ module Scrooge
           end
           
           def interesting_for_scrooge?( attr_s )
-            has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
+            @klass.column_names_hashed.has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
           end
 
           def augment_callsite!( attr_s )

@@ -66,6 +66,12 @@ module Scrooge
           column_names.include?(self.primary_key.to_s) &&
           sql !~ ScroogeRegexJoin
         end        
+
+        # far more efficient to search for a hash key than through an array
+        #
+        def column_names_hashed
+          @column_names_hashed ||= column_names.inject({}) {|memo, cn| memo[cn] = true; memo}
+        end
         
         private
         
@@ -77,12 +83,15 @@ module Scrooge
             callsite.reset
 
             sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite.columns)} FROM")
+
             results = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged")
 
             result_set = ResultSets::ResultArray.new
             updateable = ResultSets::UpdateableResultSet.new(result_set, self)
-            results.inject(result_set) do |memo, record|
-              memo << instantiate(ScroogedAttributes.setup(record, callsite.columns, self, callsite_sig, updateable))
+            site_columns = callsite.columns
+
+            results.each do |record|
+              result_set << instantiate(ScroogedAttributes.setup(record, site_columns, self, callsite_sig, updateable))
             end
 
             callsite.register_result_set(result_set)
@@ -110,7 +119,7 @@ module Scrooge
           def callsite_sql( sql )
             sql.gsub(ScroogeRegexSanitize, ScroogeBlankString)
           end
-
+          
       end
       
       module InstanceMethods

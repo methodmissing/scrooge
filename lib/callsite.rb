@@ -6,7 +6,7 @@ module Scrooge
     #
     
     Mtx = Mutex.new  # mutex should perhaps be per-instance at the expense of a little memory
-    
+
     attr_accessor :klass,
                   :signature,
                   :columns,
