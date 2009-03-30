@@ -65,12 +65,6 @@ module Scrooge
           sql =~ scrooge_select_regex && 
           column_names.include?(self.primary_key.to_s) &&
           sql !~ ScroogeRegexJoin
-        end        
-
-        # far more efficient to search for a hash key than through an array
-        #
-        def column_names_hashed
-          @column_names_hashed ||= column_names.inject({}) {|memo, cn| memo[cn] = true; memo}
         end
         
         private

@@ -52,7 +52,7 @@ module Scrooge
         # Let #has_key? consider defined columns
         #
         def has_key?(attr_name)
-          @klass.column_names_hashed.has_key?(attr_name.to_s)
+          @klass.column_names.include?(attr_name.to_s)
         end
 
         alias_method :include?, :has_key?
@@ -127,7 +127,7 @@ module Scrooge
           end
           
           def interesting_for_scrooge?( attr_s )
-            @klass.column_names_hashed.has_key?(attr_s) && !@scrooge_columns.include?(attr_s)
+            @klass.column_names.include?(attr_s) && !@scrooge_columns.include?(attr_s)
           end
 
           def augment_callsite!( attr_s )
