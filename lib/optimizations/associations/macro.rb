@@ -73,7 +73,7 @@ module Scrooge
         # do collections at the moment anyway
         #
         def load_target_with_scrooge
-          scrooge_seen_association!(@reflection.name)
+          scrooge_seen_association!(@reflection)
           load_target_without_scrooge
         end
 

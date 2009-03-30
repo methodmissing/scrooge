@@ -3,7 +3,8 @@ module Scrooge
     module Associations
 
       # Keeps track of how a result set is used to access associations
-      # Each callsite will contain one of these objects.
+      # Each callsite where associations are accessed will contain one of 
+      # these objects.
       # Each thread will collect data, and we check this data before each
       # fetch from the database, adding any associations that are needed
       # which are returned when to_preload is called.
@@ -53,16 +54,14 @@ module Scrooge
         end
         
         def reset
-          @associations = Set.new
-          @accessed_via = {}
+          @associations = {}
           @result_set_size = 0
         end
         
         def register(association, record_id)
           if @result_set_size > 1
-            @associations << association
-            @accessed_via[association] ||= []
-            @accessed_via[association] << record_id
+            assoc = (@associations[association.name] ||= AssociationIdentity.new(association))
+            assoc.register(record_id)
           end
         end
         
@@ -71,7 +70,7 @@ module Scrooge
         end
         
         def to_preload
-          @associations.select { |association| preload_this_assoc?(association) }
+          @associations.values.select { |association| preload_this_assoc?(association) }.map(&:name)
         end
         
         private
@@ -87,8 +86,22 @@ module Scrooge
           if @result_set_size <= 1
             false
           else
-            @accessed_via[association].size > @result_set_size / 4
+            association.accessed_via.size > @result_set_size / 4
           end
+        end
+      end
+
+      class AssociationIdentity
+        attr_reader :name, :type, :accessed_via
+
+        def initialize(association)
+          @name = association.name
+          @type = association.macro
+          @accessed_via = []
+        end
+
+        def register(record_id)
+          @accessed_via << record_id
         end
       end
     end

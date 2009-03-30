@@ -24,9 +24,10 @@ module Scrooge
     end
     
     # Flag an association as seen
+    # association should be an AssociationReflection object
     #
     def association!(association, record_id)
-      if preloadable_association?(association)
+      if preloadable_association?(association.name)
         associations.register(association, record_id)
       end
     end
