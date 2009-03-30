@@ -5,6 +5,7 @@ require 'callsite'
 require 'optimizations/columns/attributes_proxy'
 require 'optimizations/columns/macro'
 require 'optimizations/associations/macro'
+require 'optimizations/associations/association_set'
 require 'optimizations/result_sets/updateable_result_set'
 require 'optimizations/result_sets/result_array'
 
@@ -13,9 +14,14 @@ module ActiveRecord
 
     @@scrooge_callsites = {}
     ScroogeCallsiteSample = 0..10
+    ScroogeMutex = Mutex.new
+
+    # this can be set to help with testing
+    cattr_accessor :scrooge_ignore_call_stack
+    @@scrooge_ignore_call_stack = ($0 == "irb")
 
     class << self
-      
+
       # Determine if a given SQL string is a candidate for callsite <=> columns
       # optimization.
       #     
@@ -30,20 +36,23 @@ module ActiveRecord
       # Expose known callsites for this model
       #      
       def scrooge_callsites
-        @@scrooge_callsites[self.table_name] ||= {}
+        @@scrooge_callsites[table_name] || ScroogeMutex.synchronize { @@scrooge_callsites[table_name] = {} }
       end
 
       # Fetch or setup a callsite instance for a given signature
       #
       def scrooge_callsite( callsite_signature )
-        @@scrooge_callsites[self.table_name] ||= {}
-        @@scrooge_callsites[self.table_name][callsite_signature] ||= callsite( callsite_signature )
+        scrooge_callsites[callsite_signature] || ScroogeMutex.synchronize do
+          scrooge_callsites[callsite_signature] = callsite(callsite_signature)
+        end
       end
 
-      # Flush all known callsites.Mostly a test helper.
-      #      
+      # Flush all known callsites. Mostly a test helper.
+      # 
       def scrooge_flush_callsites!
-        @@scrooge_callsites[self.table_name] = {}
+        ScroogeMutex.synchronize do
+          @@scrooge_callsites[table_name] = {}
+        end
       end
 
       private
@@ -51,7 +60,9 @@ module ActiveRecord
         # Removes a single callsite
         #
         def scrooge_unlink_callsite!( callsite_signature )
-          @@scrooge_callsites.delete(callsite_signature)  
+          ScroogeMutex.synchronize do
+            @@scrooge_callsites.delete(callsite_signature)
+          end
         end 
 
         # Initialize a callsite
@@ -70,7 +81,11 @@ module ActiveRecord
         # context information.
         #
         def callsite_signature( call_stack, supplementary )
-          ( call_stack[ScroogeCallsiteSample] << supplementary ).hash
+          if @@scrooge_ignore_call_stack
+            supplementary.hash
+          else
+            ( call_stack[ScroogeCallsiteSample] << supplementary ).hash
+          end
         end
 
     end  # class << self

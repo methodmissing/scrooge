@@ -7,14 +7,14 @@ class OptimizationsAssociationsMacroTest < ActiveSupport::TestCase
   test "should be able to flag any associations instantiated from a record" do
     @user = MysqlUser.find(:first)
     @user.host
-    assert_equal MysqlUser.scrooge_callsite( @user.callsite_signature ).associations, Set[:host]
+    assert_equal MysqlUser.scrooge_callsite( @user.callsite_signature ).associations.to_preload, [:host]
   end
 
   test "should only flag preloadable associations" do
     Scrooge::Callsite.any_instance.expects(:association!).once
     @user = MysqlUser.find(:first)
     @user.host
-    assert_equal MysqlUser.scrooge_callsite( @user.callsite_signature ).associations, Set.new
+    assert_equal [], MysqlUser.scrooge_callsite( @user.callsite_signature ).associations.to_preload
   end
   
   test "should be able to identify all preloadable associations for a given Model" do

@@ -87,9 +87,7 @@ module Scrooge
 
             callsite.register_result_set(result_set)
 
-            if Associations::Macro.scrooge_installed?
-              preload_scrooge_associations(result_set, callsite_sig)
-            end
+            preload_scrooge_associations(result_set, callsite_sig)
 
             result_set
           end

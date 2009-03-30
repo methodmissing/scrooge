@@ -11,7 +11,7 @@ module Scrooge
             unless scrooge_installed?
               ActiveRecord::Base.send( :extend,  SingletonMethods )
               ActiveRecord::Associations::AssociationProxy.send( :include, InstanceMethods )              
-            end  
+            end
           end
       
           protected
@@ -36,9 +36,11 @@ module Scrooge
         def preload_scrooge_associations(result_set, callsite_sig)
           if result_set.size > 1
             scrooge_preloading_exclude do
-              callsite_associations = scrooge_callsite(callsite_sig).associations
-              unless callsite_associations.empty?
-                preload_associations(result_set, callsite_associations)
+              if scrooge_callsite(callsite_sig).has_associations?
+                callsite_associations = scrooge_callsite(callsite_sig).associations.to_preload
+                unless callsite_associations.empty?
+                  preload_associations(result_set, callsite_associations)
+                end
               end
             end
           end
