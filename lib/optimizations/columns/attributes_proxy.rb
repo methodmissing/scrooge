@@ -52,7 +52,7 @@ module Scrooge
         # Let #has_key? consider defined columns
         #
         def has_key?(attr_name)
-          @klass.columns_hash.has_key?(attr_name.to_s)
+          @klass.columns_hash.has_key?(attr_name)
         end
 
         alias_method :include?, :has_key?
@@ -62,11 +62,10 @@ module Scrooge
         # Lazily augment and load missing attributes
         #
         def [](attr_name)
-          attr_s = attr_name.to_s
-          if interesting_for_scrooge?( attr_s )
-            augment_callsite!( attr_s )
+          if interesting_for_scrooge?( attr_name )
+            augment_callsite!( attr_name )
             fetch_remaining
-            @scrooge_columns << attr_s
+            @scrooge_columns << attr_name
           end
           super
         end
@@ -77,7 +76,7 @@ module Scrooge
         end
 
         def []=(attr_name, value)
-          @scrooge_columns << attr_name.to_s
+          @scrooge_columns << attr_name
           super
         end
         
@@ -111,7 +110,7 @@ module Scrooge
 
         def fetch_remaining
           unless @fully_fetched
-            columns_to_fetch = keys - @scrooge_columns.to_a
+            columns_to_fetch = @klass.column_names - @scrooge_columns.to_a
             unless columns_to_fetch.empty?
               fetch_remaining!( columns_to_fetch )
             end
