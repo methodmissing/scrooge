@@ -75,17 +75,17 @@ module Scrooge
             callsite_sig = callsite_signature( caller, callsite_sql( sql ) )
             callsite = scrooge_callsite(callsite_sig)
             callsite.reset
+            site_columns = callsite.columns
 
-            sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite.columns)} FROM")
+            sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(site_columns)} FROM")
 
             results = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged")
 
             result_set = ResultSets::ResultArray.new
-            updateable = ResultSets::UpdateableResultSet.new(result_set, self)
-            site_columns = callsite.columns
+            updateable = ResultSets::UpdateableResultSet.new(result_set, self, callsite_sig, site_columns.dup)
 
             results.collect! do |record|
-              instantiate(ScroogedAttributes.setup(record, site_columns, self, callsite_sig, updateable))
+              instantiate(ScroogedAttributes.setup(record, self, updateable))
             end
             result_set.replace(results)
 
@@ -217,7 +217,9 @@ module Scrooge
           # Dumped objects should not contain object_ids of old result sets
           #
           def scrooge_invalidate_updateable_result_set
-            @attributes.updateable_result_set = ResultSets::UpdateableResultSet.new(nil, self) if scrooged?
+            if scrooged?
+              @attributes.updateable_result_set = ResultSets::UpdateableResultSet.new(nil, self, callsite_signature, @attributes.scrooge_columns)
+            end
           end
           
           # New objects should get an UnscroogedAttributes as their @attributes hash

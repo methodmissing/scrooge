@@ -7,13 +7,16 @@ module Scrooge
         #
         
         attr_accessor :updaters_attributes
+        attr_reader :callsite_signature, :scrooge_columns
         
-        def initialize(result_set_array, klass)
+        def initialize(result_set_array, klass, callsite_signature, scrooge_columns)
           if result_set_array
             @result_set_object_id = result_set_array.object_id
             @unique_id = result_set_array.unique_id ||= "#{Time.now.to_f}#{object_id}"  # avoid recycled object ids
           end
           @klass = klass  # expected class of items in the array
+          @callsite_signature = callsite_signature
+          @scrooge_columns = scrooge_columns
         end
         
         # Called by a ScroogedAttributes hash when it is asked for a column

@@ -27,7 +27,7 @@ module ActiveRecord
       #     
       def find_by_sql(sql)
         if scope_with_scrooge?(sql)
-          find_by_sql_with_scrooge(sql)
+          find_by_sql_without_scrooge(sql)
         else
           find_by_sql_without_scrooge(sql)
         end
