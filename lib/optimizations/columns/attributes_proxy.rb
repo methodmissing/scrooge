@@ -34,33 +34,18 @@ module Scrooge
         attr_accessor :fully_fetched, :klass, :updateable_result_set
 
         def self.setup(record, klass, updateable_result_set)
-          hash = new.replace(record)
+          hash = new.replace(klass.columns_hash.merge(record))
           hash.fully_fetched = false
           hash.klass = klass
           hash.updateable_result_set = updateable_result_set
           hash
         end
 
-        # Delegate Hash keys to all defined columns
-        #
-        def keys
-          @klass.column_names
-        end
-
-        # Let #has_key? consider defined columns
-        #
-        def has_key?(attr_name)
-          @klass.columns_hash.has_key?(attr_name)
-        end
-
-        alias_method :include?, :has_key?
-        alias_method :key?, :has_key?
-        alias_method :member?, :has_key?
-
         # Lazily augment and load missing attributes
         #
         def [](attr_name)
-          if interesting_for_scrooge?( attr_name )
+          return nil unless has_key?(attr_name)
+          if !scrooge_columns.include?(attr_name)
             augment_callsite!( attr_name )
             fetch_remaining
             add_to_scrooge_columns(attr_name)
@@ -131,10 +116,6 @@ module Scrooge
             @updateable_result_set.reload_columns!(columns_to_fetch)
           end
           
-          def interesting_for_scrooge?( attr_name )
-            @klass.columns_hash.has_key?(attr_name) && !scrooge_columns.include?(attr_name)
-          end
-
           def augment_callsite!( attr_name )
             @klass.scrooge_seen_column!(callsite_signature, attr_name)
           end
