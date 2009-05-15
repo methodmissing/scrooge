@@ -100,9 +100,9 @@ module Scrooge
       #
       def setup_columns
         if inheritable?
-          Set.new([primary_key, inheritance_column])
+          SimpleSet.new([primary_key, inheritance_column])
         else
-          primary_key.blank? ? Set.new : Set.new([primary_key])
+          primary_key.blank? ? SimpleSet.new : SimpleSet.new([primary_key])
         end    
       end
     

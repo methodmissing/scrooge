@@ -18,7 +18,7 @@ module Scrooge
         Mtx = Mutex.new
 
         def initialize
-          @associations = Set.new
+          @associations = SimpleSet.new
           @as_data_id = :"association_data_#{object_id}"
         end
         

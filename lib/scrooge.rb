@@ -2,6 +2,7 @@ $:.unshift(File.dirname(__FILE__))
 
 require 'set'
 require 'callsite'
+require 'simple_set'
 require 'optimizations/columns/attributes_proxy'
 require 'optimizations/columns/macro'
 require 'optimizations/associations/macro'

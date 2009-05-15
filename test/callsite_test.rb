@@ -10,10 +10,10 @@ class CallsiteTest < ActiveSupport::TestCase
   
   test "should initialize with a default set of columns" do
     assert @callsite.columns.empty?
-    assert_equal Scrooge::Callsite.new( MysqlUser, 123456 ).columns, Set["User"]
+    assert_equal Scrooge::Callsite.new( MysqlUser, 123456 ).columns, SimpleSet["User"]
     Scrooge::Callsite.any_instance.stubs(:inheritable?).returns(true)
     Scrooge::Callsite.any_instance.stubs(:inheritance_column).returns("inheritance")
-    assert_equal Scrooge::Callsite.new( MysqlUser, 123456 ).columns, Set["User","inheritance"]
+    assert_equal Scrooge::Callsite.new( MysqlUser, 123456 ).columns, SimpleSet["User","inheritance"]
   end
 
   test "should be inspectable" do
