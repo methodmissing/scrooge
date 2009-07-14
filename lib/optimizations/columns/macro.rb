@@ -63,9 +63,9 @@ module Scrooge
         # 
         def scope_with_scrooge?( sql )
           sql =~ scrooge_select_regex && 
-          column_names.include?(self.primary_key.to_s) &&
+          columns_hash.has_key?(self.primary_key.to_s) &&
           sql !~ ScroogeRegexJoin
-        end        
+        end
         
         private
         
@@ -73,24 +73,30 @@ module Scrooge
           #
           def find_by_sql_with_scrooge(sql)
             callsite_sig = callsite_signature( caller, callsite_sql( sql ) )
-            callsite_columns = scrooge_callsite(callsite_sig).columns
-            sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(callsite_columns)} FROM")
+            callsite = scrooge_callsite(callsite_sig)
+            callsite.reset
+            site_columns = callsite.columns
+
+            sql = sql.gsub(scrooge_select_regex, "SELECT #{scrooge_select_sql(site_columns)} FROM")
+
             results = connection.select_all(sanitize_sql(sql), "#{name} Load Scrooged")
 
             result_set = ResultSets::ResultArray.new
-            updateable = ResultSets::UpdateableResultSet.new(result_set, self)
-            results.inject(result_set) do |memo, record|
-              memo << instantiate(ScroogedAttributes.setup(record, callsite_columns, self, callsite_sig, updateable))
-            end
+            updateable = ResultSets::UpdateableResultSet.new(result_set, self, callsite_sig, site_columns.dup)
 
-            if Associations::Macro.scrooge_installed?
-              preload_scrooge_associations(result_set, callsite_sig)
+            results.collect! do |record|
+              instantiate(ScroogedAttributes.setup(record, self, updateable))
             end
+            result_set.replace(results)
+
+            callsite.register_result_set(result_set)
+
+            preload_scrooge_associations(result_set, callsite_sig)
 
             result_set
           end
         
-          def find_by_sql_without_scrooge( sql)
+          def find_by_sql_without_scrooge(sql)
             connection.select_all(sanitize_sql(sql), "#{name} Load").collect! do |record|
               instantiate( UnscroogedAttributes.setup(record) )
             end
@@ -108,7 +114,7 @@ module Scrooge
           def callsite_sql( sql )
             sql.gsub(ScroogeRegexSanitize, ScroogeBlankString)
           end
-
+          
       end
       
       module InstanceMethods
@@ -211,7 +217,9 @@ module Scrooge
           # Dumped objects should not contain object_ids of old result sets
           #
           def scrooge_invalidate_updateable_result_set
-            @attributes.updateable_result_set = ResultSets::UpdateableResultSet.new(nil, self) if scrooged?
+            if scrooged?
+              @attributes.updateable_result_set = ResultSets::UpdateableResultSet.new(nil, self, callsite_signature, @attributes.scrooge_columns)
+            end
           end
           
           # New objects should get an UnscroogedAttributes as their @attributes hash

@@ -51,7 +51,7 @@ class ScroogeTest < ActiveRecord::TestCase
   end
   
   test "should be able to generate a SQL select snippet from a given set" do
-    assert_equal MysqlUser.scrooge_select_sql( Set['Password','User','Host'] ), "`user`.User,`user`.Password,`user`.Host"
+    assert_equal MysqlUser.scrooge_select_sql( SimpleSet['Password','User','Host'] ), "`user`.User,`user`.Password,`user`.Host"
   end
  
   test "should be able to augment an existing callsite when attributes is referenced that we haven't seen yet" do

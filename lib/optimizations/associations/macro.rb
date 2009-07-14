@@ -11,7 +11,7 @@ module Scrooge
             unless scrooge_installed?
               ActiveRecord::Base.send( :extend,  SingletonMethods )
               ActiveRecord::Associations::AssociationProxy.send( :include, InstanceMethods )              
-            end  
+            end
           end
       
           protected
@@ -34,9 +34,15 @@ module Scrooge
         end
 
         def preload_scrooge_associations(result_set, callsite_sig)
-          scrooge_preloading_exclude do
-            callsite_associations = scrooge_callsite(callsite_sig).associations.to_a
-            preload_associations(result_set, callsite_associations) unless callsite_associations.empty?
+          if result_set.size > 1
+            scrooge_preloading_exclude do
+              if scrooge_callsite(callsite_sig).has_associations?
+                callsite_associations = scrooge_callsite(callsite_sig).associations.to_preload
+                unless callsite_associations.empty?
+                  preload_associations(result_set, callsite_associations)
+                end
+              end
+            end
           end
         end
 
@@ -67,7 +73,7 @@ module Scrooge
         # do collections at the moment anyway
         #
         def load_target_with_scrooge
-          scrooge_seen_association!(@reflection.name)
+          scrooge_seen_association!(@reflection)
           load_target_without_scrooge
         end
 
@@ -77,7 +83,7 @@ module Scrooge
           #
           def scrooge_seen_association!( association )
             if @owner.scrooged? && !@loaded
-              @owner.class.scrooge_callsite(callsite_signature).association!(association)
+              @owner.class.scrooge_callsite(callsite_signature).association!(association, @owner.id)
             end
           end
           

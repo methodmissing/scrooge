@@ -5,8 +5,8 @@ module Scrooge
     # associations referenced at the callsite.
     #
     
-    Mtx = Mutex.new
-    
+    Mtx = Mutex.new  # mutex should perhaps be per-instance at the expense of a little memory
+
     attr_accessor :klass,
                   :signature,
                   :columns,
@@ -20,16 +20,15 @@ module Scrooge
     # Flag a column as seen
     #
     def column!( column )
-      Mtx.synchronize do 
-        columns << column
-      end
+      columns && Mtx.synchronize { @columns << column }
     end
     
     # Flag an association as seen
+    # association should be an AssociationReflection object
     #
-    def association!( association )
-      Mtx.synchronize do
-        associations << association if preloadable_association?( association )
+    def association!(association, record_id)
+      if preloadable_association?(association.name)
+        associations.register(association, record_id)
       end
     end
     
@@ -40,25 +39,48 @@ module Scrooge
     # Lazy init default columns
     #
     def default_columns
-      @default_columns ||= setup_columns
+      @default_columns || Mtx.synchronize { @default_columns = setup_columns }
     end
     
     # Lazy init columns
     #
     def columns
-      @columns ||= default_columns.dup
-    end  
+      @columns || default_columns && Mtx.synchronize { @columns = @default_columns.dup } 
+    end
   
     # Lazy init associations
     #
     def associations
-      @associations ||= setup_associations
+      @associations || Mtx.synchronize { @associations = setup_associations }
+    end
+    
+    def has_associations?
+      @associations
+    end
+    
+    # Analyze previously collected information
+    # and reset ready for a new query
+    #
+    def reset
+      if has_associations?
+        associations.reset
+      end
+    end
+    
+    def register_result_set(result_set)
+      if has_associations?
+        associations.register_result_set(result_set)
+      end
     end
     
     private
     
       def associations_for_inspect
-        associations.map{|a| ":#{a.to_s}" }.join(', ')
+        if has_associations?
+          associations.to_preload.map{|a| ":#{a.to_s}" }.join(', ')
+        else
+          ""
+        end
       end
     
       # Only register associations that isn't polymorphic or a collection
@@ -70,7 +92,7 @@ module Scrooge
       # Is the table a container for STI models ?
       # 
       def inheritable?
-        @klass.column_names.include?( inheritance_column )
+        @klass.columns_hash.has_key?( inheritance_column )
       end
     
       # Ensure that at least the primary key and optionally the inheritance
@@ -78,16 +100,16 @@ module Scrooge
       #
       def setup_columns
         if inheritable?
-          Set.new([primary_key, inheritance_column])
+          SimpleSet.new([primary_key, inheritance_column])
         else
-          primary_key.blank? ? Set.new : Set.new([primary_key])
+          primary_key.blank? ? SimpleSet.new : SimpleSet.new([primary_key])
         end    
       end
     
       # Start with no registered associations
       #
       def setup_associations
-        Set.new
+        Optimizations::Associations::AssociationSet.new
       end
     
       # Memoize a string representation of the inheritance column
