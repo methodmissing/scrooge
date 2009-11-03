@@ -75,7 +75,7 @@ module ActiveRecord
         # Link the column to its table
         #
         def attribute_with_table( attr_name )
-          "#{quoted_table_name}.#{attr_name.to_s}"
+         "#{quoted_table_name}.#{connection.quote_column_name(attr_name.to_s)}"
         end
         
         # Computes a unique signature from a given call stack and supplementary
