@@ -1,4 +1,7 @@
-h1. Scrooge
+h1. *UPDATED*
+
+Please head on over to Stephen Sykes's more recent implementation "slim_scrooge":http://github.com/sdsykes/slim_scrooge - DB agnostic,
+leaner and a native MRI callsite hash to negate Kernel#caller overheads
 
 h4. This is a complete rewrite from the initial coverage at "igvita.com":http://www.igvita.com/2009/02/27/activerecord-optimization-with-scrooge/ - read on below
 
